@@ -274,7 +274,7 @@ namespace OpenH2.AvaloniaControls
         {
             var dialog = new SaveFileDialog
             {
-                InitialDirectory = LastSaveLocation,
+                Directory = LastSaveLocation,
                 Title = "Save Data"
             };
 

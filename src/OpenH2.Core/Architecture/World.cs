@@ -7,7 +7,7 @@ namespace OpenH2.Core.Architecture
 {
     public abstract class World : IPhysicsWorld
     {
-        public Scene Scene { get; private set; }
+        public Scene? Scene { get; private set; }
 
         public List<WorldSystem> Systems { get; private set; } = new List<WorldSystem>();
         public List<RenderSystem> RenderSystems { get; private set; } = new List<RenderSystem>();
@@ -21,7 +21,7 @@ namespace OpenH2.Core.Architecture
             Parallel.ForEach(Systems, s => s.Initialize(scene));
         }
 
-        public List<T> Components<T>() where T : Component
+        public List<T>? Components<T>() where T : Component
         {
             if (Scene == null)
                 return null;
@@ -30,7 +30,7 @@ namespace OpenH2.Core.Architecture
 
             foreach (var entity in this.Scene.Entities.Values)
             {
-                if(entity.TryGetChild<T>(out var c))
+                if(entity.TryGetChild<T>(out var c) && c != null)
                 {
                     accum.Add(c);
                 }
@@ -39,7 +39,7 @@ namespace OpenH2.Core.Architecture
             return accum;
         }
 
-        public List<T> Entities<T>() where T : Entity
+        public List<T>? Entities<T>() where T : Entity
         {
             if (Scene == null)
                 return null;

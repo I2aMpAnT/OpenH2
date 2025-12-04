@@ -5,7 +5,7 @@ namespace OpenH2.Core.Configuration
 {
     public class MaterialMapping
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public int? DiffuseMapIndex { get; set; } = null;
         public int[] DiffuseColor { get; set; } = new int[0];

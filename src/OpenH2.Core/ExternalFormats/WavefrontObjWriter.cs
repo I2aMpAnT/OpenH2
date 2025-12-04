@@ -32,7 +32,7 @@ namespace OpenH2.Core.ExternalFormats
             return builder.ToString();
         }
 
-        public void WriteModel(MeshCollection meshCollection, Matrix4x4 transform = default, string name = null)
+        public void WriteModel(MeshCollection meshCollection, Matrix4x4 transform = default, string? name = null)
         {
             var xform = transform == default ? Matrix4x4.Identity : transform;
 

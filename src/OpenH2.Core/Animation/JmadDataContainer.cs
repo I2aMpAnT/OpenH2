@@ -332,7 +332,8 @@ namespace OpenH2.Core.Animation
             var (componentBase, componentCount, blockBase) = type switch
             {
                 ComponentType.Orientation => (this.OrientationOffset, this.OrientationCount, this.OrientationVariableSizeBlockOffset),
-                ComponentType.Translation => (this.TranslationOffset, this.TranslationCount, this.TranslationVariableSizeBlockOffset)
+                ComponentType.Translation => (this.TranslationOffset, this.TranslationCount, this.TranslationVariableSizeBlockOffset),
+                ComponentType.Scale => (this.ScaleOffset, this.ScaleCount, this.ScaleVariableSizeBlockOffset),
             };
 
             var current = 0;
@@ -346,7 +347,6 @@ namespace OpenH2.Core.Animation
 
             var mappingOffset = 0;
             byte mappingLength = 0;
-            ushort dataOffset = 0;
 
             for (int i = 0; i < boneIndex+1; i++, next())
             {
@@ -355,9 +355,6 @@ namespace OpenH2.Core.Animation
                 mappingOffset += mappingLength;
 
                 mappingLength = this.Data[itemBase];
-
-                // This isn't always correct
-                //dataOffset = this.Data.ReadUInt16At(itemBase + 1);
             }
 
             return (mappingOffset, mappingLength);
