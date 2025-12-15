@@ -7,7 +7,9 @@ using OpenH2.Core.Audio.Abstractions;
 using OpenH2.Core.Configuration;
 using OpenH2.Core.Extensions;
 using OpenH2.Core.Factories;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps.Xbox;
 using OpenH2.Core.Metrics;
 using OpenH2.Engine.Components;
 using OpenH2.Engine.Entities;
@@ -45,6 +47,11 @@ namespace OpenH2.Engine
             audioHost = OpenALHost.Open(EngineGlobals.Forward, EngineGlobals.Up);
         }
 
+        // Environment variable names for ancillary map paths
+        private const string EnvSharedMapPath = "openh2_shared_map";
+        private const string EnvMainMenuMapPath = "openh2_mainmenu_map";
+        private const string EnvSPSharedMapPath = "openh2_sp_shared_map";
+
         public void Start(EngineStartParameters parameters)
         {
             var mapPath = parameters.LoadPathOverride ?? @"D:\H2vMaps\lockout.map";
@@ -61,7 +68,15 @@ namespace OpenH2.Engine
 
             var matFactory = new MaterialFactory(configPath);
 
-            var factory = new MapFactory(Path.GetDirectoryName(mapPath));
+            // Build ancillary map config from environment variables
+            var ancillaryConfig = new AncillaryMapConfig
+            {
+                SharedMapPath = Environment.GetEnvironmentVariable(EnvSharedMapPath),
+                MainMenuMapPath = Environment.GetEnvironmentVariable(EnvMainMenuMapPath),
+                SinglePlayerSharedMapPath = Environment.GetEnvironmentVariable(EnvSPSharedMapPath)
+            };
+
+            var factory = new MapFactory(Path.GetDirectoryName(mapPath), ancillaryConfig);
 
             var mapFilename = Path.GetFileName(mapPath);
 
@@ -89,14 +104,30 @@ namespace OpenH2.Engine
 
             var imap = factory.Load(mapFilename);
 
-            if(imap is not H2vMap map)
+            // Support both Vista and Xbox maps
+            Tags.Scenario.ScenarioTag scenario;
+            IH2Map h2map;
+
+            switch (imap)
             {
-                throw new Exception("Engine only supports Halo 2 Vista maps currently");
+                case H2vMap vistaMap:
+                    vistaMap.UseMaterialFactory(materialFactory);
+                    scenario = vistaMap.Scenario;
+                    h2map = vistaMap;
+                    break;
+
+                case H2xMap xboxMap:
+                    xboxMap.UseMaterialFactory(materialFactory);
+                    scenario = xboxMap.Scenario;
+                    h2map = xboxMap;
+                    Console.WriteLine("Loading Xbox original map");
+                    break;
+
+                default:
+                    throw new Exception($"Unsupported map type: {imap.GetType().Name}");
             }
 
-            map.UseMaterialFactory(materialFactory);
-
-            var scene = new Scene(map, new EntityCreator(map));
+            var scene = new Scene(h2map, new EntityCreator(h2map));
             scene.Load();
 
             watch.Stop();
@@ -104,18 +135,18 @@ namespace OpenH2.Engine
 
             var player = new Player(true);
             player.FriendlyName = "player_0";
-            player.Transform.Position = map.Scenario.PlayerSpawnMarkers[0].Position + new Vector3(0, 0, 0.3f);
-            player.Transform.Orientation = Quaternion.CreateFromAxisAngle(EngineGlobals.Up, map.Scenario.PlayerSpawnMarkers[0].Heading);
+            player.Transform.Position = scenario.PlayerSpawnMarkers[0].Position + new Vector3(0, 0, 0.3f);
+            player.Transform.Orientation = Quaternion.CreateFromAxisAngle(EngineGlobals.Up, scenario.PlayerSpawnMarkers[0].Heading);
             player.Transform.UpdateDerivedData();
-            
+
             scene.AddEntity(player);
 
 
-            foreach (var squad in map.Scenario.AiSquadDefinitions)
+            foreach (var squad in scenario.AiSquadDefinitions)
             {
                 foreach (var start in squad.StartingLocations)
                 {
-                    var entity = ActorFactory.SpawnPointFromStartingLocation(map, start);
+                    var entity = ActorFactory.SpawnPointFromStartingLocation(h2map, start);
 
                     if(entity != null)
                         scene.AddEntity(entity);

@@ -1,4 +1,4 @@
-﻿namespace OpenH2.Launcher.Preferences
+namespace OpenH2.Launcher.Preferences
 {
     public class AppPreferences
     {
@@ -14,6 +14,13 @@
 
         public static AppPreferences Current { get; private set; }
 
+        // Primary map folder for loading maps
         public string? ChosenMapFolder { get; set; }
+
+        // Ancillary map paths - if null, uses ChosenMapFolder
+        // These can be set separately for Xbox maps or custom setups
+        public string? SharedMapPath { get; set; }
+        public string? MainMenuMapPath { get; set; }
+        public string? SinglePlayerSharedMapPath { get; set; }
     }
 }

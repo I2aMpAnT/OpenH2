@@ -1,4 +1,5 @@
-﻿using System;
+using OpenH2.Launcher.Preferences;
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -45,6 +46,17 @@ namespace OpenH2.Launcher
             var startInfo = new ProcessStartInfo(enginePath, @$"""{mapPath}""");
             startInfo.WorkingDirectory = Path.GetDirectoryName(enginePath);
             startInfo.EnvironmentVariables["openh2_configroot"] = "Configs";
+
+            // Pass ancillary map paths from preferences
+            var prefs = AppPreferences.Current;
+            if (!string.IsNullOrWhiteSpace(prefs.SharedMapPath))
+                startInfo.EnvironmentVariables["openh2_shared_map"] = prefs.SharedMapPath;
+
+            if (!string.IsNullOrWhiteSpace(prefs.MainMenuMapPath))
+                startInfo.EnvironmentVariables["openh2_mainmenu_map"] = prefs.MainMenuMapPath;
+
+            if (!string.IsNullOrWhiteSpace(prefs.SinglePlayerSharedMapPath))
+                startInfo.EnvironmentVariables["openh2_sp_shared_map"] = prefs.SinglePlayerSharedMapPath;
 
             runningProcess = Process.Start(startInfo);
         }
