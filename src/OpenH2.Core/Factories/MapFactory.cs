@@ -17,6 +17,22 @@ using System.IO;
 
 namespace OpenH2.Core.Factories
 {
+    /// <summary>
+    /// Configuration for ancillary map file paths.
+    /// Set paths to use custom locations, or leave null to use mapRoot.
+    /// </summary>
+    public class AncillaryMapConfig
+    {
+        /// <summary>Full path to shared.map (used for multiplayer maps)</summary>
+        public string? SharedMapPath { get; set; }
+
+        /// <summary>Full path to mainmenu.map</summary>
+        public string? MainMenuMapPath { get; set; }
+
+        /// <summary>Full path to single_player_shared.map (used for campaign maps)</summary>
+        public string? SinglePlayerSharedMapPath { get; set; }
+    }
+
     public class MapFactory
     {
         private const string MainMenuName = "mainmenu.map";
@@ -25,14 +41,35 @@ namespace OpenH2.Core.Factories
         private readonly string mapRoot;
         private MapLoader loader;
 
-        public MapFactory(string mapRoot)
+        public MapFactory(string mapRoot) : this(mapRoot, null)
         {
-            this.loader = MapLoaderBuilder.FromRoot(mapRoot)
-                .UseAncillaryMap((byte)DataFile.MainMenu, MainMenuName)
-                .UseAncillaryMap((byte)DataFile.SinglePlayerShared, SinglePlayerSharedName)
-                .UseAncillaryMap((byte)DataFile.Shared, MultiPlayerSharedName)
-                .Build();
+        }
+
+        public MapFactory(string mapRoot, AncillaryMapConfig? config)
+        {
             this.mapRoot = mapRoot;
+
+            var builder = MapLoaderBuilder.FromRoot(mapRoot);
+
+            // Use custom paths if provided, otherwise default to mapRoot
+            var mainMenuPath = GetAncillaryPath(config?.MainMenuMapPath, mapRoot, MainMenuName);
+            var sharedPath = GetAncillaryPath(config?.SharedMapPath, mapRoot, MultiPlayerSharedName);
+            var spSharedPath = GetAncillaryPath(config?.SinglePlayerSharedMapPath, mapRoot, SinglePlayerSharedName);
+
+            builder.UseAncillaryMap((byte)DataFile.MainMenu, mainMenuPath);
+            builder.UseAncillaryMap((byte)DataFile.SinglePlayerShared, spSharedPath);
+            builder.UseAncillaryMap((byte)DataFile.Shared, sharedPath);
+
+            this.loader = builder.Build();
+        }
+
+        private static string GetAncillaryPath(string? customPath, string mapRoot, string defaultName)
+        {
+            if (!string.IsNullOrWhiteSpace(customPath) && File.Exists(customPath))
+            {
+                return customPath;
+            }
+            return Path.Combine(mapRoot, defaultName);
         }
 
         public IH2Map Load(string mapFileName)

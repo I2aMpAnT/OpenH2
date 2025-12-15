@@ -60,6 +60,58 @@
 
       </TabItem>
 
+      <TabItem Header="Settings" FontSize="14">
+        <ScrollViewer>
+          <StackPanel Margin="10">
+            <TextBlock Text="Ancillary Map Paths" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+            <TextBlock Text="Configure paths to required map files. Leave empty to use the main map folder."
+                       TextWrapping="Wrap" Margin="0,0,0,15" Foreground="Gray" />
+
+            <!-- shared.map -->
+            <TextBlock Text="shared.map (Multiplayer)" FontWeight="SemiBold" Margin="0,5,0,3" />
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBox Grid.Column="0" Text="{Binding SharedMapPath}" Watermark="(uses map folder)" />
+              <Button Grid.Column="1" Content="Browse..." Command="{Binding BrowseSharedMap}" Margin="5,0,0,0" Padding="10,5" />
+              <Button Grid.Column="2" Content="Clear" Command="{Binding ClearSharedMap}" Margin="5,0,0,0" Padding="10,5" />
+            </Grid>
+
+            <!-- mainmenu.map -->
+            <TextBlock Text="mainmenu.map" FontWeight="SemiBold" Margin="0,15,0,3" />
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBox Grid.Column="0" Text="{Binding MainMenuMapPath}" Watermark="(uses map folder)" />
+              <Button Grid.Column="1" Content="Browse..." Command="{Binding BrowseMainMenuMap}" Margin="5,0,0,0" Padding="10,5" />
+              <Button Grid.Column="2" Content="Clear" Command="{Binding ClearMainMenuMap}" Margin="5,0,0,0" Padding="10,5" />
+            </Grid>
+
+            <!-- single_player_shared.map -->
+            <TextBlock Text="single_player_shared.map (Campaign)" FontWeight="SemiBold" Margin="0,15,0,3" />
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBox Grid.Column="0" Text="{Binding SinglePlayerSharedMapPath}" Watermark="(uses map folder)" />
+              <Button Grid.Column="1" Content="Browse..." Command="{Binding BrowseSinglePlayerSharedMap}" Margin="5,0,0,0" Padding="10,5" />
+              <Button Grid.Column="2" Content="Clear" Command="{Binding ClearSinglePlayerSharedMap}" Margin="5,0,0,0" Padding="10,5" />
+            </Grid>
+
+            <TextBlock Text="Note: Xbox maps require Xbox versions of these files."
+                       TextWrapping="Wrap" Margin="0,20,0,0" Foreground="Orange" FontStyle="Italic" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
       <TabItem Header="Logs" FontSize="14">
         <TextBlock Text="TODO" />
       </TabItem>
