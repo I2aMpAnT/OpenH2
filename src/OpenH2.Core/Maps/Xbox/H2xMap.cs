@@ -10,7 +10,7 @@ namespace OpenH2.Core.Maps.Xbox
     /// <summary>
     /// In-memory representation of an original Xbox Halo 2 .map file.
     /// </summary>
-    public class H2xMap : H2BaseMap<H2xMapHeader>
+    public class H2xMap : H2BaseMap<H2xMapHeader>, IH2PlayableMap
     {
         private IMaterialFactory materialFactory = NullMaterialFactory.Instance;
 

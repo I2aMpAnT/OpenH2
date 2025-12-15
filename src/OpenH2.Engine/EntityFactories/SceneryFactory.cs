@@ -1,6 +1,6 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Extensions;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components;
@@ -14,7 +14,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public class SceneryFactory
     {
-        public static Scenery FromInstancedGeometry(H2vMap map, BspTag bsp, BspTag.InstancedGeometryInstance instance)
+        public static Scenery FromInstancedGeometry(IH2PlayableMap map, BspTag bsp, BspTag.InstancedGeometryInstance instance)
         {
             var scenery = new Scenery();
             scenery.FriendlyName = "Geom";
@@ -100,7 +100,7 @@ namespace OpenH2.Engine.EntityFactories
             return scenery;
         }
 
-        public static Scenery FromTag(H2vMap map, ScenarioTag scenario,  ScenarioTag.SceneryInstance instance)
+        public static Scenery FromTag(IH2PlayableMap map, ScenarioTag scenario,  ScenarioTag.SceneryInstance instance)
         {
             var scenery = new Scenery();
             scenery.FriendlyName = "Scenery_" + instance.SceneryDefinitionIndex;

@@ -1,5 +1,5 @@
 ﻿using OpenH2.Core.Architecture;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components.Globals;
@@ -10,9 +10,9 @@ namespace OpenH2.Engine.Entities
 {
     public class EntityCreator : IEntityCreator
     {
-        public H2vMap Map { get; }
+        public IH2PlayableMap Map { get; }
 
-        public EntityCreator(H2vMap map)
+        public EntityCreator(IH2PlayableMap map)
         {
             this.Map = map;
         }

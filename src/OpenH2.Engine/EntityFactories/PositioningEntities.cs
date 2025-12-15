@@ -1,6 +1,6 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Factories;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components;
 using OpenH2.Engine.Entities;
@@ -38,9 +38,9 @@ namespace OpenH2.Engine.EntityFactories
             new Vector4(0f, 0f, 0f, 1)
         };
 
-        public static void AddLocators(H2vMap map, Scene destination)
+        public static void AddLocators(IH2PlayableMap map, Scene destination)
         {
-            var scenario = map.GetLocalTagsOfType<ScenarioTag>().First();
+            var scenario = map.Scenario;
 
             //foreach (var obj in scenario.Obj96s)
             //{

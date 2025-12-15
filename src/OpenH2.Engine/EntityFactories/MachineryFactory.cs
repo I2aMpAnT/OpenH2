@@ -1,6 +1,6 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Extensions;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components;
@@ -16,7 +16,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public class MachineryFactory
     {
-        public static Machine FromTag(H2vMap map, ScenarioTag scenario,  ScenarioTag.MachineryInstance instance)
+        public static Machine FromTag(IH2PlayableMap map, ScenarioTag scenario,  ScenarioTag.MachineryInstance instance)
         {
             var mach = new Machine();
             mach.FriendlyName = "Machine_" + instance.MachineryDefinitionIndex;

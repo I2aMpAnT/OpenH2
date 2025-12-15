@@ -1,4 +1,4 @@
-﻿using OpenH2.Core.Maps.Vista;
+﻿using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using System.Numerics;
 
@@ -6,7 +6,7 @@ namespace OpenH2.Core.Extensions
 {
     public static class TagExtensions
     {
-        public static BitmapTag GetBitmap(this ShaderTag.ShaderTemplateArguments args, H2vMap map, int? index)
+        public static BitmapTag GetBitmap(this ShaderTag.ShaderTemplateArguments args, IH2Map map, int? index)
         {
             if (index.HasValue == false)
                 return null;

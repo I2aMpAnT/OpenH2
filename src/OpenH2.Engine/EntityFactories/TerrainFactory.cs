@@ -1,5 +1,5 @@
 ﻿using OpenH2.Core.Architecture;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Common.Models;
 using OpenH2.Engine.Components;
@@ -13,7 +13,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public static class TerrainFactory
     {
-        public static Terrain FromBspData(H2vMap map, BspTag tag)
+        public static Terrain FromBspData(IH2PlayableMap map, BspTag tag)
         {
             var terrain = new Terrain();
             terrain.FriendlyName = tag.Name;

@@ -105,21 +105,18 @@ namespace OpenH2.Engine
             var imap = factory.Load(mapFilename);
 
             // Support both Vista and Xbox maps
-            Tags.Scenario.ScenarioTag scenario;
-            IH2Map h2map;
+            IH2PlayableMap playableMap;
 
             switch (imap)
             {
                 case H2vMap vistaMap:
                     vistaMap.UseMaterialFactory(materialFactory);
-                    scenario = vistaMap.Scenario;
-                    h2map = vistaMap;
+                    playableMap = vistaMap;
                     break;
 
                 case H2xMap xboxMap:
                     xboxMap.UseMaterialFactory(materialFactory);
-                    scenario = xboxMap.Scenario;
-                    h2map = xboxMap;
+                    playableMap = xboxMap;
                     Console.WriteLine("Loading Xbox original map");
                     break;
 
@@ -127,7 +124,8 @@ namespace OpenH2.Engine
                     throw new Exception($"Unsupported map type: {imap.GetType().Name}");
             }
 
-            var scene = new Scene(h2map, new EntityCreator(h2map));
+            var scenario = playableMap.Scenario;
+            var scene = new Scene(playableMap, new EntityCreator(playableMap));
             scene.Load();
 
             watch.Stop();
@@ -146,7 +144,7 @@ namespace OpenH2.Engine
             {
                 foreach (var start in squad.StartingLocations)
                 {
-                    var entity = ActorFactory.SpawnPointFromStartingLocation(h2map, start);
+                    var entity = ActorFactory.SpawnPointFromStartingLocation(playableMap, start);
 
                     if(entity != null)
                         scene.AddEntity(entity);

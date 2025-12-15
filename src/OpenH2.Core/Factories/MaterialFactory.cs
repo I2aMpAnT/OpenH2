@@ -2,7 +2,7 @@
 using OpenH2.Core.Configuration;
 using OpenH2.Core.Enums.Texture;
 using OpenH2.Core.Extensions;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Common.Models;
 using OpenH2.Foundation;
@@ -42,7 +42,7 @@ namespace OpenH2.Core.Factories
             callbacks.Add(callback);
         }
 
-        public Material<BitmapTag> CreateMaterial(H2vMap map, ModelMesh mesh)
+        public Material<BitmapTag> CreateMaterial(IH2Map map, ModelMesh mesh)
         {
             if (createdMaterials.TryGetValue(mesh.Shader.Id, out var mat))
             {
@@ -86,7 +86,7 @@ namespace OpenH2.Core.Factories
         }
 
         private void PopulateFromMapping(
-            H2vMap map,
+            IH2Map map,
             Material<BitmapTag> mat,
             ShaderTag.ShaderTemplateArguments args,
             MaterialMapping mapping)
@@ -123,7 +123,7 @@ namespace OpenH2.Core.Factories
             mat.SpecularMap = args.GetBitmap(map, mapping.SpecularMapIndex);
         }
 
-        private static void PopulateFromHeuristic(H2vMap map, Material<BitmapTag> mat, ShaderTag shader)
+        private static void PopulateFromHeuristic(IH2Map map, Material<BitmapTag> mat, ShaderTag shader)
         {
             foreach (var info in shader.BitmapInfos)
             {

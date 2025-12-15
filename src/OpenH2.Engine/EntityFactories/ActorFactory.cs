@@ -1,6 +1,5 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Maps;
-using OpenH2.Core.Maps.Vista;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components;
@@ -14,7 +13,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public static class ActorFactory
     {
-        public static Actor FromStartingLocation(H2vMap map,
+        public static Actor FromStartingLocation(IH2PlayableMap map,
             ScenarioTag.AiSquadDefinition.StartingLocation loc)
         {
             var entity = new Actor();
@@ -89,7 +88,7 @@ namespace OpenH2.Engine.EntityFactories
             return entity;
         }
 
-        public static ActorSpawn? SpawnPointFromStartingLocation(H2vMap map,
+        public static ActorSpawn? SpawnPointFromStartingLocation(IH2PlayableMap map,
             ScenarioTag.AiSquadDefinition.StartingLocation loc)
         {
             var entity = new ActorSpawn();
