@@ -67,6 +67,40 @@ namespace OpenH2.Launcher.ViewModels
             EngineConnector.Start(this.SelectedMap.FullPath);
         }
 
+        public async Task QuickLoadMap()
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Title = "Select a Halo 2 Map";
+            dialog.AllowMultiple = false;
+            dialog.Filters.Add(new FileDialogFilter
+            {
+                Name = "Halo 2 Map Files",
+                Extensions = { "map" }
+            });
+
+            // Start in the last used folder or default Halo 2 location
+            dialog.Directory =
+                AppPreferences.Current.ChosenMapFolder ??
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Games", "Halo 2", "maps");
+
+            var result = await dialog.ShowAsync(this.window);
+
+            if (result != null && result.Length > 0)
+            {
+                var mapPath = result[0];
+
+                // Remember the folder for next time
+                AppPreferences.Current.ChosenMapFolder = Path.GetDirectoryName(mapPath);
+                AppPreferences.StoreCurrent();
+
+                // Reload the maps list from this folder
+                LoadMaps(Path.GetDirectoryName(mapPath));
+
+                // Launch the map directly
+                EngineConnector.Start(mapPath);
+            }
+        }
+
         public void Exit()
         {
             this.Exit();

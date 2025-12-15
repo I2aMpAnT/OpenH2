@@ -8,6 +8,7 @@ using OpenH2.Core.Extensions;
 using OpenH2.Core.Maps;
 using OpenH2.Core.Maps.MCC;
 using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps.Xbox;
 using OpenH2.Core.Offsets;
 using OpenH2.Core.Tags;
 using System;
@@ -68,21 +69,44 @@ namespace OpenH2.Core.Factories
 
             return baseHeader.Version switch
             {
-                MapVersion.Halo2 => singleLoader.Load<H2vMapInfo>(
-                    new ReadOnlyFileStream(mapPath), 
-                    (IMap map, Stream stream) => {}),
-
+                MapVersion.Halo2 => LoadH2MapInfo(singleLoader, mapPath, header),
                 _ => throw new NotSupportedException("This map type is not supported")
             };
         }
 
+        private static IH2MapInfo LoadH2MapInfo(MapLoader loader, string mapPath, Span<byte> headerData)
+        {
+            // Check sub-version to determine Xbox vs Vista
+            var subVersion = headerData.ReadInt32At(SubVersionOffset);
+
+            if (subVersion == 0)
+            {
+                // Xbox map
+                return loader.Load<H2xMapInfo>(
+                    new ReadOnlyFileStream(mapPath),
+                    (IMap map, Stream stream) => { });
+            }
+
+            // Vista map
+            return loader.Load<H2vMapInfo>(
+                new ReadOnlyFileStream(mapPath),
+                (IMap map, Stream stream) => { });
+        }
+
+        // Sub-version offset for detecting Xbox vs Vista (offset 0x24 = 36)
+        private const int SubVersionOffset = 0x24;
+
         public IH2Map LoadH2Map(string mapFileName, Span<byte> headerData)
         {
-            // Vista and Xbox use the same version, using header layout to differentiate
-            // If the stored signature according to the Vista layout is 0, it's an Xbox map
-            if(headerData.ReadUInt32At(BlamSerializer.StartsAt<H2vMapHeader>(h => h.StoredSignature)) == 0)
+            // Vista and Xbox both use version 8, but differ in sub-version at offset 0x24:
+            // - Xbox: sub-version = 0
+            // - Vista: sub-version = -1 (0xFFFFFFFF)
+            // Reference: Entity (github.com/I2aMpAnT/Entity) Map.cs LoadFromFile
+            var subVersion = headerData.ReadInt32At(SubVersionOffset);
+
+            if (subVersion == 0)
             {
-                throw new NotSupportedException("Xbox maps aren't supported yet");
+                return this.loader.Load<H2xMap>(mapFileName, LoadMetadata);
             }
 
             return this.loader.Load<H2vMap>(mapFileName, LoadMetadata);
