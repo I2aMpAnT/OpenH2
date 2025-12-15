@@ -6,7 +6,7 @@ namespace OpenH2.Core.Maps.Xbox
 {
     /// <summary>
     /// Halo 2 Xbox original map header structure.
-    /// Based on Entity (github.com/troymac1ure/Entity) LoadHalo2MapHeaderInfo offsets.
+    /// Based on Entity (github.com/I2aMpAnT/Entity) LoadHalo2MapHeaderInfo offsets.
     /// Xbox headers have different field positions than Vista/PC.
     /// </summary>
     [FixedLength(2048)]
@@ -21,16 +21,22 @@ namespace OpenH2.Core.Maps.Xbox
         [PrimitiveValue(8)]
         public int TotalBytes { get; set; }
 
+        // 0x10 - indexOffset
         [PrimitiveValue(16)]
         public NormalOffset IndexOffset { get; set; }
 
+        // 0x14 - metaStart (called RawSecondaryOffset in OpenH2)
         [PrimitiveValue(20)]
         public int RawSecondaryOffset { get; set; }
 
         public PrimaryOffset SecondaryOffset { get; set; }
 
-        // Xbox has combinedSize at 24
+        // 0x18 - metaSize
         [PrimitiveValue(24)]
+        public int MetaSize { get; set; }
+
+        // 0x1C - combinedSize
+        [PrimitiveValue(28)]
         public int CombinedSize { get; set; }
 
         [StringValue(32, 32)]
@@ -39,48 +45,59 @@ namespace OpenH2.Core.Maps.Xbox
         [StringValue(288, 32)]
         public string Build { get; set; }
 
-        // Xbox crazy section info
+        // 0x154 - sizeOfCrazy
         [PrimitiveValue(340)]
         public int SizeOfCrazy { get; set; }
 
+        // 0x158 - offsetToCrazy
         [PrimitiveValue(344)]
         public int OffsetToCrazy { get; set; }
 
-        // Xbox string offsets are shifted earlier than Vista
+        // 0x160 - offsetToStringNames1 (InternedStringsOffset)
         [PrimitiveValue(352)]
         public int InternedStringsOffset { get; set; }
 
+        // 0x164 - scriptReferenceCount (InternedStringCount)
         [PrimitiveValue(356)]
         public int InternedStringCount { get; set; }
 
+        // 0x168 - sizeOfScriptReference
         [PrimitiveValue(360)]
         public int SizeOfScriptReference { get; set; }
 
+        // 0x16C - offsetToStringIndex (InternedStringIndexOffset)
         [PrimitiveValue(364)]
         public int InternedStringIndexOffset { get; set; }
 
-        // Xbox map name is at 408 (36 chars), Vista is at 420 (32 chars)
+        // 0x170 - offsetToStringNames2 (duplicate/alternate string offset)
+        [PrimitiveValue(368)]
+        public int InternedStringsOffset2 { get; set; }
+
+        // 0x198 - mapName (36 chars)
         [StringValue(408, 36)]
         public string Name { get; set; }
 
-        // Xbox scenario path is at 444 with 64 chars (Vista uses 256 chars at offset 456)
+        // 0x1BC - scenarioPath (64 chars for Xbox)
         [StringValue(444, 64)]
         public string ScenarioPath { get; set; }
 
-        // Xbox file table info - shifted earlier than Vista
+        // 0x2C0 - fileCount
         [PrimitiveValue(704)]
         public int FileCount { get; set; }
 
+        // 0x2C4 - offsetTofileNames
         [PrimitiveValue(708)]
         public int FileTableOffset { get; set; }
 
+        // 0x2C8 - fileNamesSize
         [PrimitiveValue(712)]
         public int FileTableSize { get; set; }
 
+        // 0x2CC - offsetTofileIndex
         [PrimitiveValue(716)]
         public int FilesIndex { get; set; }
 
-        // Xbox signature is at 720, but always 0 for Xbox maps
+        // 0x2D0 - signature (always 0 for Xbox maps)
         [PrimitiveValue(720)]
         public int StoredSignature { get; set; }
 
