@@ -1,3 +1,4 @@
+using OpenBlam.Core.Texturing;
 using OpenH2.Core.Enums.Texture;
 using OpenH2.Core.Factories;
 using OpenH2.Core.Maps;
