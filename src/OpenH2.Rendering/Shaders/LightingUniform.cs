@@ -1,4 +1,5 @@
 ﻿using OpenH2.Foundation;
+using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -7,6 +8,8 @@ namespace OpenH2.Rendering.Shaders
     [StructLayout(LayoutKind.Explicit)]
     public struct LightingUniform
     {
+        public LightingUniform() { }
+
         [FieldOffset(0)]
         public PointLightUniform[] PointLights = Array.Empty<PointLightUniform>();
 

@@ -4,6 +4,7 @@ using OpenH2.Core.GameObjects;
 using OpenH2.Core.Maps;
 using OpenH2.Core.Scripting;
 using OpenH2.Core.Tags.Layout;
+using System;
 using System.Numerics;
 using System.Text.Json.Serialization;
 

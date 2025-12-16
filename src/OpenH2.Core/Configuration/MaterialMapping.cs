@@ -1,4 +1,5 @@
 ﻿using OpenH2.Foundation;
+using System;
 using System.Text.Json.Serialization;
 
 namespace OpenH2.Core.Configuration

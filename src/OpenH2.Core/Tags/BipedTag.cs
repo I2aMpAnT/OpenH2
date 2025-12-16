@@ -2,6 +2,7 @@
 using OpenH2.Core.Tags.Layout;
 using OpenBlam.Serialization.Layout;
 using OpenH2.Core.Tags.Common;
+using System;
 using System.Numerics;
 
 namespace OpenH2.Core.Tags

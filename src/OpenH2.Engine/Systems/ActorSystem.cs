@@ -1,5 +1,6 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Engine.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace OpenH2.Engine.Systems

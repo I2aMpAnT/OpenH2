@@ -16,9 +16,9 @@ namespace OpenH2.Core.Tags
 
         public uint Length { get; set; }
 
-        public TagIndexEntry TagIndexEntry { get; set; } = null!;
+        public TagIndexEntry TagIndexEntry { get; set; }
 
-        public DataFile DataFile { get; set; } = null!;
+        public DataFile DataFile { get; set; }
 
         public int InternalSecondaryMagic { get; set; }
 
