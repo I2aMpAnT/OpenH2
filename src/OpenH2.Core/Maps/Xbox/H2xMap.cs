@@ -27,7 +27,7 @@ namespace OpenH2.Core.Maps.Xbox
         {
             if (this.TryGetTag(this.IndexHeader.Scenario, out var scnr))
             {
-                this.Scenario = scnr;
+                this.Scenario = scnr!;
             }
 
             // Xbox maps don't have LocalSounds in header, but we can try to find it
@@ -35,12 +35,12 @@ namespace OpenH2.Core.Maps.Xbox
             if (this.Header.LocalSounds.IsInvalid == false &&
                 this.TryGetTag(this.Header.LocalSounds, out var ugh))
             {
-                this.LocalSounds = ugh;
+                this.LocalSounds = ugh!;
             }
 
             if (this.TryGetTag(this.IndexHeader.Globals, out var globals))
             {
-                this.Globals = globals;
+                this.Globals = globals!;
             }
         }
 
