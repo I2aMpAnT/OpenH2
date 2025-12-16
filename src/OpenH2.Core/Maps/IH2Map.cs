@@ -30,6 +30,7 @@ namespace OpenH2.Core.Maps
         bool TryGetTag<T>(uint id, out T? tag) where T : BaseTag;
         bool TryGetTag<T>(TagRef<T> tagref, out T? tag) where T : BaseTag;
         T GetTag<T>(TagRef<T> tagref) where T : BaseTag;
+        T GetTag<T>(uint id) where T : BaseTag;
         bool TryFindTagId(TagName tag, string fullName, out uint id);
     }
 
@@ -77,6 +78,11 @@ namespace OpenH2.Core.Maps
         }
 
         public T GetTag<T>(TagRef<T> tagref) where T : BaseTag
+        {
+            return default!;
+        }
+
+        public T GetTag<T>(uint id) where T : BaseTag
         {
             return default!;
         }
