@@ -214,6 +214,9 @@ namespace OpenH2.Rendering.OpenGL
                     case TextureCompressionFormat.Monochrome:
                         gl.TexSubImage2D<byte>((GLEnum)TextureTarget.Texture2D, i, 0, 0, (uint)width, (uint)height, pixelFormat, PixelType.UnsignedByte, bytes);
                         break;
+                    default:
+                        // Unknown format - skip this texture level
+                        break;
                 }
 
                 offset += size;

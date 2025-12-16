@@ -9,9 +9,9 @@ namespace OpenH2.Engine.Scripting
     public partial class ScriptEngine : IScriptEngine
     {
 
-        public IGameObject object_at_marker(IGameObject entity, string stringId)
+        public IGameObject? object_at_marker(IGameObject entity, string stringId)
         {
-            return default(IGameObject);
+            return null;
         }
 
         /// <summary>allows an object to take damage again</summary>
@@ -151,7 +151,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>returns the parent of the given object</summary>
-        public IGameObject object_get_parent(IGameObject entity)
+        public IGameObject? object_get_parent(IGameObject? entity)
         {
             if (entity == null)
                 return null;
@@ -160,7 +160,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>returns the ai attached to this object, if any</summary>
-        public IAiActorDefinition object_get_ai(IGameObject entity)
+        public IAiActorDefinition? object_get_ai(IGameObject? entity)
         {
             if (entity == null)
                 return null;

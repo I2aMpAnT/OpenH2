@@ -206,7 +206,7 @@ namespace OpenH2.ScenarioExplorer.ViewModels
                 || type == typeof(byte[]);
             }
 
-            public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 return null;
             }

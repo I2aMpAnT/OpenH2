@@ -88,11 +88,11 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>returns the unit/object corresponding to the given actor</summary>
         [ScriptImplementation(284)]
-        IGameObject ai_get_object(IAiActorDefinition ai);
+        IGameObject? ai_get_object(IAiActorDefinition ai);
 
         /// <summary>returns the unit/object corresponding to the given actor</summary>
         [ScriptImplementation(285)]
-        IUnit ai_get_unit(IAiActorDefinition ai);
+        IUnit? ai_get_unit(IAiActorDefinition ai);
 
         /// <summary>instantly kills the specified encounter and/or squad.</summary>
         [ScriptImplementation(296)]
@@ -225,11 +225,11 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>Returns the vehicle that the given actor is in.</summary>
         [ScriptImplementation(340)]
-        IVehicle ai_vehicle_get(IAiActorDefinition ai);
+        IVehicle? ai_vehicle_get(IAiActorDefinition ai);
 
         /// <summary>Returns the vehicle that was spawned at the given starting location.</summary>
         [ScriptImplementation(341)]
-        IVehicle ai_vehicle_get_from_starting_location(IAiActorDefinition ai);
+        IVehicle? ai_vehicle_get_from_starting_location(IAiActorDefinition ai);
 
         /// <summary>Reserves the given vehicle (so that AI may not enter it</summary>
         [ScriptImplementation(343)]
@@ -856,7 +856,7 @@ namespace OpenH2.Core.Scripting
         [ScriptImplementation(531)]
         void geometry_cache_flush();
 
-        T GetReference<T>(string reference);
+        T? GetReference<T>(string reference);
 
         T GetTag<T>(string? name, uint id) where T : BaseTag;
 
@@ -909,7 +909,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>returns an item in an object list.</summary>
         [ScriptImplementation(37)]
-        IGameObject list_get(GameObjectList object_list, int index);
+        IGameObject? list_get(GameObjectList object_list, int index);
 
         /// <summary>sets the next loading screen to just fade to white</summary>
         [ScriptImplementation(922)]
@@ -985,7 +985,7 @@ namespace OpenH2.Core.Scripting
         void objects_predict_high(IGameObject entity);
 
         [ScriptImplementation(75)]
-        IGameObject object_at_marker(IGameObject entity, string stringId);
+        IGameObject? object_at_marker(IGameObject entity, string stringId);
 
         /// <summary>Set whether the object can die from damage or not (as opposed to by scripting)</summary>
         [ScriptImplementation(85)]
@@ -1063,7 +1063,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>returns the ai attached to this object, if any</summary>
         [ScriptImplementation(336)]
-        IAiActorDefinition object_get_ai(IGameObject entity);
+        IAiActorDefinition? object_get_ai(IGameObject? entity);
 
         /// <summary>returns the health [0,1] of the object, returns -1 if the object does not exist</summary>
         [ScriptImplementation(69)]
@@ -1071,7 +1071,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>returns the parent of the given object</summary>
         [ScriptImplementation(73)]
-        IGameObject object_get_parent(IGameObject entity);
+        IGameObject? object_get_parent(IGameObject? entity);
 
         /// <summary>returns the shield [0,1] of the object, returns -1 if the object does not exist</summary>
         [ScriptImplementation(70)]
@@ -1417,7 +1417,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>converts an object to a unit.</summary>
         [ScriptImplementation(24)]
-        IUnit unit(IGameObject entity);
+        IUnit? unit(IGameObject? entity);
 
         /// <summary>sets a group of units' current body and shield vitality</summary>
         [ScriptImplementation(231)]
@@ -1518,7 +1518,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>returns the driver of a vehicle</summary>
         [ScriptImplementation(237)]
-        IGameObject vehicle_driver(IUnit unit);
+        IGameObject? vehicle_driver(IUnit unit);
 
         /// <summary>makes a list of units (named or by encounter) magically get into a vehicle, in the substring-specified seats (e.g. CD-passenger... empty string matches all seats)</summary>
         void vehicle_load_magic(IGameObject vehicle, string vehicleSeat, IGameObject unit);

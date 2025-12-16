@@ -12,7 +12,7 @@ namespace OpenH2.Core.Extensions
             return new string(c);
         }
 
-        public static bool IsSignificant(this string s)
+        public static bool IsSignificant(this string? s)
         {
             return !string.IsNullOrWhiteSpace(s);
         }

@@ -195,6 +195,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
                     case 1: write.PBufferInfo = &transformsInfo; break;
                     case 2: write.PBufferInfo = &uniformInfo; break;
                     case 16: write.PImageInfo = &shadowInfo; break;
+                    default: break; // Unknown binding location
                 }
 
                 writes[i] = write;

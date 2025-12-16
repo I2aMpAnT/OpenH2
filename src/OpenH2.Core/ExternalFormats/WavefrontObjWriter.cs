@@ -85,6 +85,9 @@ namespace OpenH2.Core.ExternalFormats
                     case MeshElementType.TriangleList:
                         WriteTriangleList(mesh, basis);
                         break;
+                    default:
+                        // Skip unsupported mesh element types
+                        break;
                 }
             }
 

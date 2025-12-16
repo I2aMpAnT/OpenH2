@@ -87,7 +87,7 @@ namespace OpenH2.Core.Maps
         {
             if (TryGetTag(tagref, out var t))
             {
-                return t;
+                return t!;
             }
 
             throw new Exception($"Unable to find tag {tagref.Id}");
@@ -114,7 +114,7 @@ namespace OpenH2.Core.Maps
         {
             if (TryGetTag<T>(id, out var t))
             {
-                return t;
+                return t!;
             }
 
             throw new Exception($"Unable to find tag {id}");
