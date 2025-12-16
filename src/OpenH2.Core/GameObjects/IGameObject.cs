@@ -10,7 +10,7 @@ namespace OpenH2.Core.GameObjects
 
         float Shield { get; set; }
         float Health { get; set; }
-        IGameObject Parent { get; }
+        IGameObject? Parent { get; }
         IAiActorDefinition? Ai { get; }
         bool IsAlive { get; }
 

@@ -2,6 +2,6 @@
 {
     public interface IUnit : IGameObject
     {
-        public IGameObject Driver { get; }
+        public IGameObject? Driver { get; }
     }
 }
