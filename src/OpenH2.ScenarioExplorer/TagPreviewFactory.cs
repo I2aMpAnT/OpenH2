@@ -18,7 +18,7 @@ namespace OpenH2.ScenarioExplorer
 {
     public class TagPreviewFactory
     {
-        public static TagPreviewViewModel GetPreview(BaseTag tag)
+        public static TagPreviewViewModel? GetPreview(BaseTag tag)
         {
             switch(tag)
             {
@@ -44,7 +44,7 @@ namespace OpenH2.ScenarioExplorer
 
             return preview;
 
-            object GetBitmapPreview(BitmapTag bitm)
+            object? GetBitmapPreview(BitmapTag bitm)
             {
                 // HACK: hard coding texture 0, needs texture binder rewrite to support here
                 if (bitm.TextureInfos[0].Width == 0 || bitm.TextureInfos[0].Height == 0)

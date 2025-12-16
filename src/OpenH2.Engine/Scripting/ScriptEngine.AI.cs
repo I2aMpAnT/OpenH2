@@ -105,7 +105,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>returns the unit/object corresponding to the given actor</summary>
-        public IUnit ai_get_unit(IAiActorDefinition ai)
+        public IUnit? ai_get_unit(IAiActorDefinition ai)
         {
             if (ai is ScenarioTag.AiSquadDefinition squad)
             {
@@ -119,7 +119,7 @@ namespace OpenH2.Engine.Scripting
                 return loc.Actor;
             }
 
-            return default(IUnit);
+            return null;
         }
 
         /// <summary>instantly kills the specified encounter and/or squad.</summary>
@@ -342,15 +342,15 @@ namespace OpenH2.Engine.Scripting
 
 
         /// <summary>Returns the vehicle that the given actor is in.</summary>
-        public IVehicle ai_vehicle_get(IAiActorDefinition ai)
+        public IVehicle? ai_vehicle_get(IAiActorDefinition ai)
         {
-            return default(IVehicle);
+            return null;
         }
 
         /// <summary>Returns the vehicle that was spawned at the given starting location.</summary>
-        public IVehicle ai_vehicle_get_from_starting_location(IAiActorDefinition ai)
+        public IVehicle? ai_vehicle_get_from_starting_location(IAiActorDefinition ai)
         {
-            return default(IVehicle);
+            return null;
         }
 
         /// <summary>Reserves the given vehicle (so that AI may not enter it</summary>

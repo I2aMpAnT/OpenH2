@@ -108,7 +108,7 @@ namespace OpenH2.ScenarioExplorer.ViewModels
             Console.WriteLine("heyo");
         }
 
-        public TagViewModel GetTagViewModel(uint tagId)
+        public TagViewModel? GetTagViewModel(uint tagId)
         {
             if(TagLookup.TryGetValue(tagId, out var existingVm))
             {
