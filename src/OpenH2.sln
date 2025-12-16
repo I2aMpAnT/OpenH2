@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenH2.Launcher", "OpenH2.Launcher\OpenH2.Launcher.csproj", "{7E7B7BE5-6C1E-40C0-81BA-06A0CD92CBED}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenH2.Core", "OpenH2.Core\OpenH2.Core.csproj", "{16A95F0B-F26C-4E38-B6F4-E74E351DE580}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenH2.Core.Tests", "OpenH2.Core.Tests\OpenH2.Core.Tests.csproj", "{9EAEBA4C-6905-4CEC-ADAD-FAAA6CE91D8D}"
@@ -65,8 +67,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenH2.Core.Generators", "OpenH2.Core.Generators\OpenH2.Core.Generators.csproj", "{2E6C459C-4C8C-4784-B22B-E520CD0180D4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenH2.Foundation.Tests", "OpenH2.FoundationTests\OpenH2.Foundation.Tests.csproj", "{4B9B239E-F245-4DA6-92B0-152D458B590F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenH2.Launcher", "OpenH2.Launcher\OpenH2.Launcher.csproj", "{7E7B7BE5-6C1E-40C0-81BA-06A0CD92CBED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -23,11 +23,22 @@ namespace OpenH2.Engine.Systems
             this.graphics = graphics;
         }
 
+        private bool debugLogged = false;
+
         public override void Render(double timestep)
         {
             var renderList = world.GetGlobalResource<RenderListStore>();
             if (renderList == null)
+            {
+                if (!debugLogged) Console.WriteLine("[RenderPipeline] No render list!");
+                debugLogged = true;
                 return;
+            }
+
+            if (!debugLogged)
+            {
+                Console.WriteLine($"[RenderPipeline] Models: {renderList.Models.Count}, Lights: {renderList.Lights.Count}");
+            }
 
             RenderingPipeline.SetModels(renderList.Models);
 
@@ -40,7 +51,17 @@ namespace OpenH2.Engine.Systems
             var cam = cameras?.FirstOrDefault();
 
             if (cam == null)
+            {
+                if (!debugLogged) Console.WriteLine("[RenderPipeline] No camera!");
+                debugLogged = true;
                 return;
+            }
+
+            if (!debugLogged)
+            {
+                Console.WriteLine($"[RenderPipeline] Camera found, position offset: {cam.PositionOffset}");
+                debugLogged = true;
+            }
 
             var pos = cam.PositionOffset;
             var orient = Quaternion.Identity;

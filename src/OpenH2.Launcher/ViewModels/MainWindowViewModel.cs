@@ -81,9 +81,11 @@ namespace OpenH2.Launcher.ViewModels
 
         private void LoadMaps(string folder)
         {
+            Log($"Loading maps from: {folder}");
             this.AvailableMaps.Clear();
 
             var maps = Directory.GetFiles(folder, "*.map");
+            Log($"Found {maps.Length} map files");
 
             foreach (var map in maps)
             {
@@ -93,9 +95,23 @@ namespace OpenH2.Launcher.ViewModels
 
         public void Launch()
         {
-            if (this.SelectedMap == null) return;
+            if (this.SelectedMap == null)
+            {
+                Log("ERROR: No map selected");
+                return;
+            }
 
-            EngineConnector.Start(this.SelectedMap.FullPath);
+            try
+            {
+                Log($"Launching map: {this.SelectedMap.FullPath}");
+                EngineConnector.Start(this.SelectedMap.FullPath);
+                Log("Engine started successfully");
+            }
+            catch (Exception ex)
+            {
+                Log($"ERROR: Failed to launch engine: {ex.Message}");
+                Log($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         public async Task QuickLoadMap()
@@ -132,7 +148,17 @@ namespace OpenH2.Launcher.ViewModels
                 }
 
                 // Launch the map directly
-                EngineConnector.Start(mapPath);
+                try
+                {
+                    Log($"Quick loading map: {mapPath}");
+                    EngineConnector.Start(mapPath);
+                    Log("Engine started successfully");
+                }
+                catch (Exception ex)
+                {
+                    Log($"ERROR: Failed to launch engine: {ex.Message}");
+                    Log($"Stack trace: {ex.StackTrace}");
+                }
             }
         }
 
@@ -183,7 +209,12 @@ namespace OpenH2.Launcher.ViewModels
 
         public void Exit()
         {
-            this.Exit();
+            this.window.Close();
+        }
+
+        private static void Log(string message)
+        {
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
         }
     }
 }
