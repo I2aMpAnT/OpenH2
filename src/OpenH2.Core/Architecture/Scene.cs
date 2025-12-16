@@ -1,5 +1,5 @@
 ﻿using OpenH2.Core.Enums;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Metrics;
 using OpenH2.Core.Scripting;
 using OpenH2.Core.Tags.Scenario;
@@ -16,7 +16,7 @@ namespace OpenH2.Core.Architecture
         public event EntityEventHandler OnEntityAdd = delegate { };
         public event EntityEventHandler OnEntityRemove = delegate { };
 
-        public H2vMap Map { get; }
+        public IH2PlayableMap Map { get; }
         public ScenarioTag Scenario => Map.Scenario;
 
         public Dictionary<Guid, Entity> Entities { get; private set; } = new();
@@ -24,7 +24,7 @@ namespace OpenH2.Core.Architecture
         private ConcurrentQueue<Entity> removedEntities = new();
         private ConcurrentBag<IMetricSource> metricSources = new();
 
-        public Scene(H2vMap map, IEntityCreator entityCreator)
+        public Scene(IH2PlayableMap map, IEntityCreator entityCreator)
         {
             this.Map = map;
             this.EntityCreator = entityCreator;

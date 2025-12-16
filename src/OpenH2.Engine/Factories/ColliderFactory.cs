@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Foundation;
 using OpenH2.Foundation.Physics;
@@ -143,7 +143,7 @@ namespace OpenH2.Engine.Factories
             }
         }
 
-        public static ICollider GetTriangleColliderForHlmt(H2vMap map, HaloModelTag hlmt, int damageLevel = 0)
+        public static ICollider GetTriangleColliderForHlmt(IH2Map map, HaloModelTag hlmt, int damageLevel = 0)
         {
             if(hlmt.ColliderId.IsInvalid)
             {

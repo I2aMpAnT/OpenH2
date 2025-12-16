@@ -1,5 +1,4 @@
 ﻿using OpenH2.Core.Maps;
-using OpenH2.Core.Maps.Vista;
 using OpenH2.Core.Tags;
 using OpenH2.Foundation;
 using OpenH2.Foundation._3D;
@@ -22,14 +21,14 @@ namespace OpenH2.Engine.Factories
 
         private static Material<BitmapTag> BoneMaterial = new Material<BitmapTag>() { DiffuseColor = new Vector4(1f, 0, 0, 1f) };
 
-        public static Mesh<BitmapTag>[] GetRenderModel(H2vMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel = 0)
+        public static Mesh<BitmapTag>[] GetRenderModel(IH2PlayableMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel = 0)
         {
             var key = (((ulong)hlmtReference.Id) << 32) | (ulong)damageLevel;
 
             return meshes.GetOrAdd(key, _ => Create(map, hlmtReference, damageLevel));
         }
 
-        public static Mesh<BitmapTag>[] GetRenderModel(H2vMap map, HaloModelTag hlmtReference, RenderModelTag model, int damageLevel = 0)
+        public static Mesh<BitmapTag>[] GetRenderModel(IH2PlayableMap map, HaloModelTag hlmtReference, RenderModelTag model, int damageLevel = 0)
         {
             var key = (((ulong)hlmtReference.Id) << 32) | (ulong)damageLevel;
 
@@ -91,7 +90,7 @@ namespace OpenH2.Engine.Factories
             return colliderModels.GetOrAdd(collider, _ => collider.Meshes.Select(m => Create(m, color)).ToArray());
         }
 
-        public static Mesh<BitmapTag>[] GetBonesModel(H2vMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel = 0)
+        public static Mesh<BitmapTag>[] GetBonesModel(IH2PlayableMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel = 0)
         {
             return CreateBoneMeshes(map, hlmtReference, damageLevel);
         }
@@ -101,7 +100,7 @@ namespace OpenH2.Engine.Factories
             return CreateBoneMeshes(renderModel, damageLevel);
         }
 
-        private static Mesh<BitmapTag>[] Create(H2vMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel)
+        private static Mesh<BitmapTag>[] Create(IH2PlayableMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel)
         {
             if (map.TryGetTag(hlmtReference, out var hlmt) == false)
             {
@@ -118,7 +117,7 @@ namespace OpenH2.Engine.Factories
             return Create(map, model, damageLevel);
         }
 
-        private static Mesh<BitmapTag>[] Create(H2vMap map, RenderModelTag model, int damageLevel)
+        private static Mesh<BitmapTag>[] Create(IH2PlayableMap map, RenderModelTag model, int damageLevel)
         {
             var renderModelMeshes = new List<Mesh<BitmapTag>>();
 
@@ -204,7 +203,7 @@ namespace OpenH2.Engine.Factories
             return mesh;
         }
 
-        private static Mesh<BitmapTag>[] CreateBoneMeshes(H2vMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel)
+        private static Mesh<BitmapTag>[] CreateBoneMeshes(IH2PlayableMap map, TagRef<HaloModelTag> hlmtReference, int damageLevel)
         {
             if (map.TryGetTag(hlmtReference, out var hlmt) == false)
             {

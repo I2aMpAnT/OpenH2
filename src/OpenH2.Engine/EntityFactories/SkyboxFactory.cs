@@ -1,5 +1,5 @@
 ﻿using OpenH2.Core.Architecture;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Common.Models;
 using OpenH2.Core.Tags.Scenario;
@@ -15,7 +15,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public class SkyboxFactory
     {
-        public static Scenery FromTag(H2vMap map, ScenarioTag scenario,  ScenarioTag.SkyboxInstance instance)
+        public static Scenery FromTag(IH2PlayableMap map, ScenarioTag scenario,  ScenarioTag.SkyboxInstance instance)
         {
             var scenery = new Scenery();
             scenery.FriendlyName = "Skybox_" + instance.Skybox.Id;

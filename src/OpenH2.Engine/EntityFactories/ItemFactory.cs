@@ -1,7 +1,6 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Extensions;
 using OpenH2.Core.Maps;
-using OpenH2.Core.Maps.Vista;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components;
@@ -15,7 +14,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public class ItemFactory
     {
-        public static Entity FromTag(H2vMap map, ScenarioTag scenario,  ScenarioTag.ItemCollectionPlacement instance)
+        public static Entity FromTag(IH2PlayableMap map, ScenarioTag scenario,  ScenarioTag.ItemCollectionPlacement instance)
         {
             if (instance.ItemCollectionReference.IsInvalid)
                 return new Scenery();
@@ -36,7 +35,7 @@ namespace OpenH2.Engine.EntityFactories
             return new Scenery();
         }
 
-        private static List<Entity> CreateFromItemCollection(H2vMap map, ItemCollectionTag itmc, ScenarioTag.ItemCollectionPlacement instance)
+        private static List<Entity> CreateFromItemCollection(IH2PlayableMap map, ItemCollectionTag itmc, ScenarioTag.ItemCollectionPlacement instance)
         {
             var entities = new List<Entity>();
 
@@ -82,7 +81,7 @@ namespace OpenH2.Engine.EntityFactories
             return entities;
         }
 
-        private static List<Entity> CreateFromVehicleCollection(H2vMap map, VehicleCollectionTag vehc, ScenarioTag.ItemCollectionPlacement instance)
+        private static List<Entity> CreateFromVehicleCollection(IH2PlayableMap map, VehicleCollectionTag vehc, ScenarioTag.ItemCollectionPlacement instance)
         {
             var entities = new List<Entity>();
 
@@ -104,7 +103,7 @@ namespace OpenH2.Engine.EntityFactories
             return entities;
         }
 
-        public static Vehicle CreateFromVehicleInstance(H2vMap map, ScenarioTag scenario, ScenarioTag.VehicleInstance instance)
+        public static Vehicle CreateFromVehicleInstance(IH2PlayableMap map, ScenarioTag scenario, ScenarioTag.VehicleInstance instance)
         {
             var item = new Vehicle();
             item.FriendlyName = "Vehicle_" + instance.Index;
@@ -123,7 +122,7 @@ namespace OpenH2.Engine.EntityFactories
             return item;
         }
 
-        private static void PopulateVehicle(Vehicle item, H2vMap map, TransformComponent xform, VehicleTag vehi)
+        private static void PopulateVehicle(Vehicle item, IH2PlayableMap map, TransformComponent xform, VehicleTag vehi)
         {
             item.FriendlyName = vehi.Name;
             item.SetComponents(xform,

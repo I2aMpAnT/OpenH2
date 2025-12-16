@@ -1,7 +1,7 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Enums;
 using OpenH2.Core.Extensions;
-using OpenH2.Core.Maps.Vista;
+using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
 using OpenH2.Engine.Components;
@@ -46,7 +46,7 @@ namespace OpenH2.Engine.EntityFactories
                 BitConverter.Int32BitsToSingle(quaternary));
         }
 
-        public static Bloc FromTag(H2vMap map, ScenarioTag scenario,  ScenarioTag.BlocInstance instance)
+        public static Bloc FromTag(IH2PlayableMap map, ScenarioTag scenario,  ScenarioTag.BlocInstance instance)
         {
             var scenery = new Bloc();
             var components = new List<Component>();

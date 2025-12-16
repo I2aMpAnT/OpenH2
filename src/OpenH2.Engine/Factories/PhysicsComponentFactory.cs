@@ -1,6 +1,5 @@
 ﻿using OpenH2.Core.Architecture;
 using OpenH2.Core.Maps;
-using OpenH2.Core.Maps.Vista;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Common.Collision;
 using OpenH2.Engine.Components;
@@ -16,7 +15,7 @@ namespace OpenH2.Engine.Factories
 {
     public static class PhysicsComponentFactory
     {
-        public static RigidBodyComponent CreateDynamicRigidBody(Entity parent, TransformComponent transform, H2vMap map, TagRef<HaloModelTag> hlmtRef, int damageLevel = 0)
+        public static RigidBodyComponent CreateDynamicRigidBody(Entity parent, TransformComponent transform, IH2PlayableMap map, TagRef<HaloModelTag> hlmtRef, int damageLevel = 0)
         {
             if(map.TryGetTag(hlmtRef, out var hlmt) == false)
             {
@@ -71,7 +70,7 @@ namespace OpenH2.Engine.Factories
         }
 
 
-        public static StaticGeometryComponent CreateStaticRigidBody(Entity parent, TransformComponent transform, H2vMap map, TagRef<HaloModelTag> hlmtRef, int damageLevel = 0)
+        public static StaticGeometryComponent CreateStaticRigidBody(Entity parent, TransformComponent transform, IH2PlayableMap map, TagRef<HaloModelTag> hlmtRef, int damageLevel = 0)
         {
             if (map.TryGetTag(hlmtRef, out var hlmt) == false)
             {

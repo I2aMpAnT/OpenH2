@@ -8,7 +8,7 @@ using OpenH2.Foundation;
 namespace OpenH2.Core.Maps.Vista
 {
     /// This class is the in-memory representation of a .map file
-    public class H2vMap : H2BaseMap<H2vMapHeader>
+    public class H2vMap : H2BaseMap<H2vMapHeader>, IH2PlayableMap
     {
         private IMaterialFactory materialFactory = NullMaterialFactory.Instance;
 
