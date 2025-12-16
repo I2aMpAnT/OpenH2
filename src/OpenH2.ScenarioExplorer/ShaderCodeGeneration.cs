@@ -85,10 +85,10 @@ namespace OpenH2.ScenarioExplorer
 
         private class ParamEntry
         {
-            public string Type { get; set; }
-            public string Name { get; set; }
+            public string Type { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
 
-            public static ParamEntry CreateFromGroup(GroupCollection g)
+            public static ParamEntry? CreateFromGroup(GroupCollection g)
             {
                 if (g == null || g.Count < 3)
                 {
@@ -106,11 +106,11 @@ namespace OpenH2.ScenarioExplorer
         private class RegisterEntry
         {
 
-            public string Name { get; set; }
-            public string RegisterId { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string RegisterId { get; set; } = string.Empty;
             public int Size { get; set; }
 
-            public static RegisterEntry CreateFromGroup(GroupCollection g)
+            public static RegisterEntry? CreateFromGroup(GroupCollection g)
             {
                 if (g == null || g.Count < 4)
                 {
@@ -154,10 +154,10 @@ namespace OpenH2.ScenarioExplorer
 
         private class Operation
         {
-            public string Original { get; set; }
-            public string Instruction { get; set; }
-            public string Modifier { get; set; }
-            public string[] Arguments { get; set; }
+            public string Original { get; set; } = string.Empty;
+            public string Instruction { get; set; } = string.Empty;
+            public string? Modifier { get; set; }
+            public string[] Arguments { get; set; } = Array.Empty<string>();
 
             public static Operation CreateFromString(string line)
             {

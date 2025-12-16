@@ -153,7 +153,7 @@ namespace OpenH2.TagFeatureAnalysis
     class ModelContainer
     {
         public bool isTriangleStrip;
-        public RenderModelTag model;
-        public IEnumerable<object> features;
+        public RenderModelTag model = null!;
+        public IEnumerable<object> features = null!;
     }
 }

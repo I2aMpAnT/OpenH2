@@ -216,7 +216,7 @@ namespace OpenH2.Core.Tags
         public class Section : IModelResourceContainer
         {
             #if DEBUG
-            public byte[] RawData { get; set; }
+            public byte[] RawData { get; set; } = Array.Empty<byte>();
             #endif
 
             [PrimitiveValue(0)]

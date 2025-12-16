@@ -48,9 +48,9 @@ namespace OpenH2.ScenarioExplorer
                 set { FilterStrings(value); }
             }
 
-            public ObservableCollection<FilteredStringVm> FilteredStrings { get; set; }
+            public ObservableCollection<FilteredStringVm> FilteredStrings { get; set; } = new();
 
-            public ScenarioViewModel Scenario { get; set; }
+            public ScenarioViewModel Scenario { get; set; } = null!;
 
             public void FilterStrings(string value)
             {
@@ -87,7 +87,7 @@ namespace OpenH2.ScenarioExplorer
                 }
 
                 public int Index { get; set; }
-                public string Value { get; set; }
+                public string Value { get; set; } = string.Empty;
             }
         }
     }

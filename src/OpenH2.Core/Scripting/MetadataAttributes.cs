@@ -4,7 +4,7 @@ namespace OpenH2.Core.Scripting
 {
     public sealed class OriginScenarioAttribute : Attribute
     {
-        public string ScenarioId { get; set; }
+        public string ScenarioId { get; set; } = string.Empty;
 
         public OriginScenarioAttribute(string scenarioId)
         {
