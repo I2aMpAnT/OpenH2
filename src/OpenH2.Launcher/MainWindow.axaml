@@ -34,13 +34,18 @@
           </Grid.RowDefinitions>
 
           <!-- Quick Load Button - prominent at top -->
-          <Button Grid.Row="0" Content="Quick Load Map..."
-                  Command="{Binding QuickLoadMap}"
-                  HorizontalAlignment="Center"
-                  Margin="10"
-                  Padding="20,10"
-                  FontSize="16"
-                  FontWeight="Bold" />
+          <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Content="Quick Load Map..."
+                    Command="{Binding QuickLoadMap}"
+                    Padding="20,10"
+                    FontSize="16"
+                    FontWeight="Bold" />
+            <Button Content="Export All Maps to GLB"
+                    Command="{Binding ExportAllMapsToGlb}"
+                    Margin="20,0,0,0"
+                    Padding="20,10"
+                    FontSize="14" />
+          </StackPanel>
 
           <!-- Existing map list -->
           <StackPanel Grid.Row="1" Orientation="Horizontal">

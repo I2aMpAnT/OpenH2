@@ -1,4 +1,6 @@
 ﻿using Avalonia.Controls;
+using OpenH2.Core.Factories;
+using OpenH2.Launcher.Export;
 using OpenH2.Launcher.Preferences;
 using PropertyChanged;
 using System;
@@ -206,6 +208,56 @@ namespace OpenH2.Launcher.ViewModels
         public void ClearSharedMap() => SharedMapPath = "";
         public void ClearMainMenuMap() => MainMenuMapPath = "";
         public void ClearSinglePlayerSharedMap() => SinglePlayerSharedMapPath = "";
+
+        public async Task ExportAllMapsToGlb()
+        {
+            var mapFolder = AppPreferences.Current.ChosenMapFolder;
+            if (string.IsNullOrWhiteSpace(mapFolder) || !Directory.Exists(mapFolder))
+            {
+                Log("ERROR: No map folder selected. Please choose a map folder first.");
+                return;
+            }
+
+            // Ask user for output folder
+            var dialog = new OpenFolderDialog();
+            dialog.Title = "Select Output Folder for GLB Files";
+            dialog.Directory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            var outputFolder = await dialog.ShowAsync(this.window);
+
+            if (string.IsNullOrWhiteSpace(outputFolder))
+            {
+                return;
+            }
+
+            Log($"Exporting all maps from {mapFolder} to {outputFolder}...");
+
+            // Build ancillary config from preferences
+            var ancillaryConfig = new AncillaryMapConfig
+            {
+                SharedMapPath = string.IsNullOrWhiteSpace(AppPreferences.Current.SharedMapPath) ? null : AppPreferences.Current.SharedMapPath,
+                MainMenuMapPath = string.IsNullOrWhiteSpace(AppPreferences.Current.MainMenuMapPath) ? null : AppPreferences.Current.MainMenuMapPath,
+                SinglePlayerSharedMapPath = string.IsNullOrWhiteSpace(AppPreferences.Current.SinglePlayerSharedMapPath) ? null : AppPreferences.Current.SinglePlayerSharedMapPath
+            };
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    GlbExporter.ExportAllMaps(mapFolder, outputFolder, ancillaryConfig, (progress) =>
+                    {
+                        Log(progress);
+                    });
+                });
+
+                Log("GLB export complete!");
+            }
+            catch (Exception ex)
+            {
+                Log($"ERROR: Export failed: {ex.Message}");
+                Log($"Stack trace: {ex.StackTrace}");
+            }
+        }
 
         public void Exit()
         {
