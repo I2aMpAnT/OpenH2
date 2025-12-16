@@ -532,6 +532,9 @@ namespace OpenH2.Rendering.Vulkan
                 case Shader.Pointviz:
                 case Shader.TextureViewer:
                     break;
+                default:
+                    // Unknown shader type - no uniform binding
+                    break;
             }
 
             return bufferIndex;

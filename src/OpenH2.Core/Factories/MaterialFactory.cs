@@ -129,14 +129,14 @@ namespace OpenH2.Core.Factories
             {
                 if (info.AlphaBitmap.IsInvalid == false && mat.AlphaMap == default)
                 {
-                    map.TryGetTag(info.AlphaBitmap, out var alpha);
-                    mat.AlphaMap = alpha;
+                    if (map.TryGetTag(info.AlphaBitmap, out var alpha))
+                        mat.AlphaMap = alpha;
                 }
 
                 if (info.DiffuseBitmap.IsInvalid == false && mat.DiffuseMap == default)
                 {
-                    map.TryGetTag(info.DiffuseBitmap, out var diff);
-                    mat.DiffuseMap = diff;
+                    if (map.TryGetTag(info.DiffuseBitmap, out var diff))
+                        mat.DiffuseMap = diff;
                 }
             }
 
