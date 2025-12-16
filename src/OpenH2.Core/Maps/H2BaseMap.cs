@@ -142,19 +142,19 @@ namespace OpenH2.Core.Maps
 
             if (mpShared.TryGetTag(id, out t))
             {
-                tag = (T)t;
+                tag = (T)t!;
                 return true;
             }
 
             if (spShared.TryGetTag(id, out t))
             {
-                tag = (T)t;
+                tag = (T)t!;
                 return true;
             }
 
             if (mainMenu.TryGetTag(id, out t))
             {
-                tag = (T)t;
+                tag = (T)t!;
                 return true;
             }
 
