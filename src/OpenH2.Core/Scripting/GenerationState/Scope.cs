@@ -4,7 +4,7 @@
     {
         public ScriptDataType Type { get; }
         public IGenerationContext Context { get; private set; }
-        public IStatementContext StatementContext { get; private set; } = null;
+        public IStatementContext? StatementContext { get; private set; } = null;
 
         public Scope(ScriptDataType type, IGenerationContext context, IStatementContext nearestStatements)
         {

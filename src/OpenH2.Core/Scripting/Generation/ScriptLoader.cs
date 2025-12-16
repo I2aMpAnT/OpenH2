@@ -22,7 +22,7 @@ namespace OpenH2.Core.Scripting.Generation
 
         private const string AssemblyName = "OpenH2.ScriptGen";
 
-        public ScriptLoader(string generatedScriptOutput = null)
+        public ScriptLoader(string? generatedScriptOutput = null)
         {
             var suppressions = new Dictionary<string, ReportDiagnostic>
             {

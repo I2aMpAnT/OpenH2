@@ -212,11 +212,11 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>tells a group of actors to get into a vehicle... does not interrupt any actors who are already going to vehicles</summary>
         [ScriptImplementation(344)]
-        void ai_vehicle_enter(IAiActorDefinition ai, IUnit unit, string unit_seat_mapping = null);
+        void ai_vehicle_enter(IAiActorDefinition ai, IUnit unit, string? unit_seat_mapping = null);
 
         /// <summary>the given group of actors is snapped into a vehicle, in the substring-specified seats (e.g. passenger for pelican)... does not interrupt any actors who are already going to vehicles</summary>
         [ScriptImplementation(346)]
-        void ai_vehicle_enter_immediate(IAiActorDefinition ai, IUnit unit, string seat = null);
+        void ai_vehicle_enter_immediate(IAiActorDefinition ai, IUnit unit, string? seat = null);
 
         /// <summary>tells a group of actors to get out of any vehicles that they are in</summary>
         [ScriptImplementation(350)]
@@ -468,7 +468,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>Actor faces exactly the point for the remainder of the cs, or until overridden (overrides aim, look)</summary>
         [ScriptImplementation(399)]
-        void cs_face(bool boolean, ISpatialPoint point = null);
+        void cs_face(bool boolean, ISpatialPoint? point = null);
 
         /// <summary>Actor faces exactly the given object for the duration of the cs, or until overridden (overrides aim, look)</summary>
         [ScriptImplementation(401)]
@@ -548,7 +548,7 @@ namespace OpenH2.Core.Scripting
 
         /// <summary>Actor looks at the point for the remainder of the cs, or until overridden</summary>
         [ScriptImplementation(393)]
-        void cs_look(bool boolean, ISpatialPoint point = null);
+        void cs_look(bool boolean, ISpatialPoint? point = null);
 
         /// <summary>Actor looks at the object for the duration of the cs, or until overridden</summary>
         [ScriptImplementation(395)]

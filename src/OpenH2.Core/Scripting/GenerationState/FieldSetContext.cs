@@ -8,8 +8,8 @@ namespace OpenH2.Core.Scripting.GenerationState
 {
     public class FieldSetContext : BaseGenerationContext, IGenerationContext
     {
-        private ExpressionSyntax field = null;
-        private ExpressionSyntax value = null;
+        private ExpressionSyntax? field = null;
+        private ExpressionSyntax? value = null;
 
         public override bool CreatesScope => true;
 
