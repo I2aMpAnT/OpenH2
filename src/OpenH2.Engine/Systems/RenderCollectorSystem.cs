@@ -12,8 +12,8 @@ namespace OpenH2.Engine.Systems
     public class RenderCollectorSystem : WorldSystem
     {
         private readonly IGraphicsAdapter graphics;
-        private RenderListStore renderList;
-        private InputStore inputStore;
+        private RenderListStore renderList = null!;
+        private InputStore inputStore = null!;
         private RenderLayers enabledLayers = RenderLayers.Normal;
 
         public RenderCollectorSystem(World world, IGraphicsAdapter graphics) : base(world)
@@ -23,8 +23,8 @@ namespace OpenH2.Engine.Systems
 
         public override void Initialize(Scene scene)
         {
-            this.renderList = this.world.GetGlobalResource<RenderListStore>();
-            this.inputStore = this.world.GetGlobalResource<InputStore>();
+            this.renderList = this.world.GetGlobalResource<RenderListStore>()!;
+            this.inputStore = this.world.GetGlobalResource<InputStore>()!;
         }
 
         public override void Update(double timestep)

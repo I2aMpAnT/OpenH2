@@ -13,17 +13,17 @@ namespace OpenH2.Core.Maps.MCC
         {
             if (this.TryGetTag(this.IndexHeader.Scenario, out var scnr))
             {
-                this.Scenario = scnr;
+                this.Scenario = scnr!;
             }
 
             if (this.TryGetTag(this.Header.LocalSounds, out var ugh))
             {
-                this.LocalSounds =ugh;
+                this.LocalSounds = ugh!;
             }
 
             if (this.TryGetTag(this.IndexHeader.Globals, out var globals))
             {
-                this.Globals = globals;
+                this.Globals = globals!;
             }
         }
     }

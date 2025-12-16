@@ -99,7 +99,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>returns the unit/object corresponding to the given actor</summary>
-        public IGameObject ai_get_object(IAiActorDefinition ai)
+        public IGameObject? ai_get_object(IAiActorDefinition ai)
         {
             return ai_get_unit(ai);
         }
@@ -321,7 +321,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>tells a group of actors to get into a vehicle, in the substring-specified seats (e.g. passenger for pelican)... does not interrupt any actors who are already going to vehicles</summary>
-        public void ai_vehicle_enter(IAiActorDefinition ai, IUnit unit, /*VehicleSeat*/ string unit_seat_mapping = null)
+        public void ai_vehicle_enter(IAiActorDefinition ai, IUnit unit, /*VehicleSeat*/ string? unit_seat_mapping = null)
         {
         }
 
@@ -331,7 +331,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>the given group of actors is snapped into a vehicle, in the substring-specified seats (e.g. passenger for pelican)... does not interrupt any actors who are already going to vehicles</summary>
-        public void ai_vehicle_enter_immediate(IAiActorDefinition ai, IUnit unit, /*VehicleSeat*/ string seat = null)
+        public void ai_vehicle_enter_immediate(IAiActorDefinition ai, IUnit unit, /*VehicleSeat*/ string? seat = null)
         {
         }
 

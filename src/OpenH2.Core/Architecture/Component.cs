@@ -9,7 +9,7 @@
             this.Parent = parent;
         }
 
-        public bool TryGetSibling<T>(out T component) where T : Component
+        public bool TryGetSibling<T>(out T? component) where T : Component
         {
             return this.Parent.TryGetChild(out component);
         }

@@ -28,6 +28,8 @@ namespace OpenH2.Engine.Systems
         public override void Update(double timestep)
         {
             var cameras = this.world.Components<CameraComponent>();
+            if (cameras == null)
+                return;
 
             foreach(var camera in cameras)
             {

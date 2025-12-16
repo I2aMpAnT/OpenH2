@@ -41,7 +41,7 @@ namespace OpenH2.Engine
             globalResources.Add(new InputStore());
         }
 
-        public override T? GetGlobalResource<T>()
+        public override T? GetGlobalResource<T>() where T : class
         {
             foreach(var obj in globalResources)
             {

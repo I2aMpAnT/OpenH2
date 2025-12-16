@@ -54,7 +54,7 @@ namespace OpenH2.Core.Factories
                 DiffuseColor = VectorExtensions.RandomColor()
             };
 
-            if (map.TryGetTag(mesh.Shader, out var shader) == false)
+            if (map.TryGetTag(mesh.Shader, out var shader) == false || shader == null)
             {
                 return mat;
             }
@@ -63,7 +63,7 @@ namespace OpenH2.Core.Factories
             var templateTag = map.GetTag(args.ShaderTemplate);
             var templateKey = templateTag.Name;
 
-            if (mappingConfig.Aliases.TryGetValue(templateKey, out var alias))
+            if (mappingConfig.Aliases.TryGetValue(templateKey, out var alias) && alias != null)
             {
                 templateKey = alias.Alias;
             }
@@ -147,7 +147,7 @@ namespace OpenH2.Core.Factories
             {
                 var bitmRef = bitmRefs[i];
 
-                if (map.TryGetTag(bitmRef.Bitmap, out var bitm) == false)
+                if (map.TryGetTag(bitmRef.Bitmap, out var bitm) == false || bitm == null)
                 {
                     continue;
                 }
