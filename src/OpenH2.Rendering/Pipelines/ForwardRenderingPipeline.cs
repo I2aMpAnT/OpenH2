@@ -1,6 +1,7 @@
 ﻿using OpenH2.Core.Tags;
 using OpenH2.Rendering.Abstractions;
 using OpenH2.Rendering.Shaders;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
@@ -33,6 +34,7 @@ namespace OpenH2.Rendering.Pipelines
         }
 
         private Stopwatch drawElapsed = new Stopwatch();
+        private bool renderStatsLogged = false;
 
         /// <summary>
         /// Kicks off the draw calls to the graphics adapter
@@ -42,6 +44,7 @@ namespace OpenH2.Rendering.Pipelines
             drawElapsed.Restart();
             transparentRenderables.Clear();
 
+            int diffuseCount = 0, skyboxCount = 0, transparentCount = 0, wireframeCount = 0;
 
             // Collect shadow map(s)
             this.adapter.UseShader(Shader.ShadowMapping);
@@ -68,6 +71,7 @@ namespace OpenH2.Rendering.Pipelines
                 var renderable = renderables[i];
                 if (RenderPasses.IsSkybox(renderable))
                 {
+                    skyboxCount++;
                     this.adapter.UseTransform(renderable.Transform);
 
                     this.adapter.DrawMeshes(renderable.DrawCommands);
@@ -82,14 +86,22 @@ namespace OpenH2.Rendering.Pipelines
 
                 if(RenderPasses.IsTransparent(renderable))
                 {
+                    transparentCount++;
                     this.InsertTransparentRenderable(renderable);
                 }
                 else if (RenderPasses.IsDiffuse(renderable))
                 {
+                    diffuseCount++;
                     this.adapter.UseTransform(renderable.Transform);
-            
+
                     this.adapter.DrawMeshes(renderable.DrawCommands);
                 }
+            }
+
+            if (!renderStatsLogged && renderables.Count > 0)
+            {
+                Console.WriteLine($"[ForwardPipeline] Diffuse: {diffuseCount}, Skybox: {skyboxCount}, Transparent: {transparentCount}");
+                renderStatsLogged = true;
             }
 
             this.adapter.UseShader(Shader.Wireframe);
