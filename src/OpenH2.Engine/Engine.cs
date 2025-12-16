@@ -151,6 +151,12 @@ namespace OpenH2.Engine
                 }
             }
 
+            // Process all queued entities before loading the scene
+            // This ensures player and other entities are in Scene.Entities
+            // before systems initialize and before the first render
+            // (VulkanHost skips the first Update to avoid physics issues with large delta time)
+            scene.ProcessUpdates();
+
             world.LoadScene(scene);
 
             var timestamp = DateTime.Now.ToString("yy-MM-ddTHH-mm");
