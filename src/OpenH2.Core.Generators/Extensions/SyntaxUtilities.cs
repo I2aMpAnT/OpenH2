@@ -15,7 +15,7 @@ namespace OpenH2.Core.Generators.Extensions
 
         public static INamedTypeSymbol GetTypeSymbol(this Compilation compilation, Type t)
         {
-            Type[] genericArgs = null;
+            Type[]? genericArgs = null;
 
             if (t.IsGenericType)
             {
@@ -26,7 +26,7 @@ namespace OpenH2.Core.Generators.Extensions
             var found = compilation.References.Select(compilation.GetAssemblyOrModuleSymbol)
                 .OfType<IAssemblySymbol>()
                 .Select(a => a.GetTypeByMetadataName(t.FullName))
-                .Single(a => a != null);
+                .Single(a => a != null)!;
 
             if (genericArgs?.Length > 0)
             {
