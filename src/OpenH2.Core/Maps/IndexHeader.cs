@@ -8,7 +8,7 @@ namespace OpenH2.Core.Maps
     [FixedLength(32)]
     public class IndexHeader
     {
-        public NormalOffset FileRawOffset { get; set; }
+        public NormalOffset FileRawOffset { get; set; } = null!;
 
         [PrimitiveValue(0)]
         public int PrimaryMagicConstant { get; set; }
@@ -19,7 +19,7 @@ namespace OpenH2.Core.Maps
         [PrimitiveValue(8)]
         public int RawTagIndexOffset { get; set; }
 
-        public PrimaryOffset TagIndexOffset { get; set; }
+        public PrimaryOffset TagIndexOffset { get; set; } = null!;
 
         [PrimitiveValue(12)]
         public TagRef<ScenarioTag> Scenario { get; set; }

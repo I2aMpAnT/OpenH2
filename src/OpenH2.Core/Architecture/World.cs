@@ -30,7 +30,7 @@ namespace OpenH2.Core.Architecture
 
             foreach (var entity in this.Scene.Entities.Values)
             {
-                if(entity.TryGetChild<T>(out var c))
+                if(entity.TryGetChild<T>(out var c) && c != null)
                 {
                     accum.Add(c);
                 }
@@ -57,7 +57,7 @@ namespace OpenH2.Core.Architecture
             return accum;
         }
 
-        public abstract T GetGlobalResource<T>() where T : class;
+        public abstract T? GetGlobalResource<T>() where T : class;
 
         public void Update(double timestep)
         {

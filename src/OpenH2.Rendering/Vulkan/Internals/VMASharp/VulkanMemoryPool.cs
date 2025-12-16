@@ -13,7 +13,7 @@ namespace VMASharp
         private Vk VkApi => Allocator.VkApi;
 
 
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         internal uint ID { get; }
 

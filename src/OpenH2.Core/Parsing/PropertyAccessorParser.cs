@@ -83,9 +83,9 @@ namespace OpenH2.Core.Parsing
 
         public class PropertyAccessData
         {
-            public string PropertyName { get; set; }
+            public string PropertyName { get; set; } = string.Empty;
             public PropertyAccessType AccessType { get; set; }
-            public object ElementArgument { get; set; }
+            public object? ElementArgument { get; set; }
         }
 
         public enum PropertyAccessType

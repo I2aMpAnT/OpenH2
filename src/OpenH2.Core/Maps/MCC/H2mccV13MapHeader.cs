@@ -8,17 +8,17 @@ namespace OpenH2.Core.Maps.MCC
     public class H2mccV13MapHeader : IH2MapHeader
     {
         [StringValue(0, 4)]
-        public string FileHead { get; set; }
+        public string FileHead { get; set; } = string.Empty;
 
         [PrimitiveValue(4)]
         public int Version { get; set; }
 
         [PrimitiveValue(16)]
-        public NormalOffset IndexOffset { get; set; }
+        public NormalOffset IndexOffset { get; set; } = null!;
 
         [PrimitiveValue(724)]
         public int RawSecondaryOffset { get; set; }
-        public PrimaryOffset SecondaryOffset { get; set; }
+        public PrimaryOffset SecondaryOffset { get; set; } = null!;
 
 
         [PrimitiveValue(32)]
@@ -46,10 +46,10 @@ namespace OpenH2.Core.Maps.MCC
         public int InternedStringsOffset { get; set; }
 
         [StringValue(176, 32)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [StringValue(208, 256)]
-        public string ScenarioPath { get; set; }
+        public string ScenarioPath { get; set; } = string.Empty;
 
         [PrimitiveValue(760)]
         public int StoredSignature { get; set; }
@@ -77,6 +77,6 @@ namespace OpenH2.Core.Maps.MCC
 
 
         [StringValue(892, 4)]
-        public string Footer { get; set; }
+        public string Footer { get; set; } = string.Empty;
     }
 }
