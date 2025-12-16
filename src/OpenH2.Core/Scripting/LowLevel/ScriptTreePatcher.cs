@@ -69,7 +69,7 @@ namespace OpenH2.Core.Scripting.LowLevel
             }
         }
 
-        public static bool ShouldPatchFrom(H2mccMap scene, string line, out SyntaxNodePatch patch)
+        public static bool ShouldPatchFrom(H2mccMap scene, string line, out SyntaxNodePatch? patch)
         {
             patch = null;
 

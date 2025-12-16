@@ -9,7 +9,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.bloc)]
     public class BlocTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public BlocTag(uint id) : base(id)
         {
         }

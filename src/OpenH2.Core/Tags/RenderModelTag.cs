@@ -26,24 +26,24 @@ namespace OpenH2.Core.Tags
         public ushort Flags { get; set; }
 
         [ReferenceArray(20)]
-        public CompressionInfo[] CompressionInfos { get; set; }
+        public CompressionInfo[] CompressionInfos { get; set; } = Array.Empty<CompressionInfo>();
 
         [ReferenceArray(28)]
-        public Region[] Regions { get; set; }
+        public Region[] Regions { get; set; } = Array.Empty<Region>();
 
-        public Permutation[] Permutations { get; set; }
+        public Permutation[] Permutations { get; set; } = Array.Empty<Permutation>();
 
         [ReferenceArray(36)]
-        public Section[] Sections { get; set; }
+        public Section[] Sections { get; set; } = Array.Empty<Section>();
 
         [ReferenceArray(72)]
-        public Node[] Nodes { get; set; }
+        public Node[] Nodes { get; set; } = Array.Empty<Node>();
 
         [ReferenceArray(88)]
-        public MarkerGroup[] MarkerGroups { get; set; }
+        public MarkerGroup[] MarkerGroups { get; set; } = Array.Empty<MarkerGroup>();
 
         [ReferenceArray(96)]
-        public ModelShaderReference[] ModelShaderReferences { get; set; }
+        public ModelShaderReference[] ModelShaderReferences { get; set; } = Array.Empty<ModelShaderReference>();
 
         public override void PopulateExternalData(MapStream reader)
         {
@@ -181,10 +181,10 @@ namespace OpenH2.Core.Tags
         public class Region
         {
             [InternedString(0)]
-            public string PartName { get; set; }
+            public string PartName { get; set; } = string.Empty;
 
             [ReferenceArray(8)]
-            public Permutation[] Permutations { get; set; }
+            public Permutation[] Permutations { get; set; } = Array.Empty<Permutation>();
         }
 
         [FixedLength(16)]
@@ -273,10 +273,10 @@ namespace OpenH2.Core.Tags
             [PrimitiveValue(68)]
             public uint DataBodySize { get; set; }
 
-            public ModelResourceBlockHeader Header { get; set; }
+            public ModelResourceBlockHeader Header { get; set; } = null!;
 
             [ReferenceArray(72)]
-            public ModelResource[] Resources { get; set; }
+            public ModelResource[] Resources { get; set; } = Array.Empty<ModelResource>();
 
             [PrimitiveValue(80)]
             public uint ResourceSize { get; set; }
@@ -284,14 +284,14 @@ namespace OpenH2.Core.Tags
             [PrimitiveValue(84)]
             public uint ResourceOffset { get; set; }
 
-            public MeshCollection Model { get; set; }
+            public MeshCollection Model { get; set; } = null!;
         }
 
         [FixedLength(96)]
         public class Node
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public short ParentIndex { get; set; }
@@ -328,10 +328,10 @@ namespace OpenH2.Core.Tags
         public class MarkerGroup
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [ReferenceArray(4)]
-            public Marker[] Markers { get; set; }
+            public Marker[] Markers { get; set; } = Array.Empty<Marker>();
         }
 
         [FixedLength(36)]

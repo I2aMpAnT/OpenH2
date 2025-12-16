@@ -13,7 +13,7 @@ namespace OpenH2.Core.Maps.Vista
         public int SecondaryMagic { get; set; }
 
         [InPlaceObject(0)]
-        public H2vMapHeader Header { get; set; }
+        public H2vMapHeader Header { get; set; } = null!;
         IH2MapHeader IH2MapInfo.Header => this.Header;
 
         public void Load(byte selfIdentifier, MapStream mapStream)

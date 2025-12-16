@@ -162,8 +162,8 @@ namespace OpenH2.Core.Scripting.Execution
 
         private struct ExecutionState
         {
-            public string Description;
-            public OrchestratedScript Func;
+            public string Description = string.Empty;
+            public OrchestratedScript Func = null!;
             public ScriptStatus Status;
             public DateTimeOffset SleepUntil;
             public Task? Task;

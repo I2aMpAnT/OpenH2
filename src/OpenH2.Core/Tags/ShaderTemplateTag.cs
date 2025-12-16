@@ -8,7 +8,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.stem)]
     public class ShaderTemplateTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public ShaderTemplateTag(uint id) : base(id)
         {

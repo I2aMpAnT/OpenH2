@@ -10,7 +10,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.bipd)]
     public class BipedTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public BipedTag(uint id) : base(id)
         {
         }

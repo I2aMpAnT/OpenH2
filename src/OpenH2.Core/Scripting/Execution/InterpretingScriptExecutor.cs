@@ -7,8 +7,8 @@ namespace OpenH2.Core.Scripting.Execution
 {
     public partial class InterpretingScriptExecutor : BaseScriptExecutor
     {
-        private ExecutionState[] executionStates;
-        private ScriptIterativeInterpreter interpreter;
+        private ExecutionState[] executionStates = Array.Empty<ExecutionState>();
+        private ScriptIterativeInterpreter interpreter = null!;
         private int currentMethod;
 
         public InterpretingScriptExecutor(ScenarioTag scenario)
@@ -109,7 +109,7 @@ namespace OpenH2.Core.Scripting.Execution
             public int MethodId;
             public ScriptStatus Status;
             public int SleepTicksRemaining;
-            public string Description;
+            public string Description = string.Empty;
             public InterpreterState InterpreterState;
         }
     }

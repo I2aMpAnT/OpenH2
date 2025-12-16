@@ -16,8 +16,8 @@ namespace OpenH2.Core.Scripting.Generation
 {
     public class ScriptLoader
     {
-        private readonly string generatedScriptOutput;
-        private CSharpCompilation compilation;
+        private readonly string? generatedScriptOutput;
+        private CSharpCompilation compilation = null!;
         private List<EmbeddedText> embeddedSource = new List<EmbeddedText>();
 
         private const string AssemblyName = "OpenH2.ScriptGen";
@@ -35,9 +35,9 @@ namespace OpenH2.Core.Scripting.Generation
                 optimizationLevel: OptimizationLevel.Debug,
                 platform: Platform.AnyCpu);
 
-            var baseLibPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+            var baseLibPath = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
 
-            var tpa = (string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
+            var tpa = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") ?? string.Empty;
 
             this.generatedScriptOutput = generatedScriptOutput;
             this.compilation = CSharpCompilation.Create(AssemblyName, options: compilationOptions)

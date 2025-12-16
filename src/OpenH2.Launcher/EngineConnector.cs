@@ -44,7 +44,7 @@ namespace OpenH2.Launcher
 
             var enginePath = LocateEngine();
             var startInfo = new ProcessStartInfo(enginePath, @$"""{mapPath}""");
-            startInfo.WorkingDirectory = Path.GetDirectoryName(enginePath);
+            startInfo.WorkingDirectory = Path.GetDirectoryName(enginePath) ?? Directory.GetCurrentDirectory();
             startInfo.EnvironmentVariables["openh2_configroot"] = "Configs";
 
             // Pass ancillary map paths from preferences

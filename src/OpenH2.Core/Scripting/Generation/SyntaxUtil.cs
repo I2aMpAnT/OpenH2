@@ -630,7 +630,7 @@ namespace OpenH2.Core.Scripting.Generation
                     .Add(SyntaxFactory.Space)
                     .Add(SyntaxFactory.Space);
 
-                ExpressionSyntax last = null;
+                ExpressionSyntax? last = null;
                 foreach(var exp in node.Expressions)
                 {
                     last = exp.WithLeadingTrivia(leading);

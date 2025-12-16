@@ -50,14 +50,14 @@ namespace OpenH2.Core.Maps
     {
         public static NullH2Map Instance { get; } = new NullH2Map();
 
-        public IndexHeader IndexHeader { get; set; }
+        public IndexHeader IndexHeader { get; set; } = null!;
 
         public string Name => "NullMap";
 
         public int PrimaryMagic { get; set; }
         public int SecondaryMagic { get; set; }
 
-        public IH2MapHeader Header => null;
+        public IH2MapHeader Header => null!;
 
         public int IndexOffset => 0;
         public int DataOffset => 0;
@@ -78,7 +78,7 @@ namespace OpenH2.Core.Maps
 
         public T GetTag<T>(TagRef<T> tagref) where T : BaseTag
         {
-            return default;
+            return default!;
         }
 
         public bool TryGetTag<T>(TagRef<T> tagref, out T? tag) where T : BaseTag

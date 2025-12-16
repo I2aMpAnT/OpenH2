@@ -8,7 +8,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.sky)]
     public class SkyboxTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public SkyboxTag(uint id) : base(id)
         {

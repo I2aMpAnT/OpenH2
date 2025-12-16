@@ -6,7 +6,7 @@ namespace OpenH2.Core.Extensions
 {
     public static class TagExtensions
     {
-        public static BitmapTag GetBitmap(this ShaderTag.ShaderTemplateArguments args, IH2Map map, int? index)
+        public static BitmapTag? GetBitmap(this ShaderTag.ShaderTemplateArguments args, IH2Map map, int? index)
         {
             if (index.HasValue == false)
                 return null;

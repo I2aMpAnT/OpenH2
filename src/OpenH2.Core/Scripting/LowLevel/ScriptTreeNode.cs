@@ -9,9 +9,9 @@ namespace OpenH2.Core.Scripting.LowLevel
     {
         public NodeType Type { get; set; }
         public ScriptDataType DataType { get; set; }
-        public object Value { get; set; }
+        public object? Value { get; set; }
         public List<ScriptTreeNode> Children { get; set; } = new List<ScriptTreeNode>();
-        public ScenarioTag.ScriptSyntaxNode Original { get; set; }
+        public ScenarioTag.ScriptSyntaxNode Original { get; set; } = null!;
         public int Index { get; internal set; }
 
         public override string ToString()

@@ -16,8 +16,8 @@ namespace OpenH2.Core.Factories
 {
     public sealed class MaterialFactory : IDisposable, IMaterialFactory
     {
-        private FileWatcher configWatcher;
-        private MaterialMappingConfig mappingConfig;
+        private FileWatcher configWatcher = null!;
+        private MaterialMappingConfig mappingConfig = null!;
         private List<Action> callbacks = new List<Action>();
         private HashSet<uint> stemsWarned = new HashSet<uint>();
         private Dictionary<uint, Material<BitmapTag>> createdMaterials = new Dictionary<uint, Material<BitmapTag>>();
@@ -216,7 +216,8 @@ namespace OpenH2.Core.Factories
                 PropertyNameCaseInsensitive = true
             };
 
-            this.mappingConfig = JsonSerializer.Deserialize<MaterialMappingConfig>(json, opts);
+            this.mappingConfig = JsonSerializer.Deserialize<MaterialMappingConfig>(json, opts)
+                ?? throw new InvalidOperationException("Failed to deserialize material mapping config");
 
             foreach (var cb in callbacks)
                 cb();

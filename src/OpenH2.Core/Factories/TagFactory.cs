@@ -39,7 +39,8 @@ namespace OpenH2.Core.Factories
                 {
                     //var ctor = tagType.GetConstructor(new[] { typeof(uint) });
                     //instance = (BaseTag)ctor.Invoke(new object[] { id });
-                    instance = Activator.CreateInstance(tagType, new object[] { id }) as BaseTag;
+                    instance = Activator.CreateInstance(tagType, new object[] { id }) as BaseTag
+                        ?? throw new InvalidOperationException($"Failed to create instance of {tagType.Name}");
                 }
                 catch
                 {
@@ -62,13 +63,13 @@ namespace OpenH2.Core.Factories
             return tag;
         }
 
-        private static Dictionary<TagName, Type> cachedTagTypes = null;
+        private static Dictionary<TagName, Type>? cachedTagTypes = null;
 
-        public static Type GetTypeForTag(TagName tag)
+        public static Type? GetTypeForTag(TagName tag)
         {
             if(cachedTagTypes == null)
             {
-                cachedTagTypes = Assembly.GetAssembly(typeof(BaseTag)).GetTypes()
+                cachedTagTypes = Assembly.GetAssembly(typeof(BaseTag))!.GetTypes()
                     .Where(t => t.IsClass && t.IsSubclassOf(typeof(BaseTag)))
                     .Select(t => new
                     {

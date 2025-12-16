@@ -40,8 +40,8 @@ namespace OpenH2.Core.Maps
         public DataFile OriginFile { get; private set; }
         public int PrimaryMagic { get; set; }
         public int SecondaryMagic { get; set; }
-        public IndexHeader IndexHeader { get; set; }
-        public Dictionary<uint, TagIndexEntry> TagIndex { get; set; }
+        public IndexHeader IndexHeader { get; set; } = null!;
+        public Dictionary<uint, TagIndexEntry> TagIndex { get; set; } = null!;
 
         int IInternedStringProvider.IndexOffset => Header.InternedStringIndexOffset;
         int IInternedStringProvider.DataOffset => Header.InternedStringsOffset;
@@ -93,7 +93,7 @@ namespace OpenH2.Core.Maps
             throw new Exception($"Unable to find tag {tagref.Id}");
         }
 
-        public bool TryGetTag<T>(TagRef<T> tagref, out T tag) where T : BaseTag
+        public bool TryGetTag<T>(TagRef<T> tagref, out T? tag) where T : BaseTag
         {
             if (tagref.IsInvalid)
             {
@@ -120,7 +120,7 @@ namespace OpenH2.Core.Maps
             throw new Exception($"Unable to find tag {id}");
         }
 
-        public bool TryGetTag<T>(uint id, out T tag) where T : BaseTag
+        public bool TryGetTag<T>(uint id, out T? tag) where T : BaseTag
         {
             if (id == uint.MaxValue)
             {

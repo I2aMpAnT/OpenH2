@@ -24,8 +24,8 @@ namespace OpenH2.Core.Scripting.Execution
     {
         private readonly ScenarioTag scenario;
         private readonly IScriptExecutor executor;
-        private Result[] variables;
-        private IScriptEngine scriptEngine;
+        private Result[] variables = Array.Empty<Result>();
+        private IScriptEngine scriptEngine = null!;
         private Stopwatch methodStopwatch = new();
 
         public GlobalVariableSet GlobalVariableSet { get; } = new();

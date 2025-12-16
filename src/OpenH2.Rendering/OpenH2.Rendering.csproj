@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Set to true to compile shaders (requires Vulkan SDK with glslc in PATH) -->
+    <CompileShaders Condition="'$(CompileShaders)' == ''">false</CompileShaders>
   </PropertyGroup>
 
   <ItemGroup>

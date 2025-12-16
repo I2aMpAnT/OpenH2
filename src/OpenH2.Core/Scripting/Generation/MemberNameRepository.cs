@@ -57,7 +57,7 @@ namespace OpenH2.Core.Scripting.Generation
             return name.UniqueName;
         }
 
-        public bool TryGetName(string desiredName, string dataType, int? index, out string result)
+        public bool TryGetName(string desiredName, string dataType, int? index, out string? result)
         {
             if (string.IsNullOrWhiteSpace(desiredName))
             {
@@ -83,9 +83,9 @@ namespace OpenH2.Core.Scripting.Generation
 
         private class RegisteredName
         {
-            public string OriginalName { get; set; }
-            public string UniqueName { get; set; }
-            public string TypeInfo { get; set; }
+            public string OriginalName { get; set; } = string.Empty;
+            public string UniqueName { get; set; } = string.Empty;
+            public string TypeInfo { get; set; } = string.Empty;
             public int? Index { get; set; }
         }
     }

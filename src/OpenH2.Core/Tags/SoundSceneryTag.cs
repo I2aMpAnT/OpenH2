@@ -7,7 +7,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.ssce)]
     public class SoundSceneryTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public SoundSceneryTag(uint id) : base(id)
         {
         }

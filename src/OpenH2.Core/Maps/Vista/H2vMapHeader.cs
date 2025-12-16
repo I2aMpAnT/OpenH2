@@ -8,7 +8,7 @@ namespace OpenH2.Core.Maps.Vista
     public class H2vMapHeader : IH2MapHeader
     {
         [StringValue(0, 4)]
-        public string FileHead { get; set; }
+        public string FileHead { get; set; } = null!;
 
         [PrimitiveValue(4)]
         public int Version { get; set; }
@@ -25,10 +25,10 @@ namespace OpenH2.Core.Maps.Vista
         public PrimaryOffset SecondaryOffset { get; set; }
 
         [StringValue(32, 32)]
-        public string MapOrigin { get; set; }
+        public string MapOrigin { get; set; } = null!;
 
         [StringValue(300, 32)]
-        public string Build { get; set; }
+        public string Build { get; set; } = null!;
 
         [PrimitiveValue(364)]
         public int OffsetToUnknownSection { get; set; }
@@ -46,10 +46,10 @@ namespace OpenH2.Core.Maps.Vista
         public int InternedStringsOffset { get; set; }
 
         [StringValue(420, 32)]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [StringValue(456, 256)]
-        public string ScenarioPath { get; set; }
+        public string ScenarioPath { get; set; } = null!;
 
         [PrimitiveValue(716)]
         public int FileCount { get; set; }
@@ -70,6 +70,6 @@ namespace OpenH2.Core.Maps.Vista
         public int StoredSignature { get; set; }
 
         [StringValue(2044, 4)]
-        public string Footer { get; set; }
+        public string Footer { get; set; } = null!;
     }
 }

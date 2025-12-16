@@ -12,7 +12,7 @@ namespace OpenH2.Launcher.Preferences
             PreferencesManager.StoreAppPreferences(AppPreferences.Current);
         }
 
-        public static AppPreferences Current { get; private set; }
+        public static AppPreferences Current { get; private set; } = null!;
 
         // Primary map folder for loading maps
         public string? ChosenMapFolder { get; set; }

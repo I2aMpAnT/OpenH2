@@ -15,7 +15,7 @@ namespace OpenH2.Launcher.ViewModels
 
         public ObservableCollection<MapEntry> AvailableMaps { get; set; } = new();
 
-        public MapEntry SelectedMap { get; set; }
+        public MapEntry? SelectedMap { get; set; }
 
         // Settings properties bound to UI
         public string SharedMapPath
@@ -121,11 +121,15 @@ namespace OpenH2.Launcher.ViewModels
                 var mapPath = result[0];
 
                 // Remember the folder for next time
-                AppPreferences.Current.ChosenMapFolder = Path.GetDirectoryName(mapPath);
+                var mapDirectory = Path.GetDirectoryName(mapPath);
+                AppPreferences.Current.ChosenMapFolder = mapDirectory;
                 AppPreferences.StoreCurrent();
 
                 // Reload the maps list from this folder
-                LoadMaps(Path.GetDirectoryName(mapPath));
+                if (mapDirectory != null)
+                {
+                    LoadMaps(mapDirectory);
+                }
 
                 // Launch the map directly
                 EngineConnector.Start(mapPath);
@@ -161,7 +165,7 @@ namespace OpenH2.Launcher.ViewModels
                 Extensions = { "map" }
             });
 
-            dialog.Directory = AppPreferences.Current.ChosenMapFolder;
+            dialog.Directory = AppPreferences.Current.ChosenMapFolder ?? "";
 
             var result = await dialog.ShowAsync(this.window);
 

@@ -10,7 +10,7 @@ namespace OpenH2.Core.Maps
         private Dictionary<string, TagListEntry> children = new Dictionary<string, TagListEntry>();
         private TagListEntry root = new TagListEntry("root");
 
-        private TagListEntry lookupChild(string key)
+        private TagListEntry? lookupChild(string? key)
         {
             if (key.IsSignificant() == false)
                 return null;
@@ -21,7 +21,7 @@ namespace OpenH2.Core.Maps
                 return null;
         }
 
-        public TagListEntry Add(string tag, string parent = null, string grandparent = null)
+        public TagListEntry? Add(string tag, string? parent = null, string? grandparent = null)
         {
             var gp = lookupChild(grandparent);
             var p = lookupChild(parent);

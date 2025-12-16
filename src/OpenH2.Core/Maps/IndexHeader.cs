@@ -31,7 +31,7 @@ namespace OpenH2.Core.Maps
         public int TagIndexCount { get; set; }
 
         [StringValue(28, 4)]
-        public string TagsLabel { get; set; }
+        public string TagsLabel { get; set; } = null!;
 
         public static int Length => 32;
     }

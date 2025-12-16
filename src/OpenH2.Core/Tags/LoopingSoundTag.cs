@@ -7,7 +7,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.lsnd)]
     public class LoopingSoundTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public LoopingSoundTag(uint id) : base(id)
         {
         }

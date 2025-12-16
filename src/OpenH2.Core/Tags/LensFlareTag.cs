@@ -8,7 +8,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.lens)]
     public class LensFlareTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public LensFlareTag(uint id) : base(id)
         {
         }

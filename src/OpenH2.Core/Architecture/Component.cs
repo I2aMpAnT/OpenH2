@@ -2,7 +2,7 @@
 {
     public abstract class Component
     {
-        public Entity Parent { get; private set; }
+        public Entity Parent { get; private set; } = null!;
 
         public Component(Entity parent)
         {

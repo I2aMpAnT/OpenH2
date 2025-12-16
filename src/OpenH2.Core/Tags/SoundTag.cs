@@ -24,7 +24,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.snd)] // snd!
     public class SoundTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public SoundTag(uint id) : base(id)
         {
         }

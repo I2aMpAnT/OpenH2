@@ -28,7 +28,7 @@ namespace OpenH2.Launcher.Preferences
                 {
                     var contents = File.ReadAllText(appPreferencesPath);
 
-                    return JsonSerializer.Deserialize<AppPreferences>(contents);
+                    return JsonSerializer.Deserialize<AppPreferences>(contents) ?? new AppPreferences();
                 }
 
                 return new AppPreferences();

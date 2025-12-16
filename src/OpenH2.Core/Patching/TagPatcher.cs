@@ -269,7 +269,7 @@ namespace OpenH2.Core.Patching
         {
             public int RelativeOffset { get; set; }
 
-            public Type PropertyType { get; set; }
+            public Type PropertyType { get; set; } = null!;
         }
     }
 }
