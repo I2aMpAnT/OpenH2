@@ -195,7 +195,7 @@ namespace OpenH2.Engine
 
         public void Dispose()
         {
-            this.sink.Stop();
+            this.sink?.Stop();
             this.graphicsHostDisposable?.Dispose();
         }
 
