@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using OpenH2.Core.Architecture;
 using OpenH2.Engine.Stores;
@@ -127,6 +128,7 @@ namespace OpenH2.Engine.Systems
                 {
                     this.bspsToLoad[i] = false;
 
+                    Console.WriteLine($"[BspSystem] Loading BSP {i} with {bspEntities[i].Count} entities");
                     foreach (var e in bspEntities[i])
                         world.Scene.AddEntity(e);
 

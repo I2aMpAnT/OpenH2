@@ -24,6 +24,7 @@ namespace OpenH2.Engine.Systems
         }
 
         private bool debugLogged = false;
+        private bool modelsFoundLogged = false;
 
         public override void Render(double timestep)
         {
@@ -38,6 +39,13 @@ namespace OpenH2.Engine.Systems
             if (!debugLogged)
             {
                 Console.WriteLine($"[RenderPipeline] Models: {renderList.Models.Count}, Lights: {renderList.Lights.Count}");
+            }
+
+            // Log once when models first appear
+            if (!modelsFoundLogged && renderList.Models.Count > 0)
+            {
+                Console.WriteLine($"[RenderPipeline] Models loaded! Count: {renderList.Models.Count}");
+                modelsFoundLogged = true;
             }
 
             RenderingPipeline.SetModels(renderList.Models);
