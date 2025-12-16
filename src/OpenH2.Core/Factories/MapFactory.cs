@@ -141,11 +141,16 @@ namespace OpenH2.Core.Factories
             // Reference: Entity (github.com/I2aMpAnT/Entity) Map.cs LoadFromFile
             var subVersion = headerData.ReadInt32At(SubVersionOffset);
 
+            Console.WriteLine($"[MapFactory] Loading map: {mapFileName}");
+            Console.WriteLine($"[MapFactory] Sub-version at 0x24: {subVersion} (0x{subVersion:X8})");
+
             if (subVersion == 0)
             {
+                Console.WriteLine("[MapFactory] Detected as Xbox format (H2xMap)");
                 return this.loader.Load<H2xMap>(mapFileName, LoadMetadata);
             }
 
+            Console.WriteLine("[MapFactory] Detected as Vista format (H2vMap)");
             return this.loader.Load<H2vMap>(mapFileName, LoadMetadata);
         }
 
