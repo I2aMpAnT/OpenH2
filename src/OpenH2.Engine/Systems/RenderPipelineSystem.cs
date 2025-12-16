@@ -45,6 +45,18 @@ namespace OpenH2.Engine.Systems
             if (!modelsFoundLogged && renderList.Models.Count > 0)
             {
                 Console.WriteLine($"[RenderPipeline] Models loaded! Count: {renderList.Models.Count}");
+
+                // Log camera info when we first have models
+                var camForLog = world.Components<CameraComponent>()?.FirstOrDefault();
+                if (camForLog != null)
+                {
+                    var camXform = camForLog.TryGetSibling<TransformComponent>(out var xf) ? xf : null;
+                    Console.WriteLine($"[RenderPipeline] Camera Position: {camXform?.Position ?? Vector3.Zero}");
+                    Console.WriteLine($"[RenderPipeline] Camera ViewMatrix M41-43: {camForLog.ViewMatrix.M41}, {camForLog.ViewMatrix.M42}, {camForLog.ViewMatrix.M43}");
+                    Console.WriteLine($"[RenderPipeline] Camera ProjectionMatrix M11: {camForLog.ProjectionMatrix.M11}, M22: {camForLog.ProjectionMatrix.M22}");
+                    Console.WriteLine($"[RenderPipeline] ViewMatrix is identity: {camForLog.ViewMatrix == Matrix4x4.Identity}");
+                }
+
                 modelsFoundLogged = true;
             }
 
