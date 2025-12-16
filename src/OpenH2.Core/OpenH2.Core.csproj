@@ -5,7 +5,7 @@
     <LangVersion>preview</LangVersion>
     <!--<DebugSerializerGeneration>True</DebugSerializerGeneration>-->
     <GenerateSerializersInto>$(MSBuildProjectDirectory)\$(BaseIntermediateOutputPath)\GeneratedSerializers</GenerateSerializersInto>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
