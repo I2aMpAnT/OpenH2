@@ -162,6 +162,7 @@ namespace OpenH2.Core.Scripting.Execution
 
         private struct ExecutionState
         {
+            public ExecutionState() { }
             public string Description = string.Empty;
             public OrchestratedScript Func = null!;
             public ScriptStatus Status;

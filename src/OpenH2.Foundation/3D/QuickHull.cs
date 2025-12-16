@@ -167,8 +167,8 @@ namespace OpenH2.Foundation._3D
                     }
                     while (hedge != HalfEdge);
 
-                    Vector3 p2 = hedgeMax.HeadVertex.Point;
-                    Vector3 p1 = hedgeMax.TailVertex.Point;
+                    Vector3 p2 = hedgeMax!.HeadVertex.Point;
+                    Vector3 p1 = hedgeMax.TailVertex!.Point;
                     double lenMax = Math.Sqrt(lenSqrMax);
                     float ux = (float)((p2.X - p1.X) / lenMax);
                     float uy = (float)((p2.Y - p1.Y) / lenMax);
@@ -378,7 +378,7 @@ namespace OpenH2.Foundation._3D
                 if (hedgePrev.OppositeFace == hedge.OppositeFace)
                 { // then there is a redundant edge that we can get rid off
 
-                    Face? oppFace = hedge.OppositeFace;
+                    Face oppFace = hedge.OppositeFace!;
                     HalfEdge hedgeOpp;
 
                     if (hedgePrev == HalfEdge)
@@ -387,14 +387,14 @@ namespace OpenH2.Foundation._3D
                     }
                     if (oppFace.VertexCount == 3)
                     { // then we can get rid of the opposite face altogether
-                        hedgeOpp = hedge.OppositeEdge.PreviousEdge.OppositeEdge;
+                        hedgeOpp = hedge.OppositeEdge!.PreviousEdge.OppositeEdge!;
 
                         oppFace.Mark = DELETED;
                         discardedFace = oppFace;
                     }
                     else
                     {
-                        hedgeOpp = hedge.OppositeEdge.NextEdge;
+                        hedgeOpp = hedge.OppositeEdge!.NextEdge;
 
                         if (oppFace.HalfEdge == hedgeOpp.PreviousEdge)
                         {
@@ -433,7 +433,7 @@ namespace OpenH2.Foundation._3D
                 }
                 do
                 {
-                    HalfEdge hedgeOpp = hedge.OppositeEdge;
+                    HalfEdge? hedgeOpp = hedge.OppositeEdge;
                     if (hedgeOpp == null)
                     {
                         throw new Exception(
@@ -456,7 +456,7 @@ namespace OpenH2.Foundation._3D
                        "half edge " + hedge.getVertexString() +
                        " reflected by " + hedgeOpp.getVertexString());
                     }
-                    Face oppFace = hedgeOpp.Face;
+                    Face? oppFace = hedgeOpp.Face;
                     if (oppFace == null)
                     {
                         throw new Exception(
@@ -487,15 +487,15 @@ namespace OpenH2.Foundation._3D
 
             }
 
-            public int MergeAdjacentFace(HalfEdge hedgeAdj, Face[] discarded)
+            public int MergeAdjacentFace(HalfEdge hedgeAdj, Face?[] discarded)
             {
-                Face oppFace = hedgeAdj.OppositeFace;
+                Face oppFace = hedgeAdj.OppositeFace!;
                 int numDiscarded = 0;
 
                 discarded[numDiscarded++] = oppFace;
                 oppFace.Mark = DELETED;
 
-                HalfEdge hedgeOpp = hedgeAdj.OppositeEdge;
+                HalfEdge hedgeOpp = hedgeAdj.OppositeEdge!;
 
                 HalfEdge hedgeAdjPrev = hedgeAdj.PreviousEdge;
                 HalfEdge hedgeAdjNext = hedgeAdj.NextEdge;
@@ -562,7 +562,7 @@ namespace OpenH2.Foundation._3D
                 Face? prevFace = null;
 
                 hedge = HalfEdge.NextEdge;
-                HalfEdge oppPrev = hedge.OppositeEdge!;
+                HalfEdge oppPrev = hedge.OppositeEdge ?? throw new InvalidOperationException("OppositeEdge is null");
                 Face? face0 = null;
 
                 for (hedge = hedge.NextEdge; hedge != HalfEdge.PreviousEdge; hedge = hedge.NextEdge)
@@ -570,7 +570,7 @@ namespace OpenH2.Foundation._3D
                     Face face =
                    CreateTriangle(v0, hedge.PreviousEdge.HeadVertex, hedge.HeadVertex, minArea);
                     face.HalfEdge.NextEdge.SetOpposite(oppPrev);
-                    face.HalfEdge.PreviousEdge.SetOpposite(hedge.OppositeEdge);
+                    face.HalfEdge.PreviousEdge.SetOpposite(hedge.OppositeEdge!);
                     oppPrev = face.HalfEdge;
                     newFaces.Add(face);
                     if (face0 == null)
@@ -1183,7 +1183,7 @@ namespace OpenH2.Foundation._3D
                 Face eyeFace = claimed.First()!.Face;
                 Vertex? eyeVtx = null;
                 double maxDist = 0;
-                for (Vertex vtx = eyeFace.Outside;
+                for (Vertex? vtx = eyeFace.Outside;
                      vtx != null && vtx.Face == eyeFace;
                      vtx = vtx.NextVertex)
                 {
@@ -1218,7 +1218,7 @@ namespace OpenH2.Foundation._3D
 
         private double OppFaceDistance(HalfEdge he)
         {
-            return he.Face.DistanceToPlane(he.OppositeEdge.Face.Centroid);
+            return he.Face.DistanceToPlane(he.OppositeEdge!.Face.Centroid);
         }
 
         private bool DoAdjacentMerge(Face face, int mergeType)
@@ -1228,10 +1228,10 @@ namespace OpenH2.Foundation._3D
             bool convex = true;
             do
             {
-                Face oppFace = hedge.OppositeFace;
+                Face oppFace = hedge.OppositeFace!;
                 bool merge = false;
                 var hedgeDistance = OppFaceDistance(hedge);
-                var oppositeHedgeDistance = OppFaceDistance(hedge.OppositeEdge);
+                var oppositeHedgeDistance = OppFaceDistance(hedge.OppositeEdge!);
 
                 if (mergeType == NONCONVEX)
                 {
@@ -1277,7 +1277,7 @@ namespace OpenH2.Foundation._3D
                     int numd = face.MergeAdjacentFace(hedge, discardedFaces);
                     for (int i = 0; i < numd; i++)
                     {
-                        DeleteFacePoints(discardedFaces[i], face);
+                        DeleteFacePoints(discardedFaces[i]!, face);
                     }
 
                     return true;
@@ -1312,7 +1312,7 @@ namespace OpenH2.Foundation._3D
 
             do
             {
-                Face oppFace = edge.OppositeFace;
+                Face oppFace = edge.OppositeFace!;
                 if (oppFace.Mark == Face.VISIBLE)
                 {
                     if (oppFace.DistanceToPlane(eyePnt) > Tolerance)
@@ -1331,8 +1331,8 @@ namespace OpenH2.Foundation._3D
 
         private HalfEdge AddAdjoiningFace(Vertex eyeVtx, HalfEdge he)
         {
-            var face = Face.CreateTriangle(eyeVtx, he.TailVertex, he.HeadVertex);
-            face.GetEdge(-1).SetOpposite(he.OppositeEdge);
+            var face = Face.CreateTriangle(eyeVtx, he.TailVertex!, he.HeadVertex);
+            face.GetEdge(-1).SetOpposite(he.OppositeEdge!);
 
             faces.Add(face);
             return face.GetEdge(0);
@@ -1361,7 +1361,7 @@ namespace OpenH2.Foundation._3D
                 this.newFaces.Add(hedgeSide.Face);
                 hedgeSidePrev = hedgeSide;
             }
-            hedgeSideBegin.NextEdge.SetOpposite(hedgeSidePrev);
+            hedgeSideBegin!.NextEdge.SetOpposite(hedgeSidePrev!);
         }
 
         private void AddPointToHull(Vertex eyeVtx)
@@ -1573,7 +1573,7 @@ namespace OpenH2.Foundation._3D
                 }
                 else
                 {
-                    tail.NextVertex = vtx;
+                    tail!.NextVertex = vtx;
                 }
                 vtx.PreviousVertex = tail;
                 vtx.NextVertex = null;
@@ -1591,7 +1591,7 @@ namespace OpenH2.Foundation._3D
                 }
                 else
                 {
-                    tail.NextVertex = vtx;
+                    tail!.NextVertex = vtx;
                 }
                 vtx.PreviousVertex = tail;
                 while (vtx.NextVertex != null)
@@ -1709,7 +1709,7 @@ namespace OpenH2.Foundation._3D
                 }
                 else
                 {
-                    tail.Next = vtx;
+                    tail!.Next = vtx;
                 }
                 vtx.Next = null;
                 tail = vtx;

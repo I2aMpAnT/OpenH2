@@ -106,6 +106,7 @@ namespace OpenH2.Core.Scripting.Execution
 
         private struct ExecutionState
         {
+            public ExecutionState() { }
             public int MethodId;
             public ScriptStatus Status;
             public int SleepTicksRemaining;
