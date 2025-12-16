@@ -180,11 +180,27 @@ namespace OpenH2.Core.Factories
                 return;
             }
 
+            Console.WriteLine($"[MapFactory] Loading metadata for map type: {map.GetType().Name}");
+            Console.WriteLine($"[MapFactory] Header.RawSecondaryOffset: {h2map.Header.RawSecondaryOffset} (0x{h2map.Header.RawSecondaryOffset:X8})");
+            Console.WriteLine($"[MapFactory] Header.IndexOffset: {h2map.Header.IndexOffset.Value} (0x{h2map.Header.IndexOffset.Value:X8})");
+
             h2map.Header.SecondaryOffset = h2map.PrimaryOffset(h2map.Header.RawSecondaryOffset);
+            Console.WriteLine($"[MapFactory] Header.SecondaryOffset.Value: {h2map.Header.SecondaryOffset.Value} (0x{h2map.Header.SecondaryOffset.Value:X8})");
+
             h2map.IndexHeader = DeserializeIndexHeader(h2map, reader);
+            Console.WriteLine($"[MapFactory] IndexHeader.Scenario: {h2map.IndexHeader.Scenario} (0x{h2map.IndexHeader.Scenario:X8})");
+            Console.WriteLine($"[MapFactory] IndexHeader.TagIndexCount: {h2map.IndexHeader.TagIndexCount}");
+
             h2map.PrimaryMagic = CalculatePrimaryMagic(h2map.IndexHeader);
+            Console.WriteLine($"[MapFactory] PrimaryMagic: {h2map.PrimaryMagic} (0x{h2map.PrimaryMagic:X8})");
+
             h2map.TagIndex = BuildTagIndex(h2map, reader, out var firstOffset);
+            Console.WriteLine($"[MapFactory] FirstTagOffset: {firstOffset} (0x{firstOffset:X8})");
+            Console.WriteLine($"[MapFactory] TagIndex count: {h2map.TagIndex.Count}");
+
             h2map.SecondaryMagic = CalculateSecondaryMagic(h2map.Header, firstOffset);
+            Console.WriteLine($"[MapFactory] SecondaryMagic: {h2map.SecondaryMagic} (0x{h2map.SecondaryMagic:X8})");
+
             h2map.LoadWellKnownTags();
         }
 
