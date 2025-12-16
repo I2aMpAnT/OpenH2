@@ -6,19 +6,19 @@ namespace OpenH2.Rendering.Vulkan.Internals
 {
     internal unsafe sealed class VkSwapchain : VkObject, IDisposable
     {
-        private VkDevice device;
-        private VkInstance instance;
-        private KhrSwapchain khrSwapchainExt;
+        private VkDevice device = null!;
+        private VkInstance instance = null!;
+        private KhrSwapchain khrSwapchainExt = null!;
 
 
         private SwapchainKHR swapchain;
         private uint imageCount;
-        private Image[] swapchainImages;
-        private ImageView[] swapchainImageviews;
-        private Framebuffer[] swapchainFramebuffers;
+        private Image[] swapchainImages = Array.Empty<Image>();
+        private ImageView[] swapchainImageviews = Array.Empty<ImageView>();
+        private Framebuffer[] swapchainFramebuffers = Array.Empty<Framebuffer>();
         private (Format format, Extent2D extent) swapchainParams;
-        private VkImage depthImage;
-        private VkImage colorImage;
+        private VkImage depthImage = null!;
+        private VkImage colorImage = null!;
         private readonly VulkanHost vulkanHost;
 
 

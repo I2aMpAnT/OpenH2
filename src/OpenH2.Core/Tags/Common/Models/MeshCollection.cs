@@ -1,4 +1,6 @@
-﻿namespace OpenH2.Core.Tags.Common.Models
+﻿using System;
+
+namespace OpenH2.Core.Tags.Common.Models
 {
     public class MeshCollection
     {
@@ -7,6 +9,6 @@
             this.Meshes = meshes;
         }
 
-        public ModelMesh[] Meshes { get; set; }
+        public ModelMesh[] Meshes { get; set; } = Array.Empty<ModelMesh>();
     }
 }

@@ -42,29 +42,29 @@ namespace OpenH2.Foundation
         public Vector4 DiffuseColor { get; set; }
         public Vector3 SpecularColor { get; set; }
 
-        public TTexture DiffuseMap { get; set; }
+        public TTexture DiffuseMap { get; set; } = default!;
 
-        public TTexture AlphaMap { get; set; }
+        public TTexture AlphaMap { get; set; } = default!;
         public bool AlphaFromRed { get; set; }
 
-        public TTexture AnimationMap { get; set; }
+        public TTexture AnimationMap { get; set; } = default!;
 
-        public TTexture EmissiveMap { get; set; }
+        public TTexture EmissiveMap { get; set; } = default!;
         public EmissiveType EmissiveType { get; set; }
         public Vector4 EmissiveArguments { get; set; }
 
-        public TTexture NormalMap { get; set; }
+        public TTexture NormalMap { get; set; } = default!;
         public Vector4 NormalMapScale { get; set; } = new Vector4(1, 1, 0, 0);
 
-        public TTexture DetailMap1 { get; set; }
+        public TTexture DetailMap1 { get; set; } = default!;
         public Vector4 Detail1Scale { get; set; } = new Vector4(1, 1, 0, 0);
 
-        public TTexture DetailMap2 { get; set; }
+        public TTexture DetailMap2 { get; set; } = default!;
         public Vector4 Detail2Scale { get; set; } = new Vector4(1, 1, 0, 0);
 
-        public TTexture ColorChangeMask { get; set; }
+        public TTexture ColorChangeMask { get; set; } = default!;
         public Vector4 ColorChangeColor { get; set; }
 
-        public TTexture SpecularMap { get; set; }
+        public TTexture SpecularMap { get; set; } = default!;
     }
 }

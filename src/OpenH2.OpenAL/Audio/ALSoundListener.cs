@@ -6,7 +6,7 @@ namespace OpenH2.OpenAL.Audio
 {
     public class ALSoundListener : ISoundListener
     {
-        private readonly AL al;
+        private readonly AL al = null!;
         private readonly Vector3 forward;
         private readonly Vector3 up;
 

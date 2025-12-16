@@ -1,4 +1,5 @@
 ﻿using OpenH2.Foundation.Physics;
+using System;
 
 namespace OpenH2.Physics.Colliders
 {
@@ -6,6 +7,6 @@ namespace OpenH2.Physics.Colliders
     {
         public int PhysicsMaterial => -1;
 
-        public TriangleMeshCollider[] MeshColliders { get; set; }
+        public TriangleMeshCollider[] MeshColliders { get; set; } = Array.Empty<TriangleMeshCollider>();
     }
 }

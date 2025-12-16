@@ -30,7 +30,7 @@ namespace OpenH2.ScriptAnalysis
                     //continue;
                 }
 
-                var factory = new MapFactory(Path.GetDirectoryName(map));
+                var factory = new MapFactory(Path.GetDirectoryName(map)!);
                 var h2map = factory.Load(Path.GetFileName(map));
 
                 if (h2map is not H2vMap scene)
@@ -77,21 +77,25 @@ namespace OpenH2.ScriptAnalysis
                 if (node.Original.NodeType == Core.Scripting.NodeType.Expression &&
                     node.Original.DataType == Core.Scripting.ScriptDataType.MethodOrOperator)
                 {
-                    MethodInfos.AddOrUpdate(node.Value as string, 
-                        k => (
-                            new HashSet<ushort>() { node.Original.OperationId },
-                            new HashSet<string>(node.Children.Select(c => c.DataType.ToString())),
-                            node.Children.Count), 
-                        (k, h) =>
+                    var methodName = node.Value as string;
+                    if (methodName != null)
                     {
-                        h.Item1.Add(node.Original.OperationId);
-                        foreach(var c in node.Children)
+                        MethodInfos.AddOrUpdate(methodName,
+                            k => (
+                                new HashSet<ushort>() { node.Original.OperationId },
+                                new HashSet<string>(node.Children.Select(c => c.DataType.ToString())),
+                                node.Children.Count),
+                            (k, h) =>
                         {
-                            h.Item2.Add(c.DataType.ToString());
-                        }
-                        h.Item3 = Math.Max(h.Item3, node.Children.Count);
-                        return h;
-                    });
+                            h.Item1.Add(node.Original.OperationId);
+                            foreach(var c in node.Children)
+                            {
+                                h.Item2.Add(c.DataType.ToString());
+                            }
+                            h.Item3 = Math.Max(h.Item3, node.Children.Count);
+                            return h;
+                        });
+                    }
                 }
 
                 foreach (var grandChild in node.Children)

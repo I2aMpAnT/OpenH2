@@ -23,22 +23,22 @@ namespace OpenH2.Rendering.Vulkan
     {
         const int MaxFramesInFlight = 2;
 
-        private VulkanHost vulkanHost;
-        private VkInstance instance;
-        private VkDevice device;
-        private VulkanTextureBinder textureBinder;
-        private VkSwapchain swapchain;
+        private VulkanHost vulkanHost = null!;
+        private VkInstance instance = null!;
+        private VkDevice device = null!;
+        private VulkanTextureBinder textureBinder = null!;
+        private VkSwapchain swapchain = null!;
 
-        private Internals.MainRenderPass renderpass;
-        private ShadowMapPass shadowpass;
-        private PipelineStore pipelineStore;
+        private Internals.MainRenderPass renderpass = null!;
+        private ShadowMapPass shadowpass = null!;
+        private PipelineStore pipelineStore = null!;
 
         private Dictionary<(Shader, MeshElementType, Material<BitmapTag>), DescriptorSet> descriptorSets = new();
         private Dictionary<IMaterial<BitmapTag>, MaterialBindings> boundMaterials = new();
         private Dictionary<IMaterial<BitmapTag>, int[]> materialUniforms = new ();
-        private TextureSet textures;
+        private TextureSet textures = null!;
 
-        private object currentPass = null;
+        private object? currentPass = null;
 
         private bool recreateSwapchain = false;
 
@@ -48,13 +48,13 @@ namespace OpenH2.Rendering.Vulkan
 
 
         // TODO: need multiple of these to support multiple in-flight frames
-        private VkBuffer<GlobalUniform> globalBuffer;
+        private VkBuffer<GlobalUniform> globalBuffer = null!;
 
         private VkBuffer[] shaderUniformBuffers = new VkBuffer[(int)Shader.MAX_VALUE];
         private int[] shaderUniformBufferOffsets = new int[(int)Shader.MAX_VALUE];
 
         private int nextTransformIndex = 0;
-        private VkBuffer<TransformUniform> transformBuffer;
+        private VkBuffer<TransformUniform> transformBuffer = null!;
         private CommandBuffer renderCommands;
         private Semaphore imageAvailableSemaphore;
         private Semaphore renderFinishedSemaphore;
@@ -184,7 +184,7 @@ namespace OpenH2.Rendering.Vulkan
             SUCCESS(vk.BeginCommandBuffer(renderCommands, in bufBegin), "Unable to begin writing to command buffer");
         }
 
-        GeneralGraphicsPipeline currentPipeline = null;
+        GeneralGraphicsPipeline? currentPipeline = null;
         ulong currentDescriptorSet = ulong.MaxValue;
         int currentModel = -1;
         ulong lastXformOffset = ulong.MaxValue;

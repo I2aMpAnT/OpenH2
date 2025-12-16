@@ -18,12 +18,12 @@ namespace OpenH2.Engine.Systems.Movement
         private float deltaGroundSpeed = 1.0f;
         private float jumpSpeed = 4.7f;
 
-        private ContactInfo GroundContact = null;
+        private ContactInfo? GroundContact = null;
 
         public ControllerState state { get; private set; } = ControllerState.Walking;
 
         // TODO: this is only present to access IPhysicsImplementation, if we can access it/be provided it, that would be better
-        public MoverComponent Mover { get; internal set; }
+        public MoverComponent Mover { get; internal set; } = null!;
 
         public DynamicMovementController()
         {

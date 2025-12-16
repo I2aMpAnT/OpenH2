@@ -13,10 +13,10 @@ namespace OpenH2.Core.Tags
         }
 
         [PrimitiveArray(108, 9)]
-        public float[] Params { get; set; }
+        public float[] Params { get; set; } = Array.Empty<float>();
 
         [ReferenceArray(148)]
-        public SoundReference[] SoundReferences { get; set; }
+        public SoundReference[] SoundReferences { get; set; } = Array.Empty<SoundReference>();
 
         [FixedLength(48)]
         public class SoundReference

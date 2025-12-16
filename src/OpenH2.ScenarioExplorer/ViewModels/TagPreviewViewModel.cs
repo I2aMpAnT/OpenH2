@@ -27,7 +27,7 @@ namespace OpenH2.ScenarioExplorer.ViewModels
             }
         }
 
-        public string SelectedPreviewItem { get; set; }
+        public string SelectedPreviewItem { get; set; } = string.Empty;
 
         public object SelectedPreviewItemObject => GetItem();
         public bool ItemIsBitmap => GetItem() is Bitmap;

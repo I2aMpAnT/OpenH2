@@ -10,13 +10,13 @@ namespace OpenH2.ScenarioExplorer.ViewModels
     {
         public ScenarioExplorerViewModel()
         {
-            
+
         }
 
-        public ScenarioViewModel LoadedScenario { get; set; }
+        public ScenarioViewModel LoadedScenario { get; set; } = null!;
 
-        private TagTreeEntryViewModel selectedEntry;
-        public TagTreeEntryViewModel SelectedEntry
+        private TagTreeEntryViewModel? selectedEntry;
+        public TagTreeEntryViewModel? SelectedEntry
         {
             get => selectedEntry;
             set 
@@ -58,8 +58,8 @@ namespace OpenH2.ScenarioExplorer.ViewModels
             }
         }
 
-        private TagViewModel _currentTag;
-        public TagViewModel CurrentTag
+        private TagViewModel? _currentTag;
+        public TagViewModel? CurrentTag
         {
             get => _currentTag;
             set
@@ -76,9 +76,9 @@ namespace OpenH2.ScenarioExplorer.ViewModels
             "D:\\H2vMaps\\ascension.map"
         };
 
-        public Control[] MenuItems { get; set; }
+        public Control[] MenuItems { get; set; } = Array.Empty<Control>();
 
-        public DataPreviewViewModel SelectedOffsetData { get; set; }
+        public DataPreviewViewModel? SelectedOffsetData { get; set; }
 
         public bool DisableHexViewer { get; set; }
 

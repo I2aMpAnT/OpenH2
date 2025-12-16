@@ -70,7 +70,7 @@ namespace OpenH2.Engine.Factories
         }
 
 
-        public static StaticGeometryComponent CreateStaticRigidBody(Entity parent, TransformComponent transform, IH2PlayableMap map, TagRef<HaloModelTag> hlmtRef, int damageLevel = 0)
+        public static StaticGeometryComponent? CreateStaticRigidBody(Entity parent, TransformComponent transform, IH2PlayableMap map, TagRef<HaloModelTag> hlmtRef, int damageLevel = 0)
         {
             if (map.TryGetTag(hlmtRef, out var hlmt) == false)
             {

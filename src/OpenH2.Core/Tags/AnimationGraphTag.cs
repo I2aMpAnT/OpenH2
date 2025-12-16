@@ -81,23 +81,23 @@ namespace OpenH2.Core.Tags
         public short AnimationCodecPack { get; set; }
 
         [ReferenceArray(12)]
-        public SkeletonNode[] Nodes { get; set; }
+        public SkeletonNode[] Nodes { get; set; } = Array.Empty<SkeletonNode>();
 
         [ReferenceArray(20)]
-        public AnimationSoundReference[] Sounds { get; set; }
+        public AnimationSoundReference[] Sounds { get; set; } = Array.Empty<AnimationSoundReference>();
 
         // 28 is effect refrences
 
         // 36 is blend screens
 
         [ReferenceArray(44)]
-        public Animation[] Animations { get; set; }
+        public Animation[] Animations { get; set; } = Array.Empty<Animation>();
 
         [ReferenceArray(52)]
-        public Obj1556[] Obj1556s { get; set; }
+        public Obj1556[] Obj1556s { get; set; } = Array.Empty<Obj1556>();
 
         [ReferenceArray(84)]
-        public Obj1656[] Obj1656s { get; set; }
+        public Obj1656[] Obj1656s { get; set; } = Array.Empty<Obj1656>();
 
         public override void PopulateExternalData(MapStream reader)
         {
@@ -148,7 +148,7 @@ namespace OpenH2.Core.Tags
         public class SkeletonNode
         {
             [InternedString(0)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Sibling { get; set; }
@@ -163,7 +163,7 @@ namespace OpenH2.Core.Tags
             public ushort Flags { get; set; }
 
             [PrimitiveArray(12, 5)]
-            public float[] Params { get; set; }
+            public float[] Params { get; set; } = Array.Empty<float>();
         }
 
         [FixedLength(12)]
@@ -197,7 +197,7 @@ namespace OpenH2.Core.Tags
             
 
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public int NodeListChecksum { get; set; }
@@ -254,7 +254,7 @@ namespace OpenH2.Core.Tags
             public ushort Zero { get; set; }
 
             [ReferenceArray(40)]
-            public byte[] Data { get; set; }
+            public byte[] Data { get; set; } = Array.Empty<byte>();
 
             [PrimitiveValue(48)]
             public byte SizeA { get; set; }
@@ -275,10 +275,10 @@ namespace OpenH2.Core.Tags
             public ushort FrameDataSize { get; set; }
 
             [ReferenceArray(64)]
-            public FrameEvent[] FrameEvents { get; set; }
+            public FrameEvent[] FrameEvents { get; set; } = Array.Empty<FrameEvent>();
 
             [ReferenceArray(72)]
-            public SoundEvent[] SoundEvents { get; set; }
+            public SoundEvent[] SoundEvents { get; set; } = Array.Empty<SoundEvent>();
 
             [FixedLength(4)]
             public class FrameEvent
@@ -300,7 +300,7 @@ namespace OpenH2.Core.Tags
                 public short Frame { get; set; }
 
                 [InternedString(4)]
-                public string MarkerName { get; set; }
+                public string MarkerName { get; set; } = string.Empty;
             }
         }
 
@@ -314,10 +314,10 @@ namespace OpenH2.Core.Tags
             public ushort IndexB { get; set; }
 
             [PrimitiveArray(4, 2)]
-            public uint[] Next { get; set; }
+            public uint[] Next { get; set; } = Array.Empty<uint>();
 
             [ReferenceArray(12)]
-            public Obj1556Val[] Value { get; set; }
+            public Obj1556Val[] Value { get; set; } = Array.Empty<Obj1556Val>();
         }
 
 

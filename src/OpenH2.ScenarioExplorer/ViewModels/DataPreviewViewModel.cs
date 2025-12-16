@@ -59,14 +59,14 @@ namespace OpenH2.ScenarioExplorer.ViewModels
         public float Float { get; set; }
 
         public Vector3 Vec3 { get; set; }
-        public ISolidColorBrush ColorBrush { get; private set; }
-        public string String { get; set; }
+        public ISolidColorBrush? ColorBrush { get; private set; }
+        public string String { get; set; } = string.Empty;
 
-        public string InternedString { get; set; }
-        public string TagName { get; set; }
+        public string? InternedString { get; set; }
+        public string? TagName { get; set; }
 
         public long InternalOffset { get; set; }
-        public string FileOffset { get; set; }
+        public string FileOffset { get; set; } = string.Empty;
 
         public long SelectedOffset { get; set; }
 

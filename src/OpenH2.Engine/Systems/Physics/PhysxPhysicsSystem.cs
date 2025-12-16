@@ -26,29 +26,29 @@ namespace OpenH2.Engine.Systems.Physics
 {
     public class PhysxPhysicsSystem : WorldSystem
     {
-        private PxFoundation physxFoundation;
-        private PxPhysics physxPhysics;
-        private PxScene physxScene;
+        private PxFoundation physxFoundation = null!;
+        private PxPhysics physxPhysics = null!;
+        private PxScene physxScene = null!;
         private PxTolerancesScale physxScale;
-        private ControllerManager controllerManager;
-        private Cooking cooker;
-        private Pvd pvd;
+        private ControllerManager controllerManager = null!;
+        private Cooking cooker = null!;
+        private Pvd? pvd;
 
-        private Material defaultMat;
-        private Material characterControlMat;
-        private Material frictionlessMat;
-        private MaterialListComponent materialList;
-        private Material[] globalMaterials;
+        private Material defaultMat = null!;
+        private Material characterControlMat = null!;
+        private Material frictionlessMat = null!;
+        private MaterialListComponent? materialList;
+        private Material[] globalMaterials = Array.Empty<Material>();
         private Dictionary<int, Material> adhocMaterials = new Dictionary<int, Material>();
 
         private Dictionary<MoverComponent, Controller> ControllerMap = new Dictionary<MoverComponent, Controller>();
         private PhysicsForceQueue queuedForces = new PhysicsForceQueue();
-        private IContactCreateProvider contactProvider;
+        private IContactCreateProvider contactProvider = null!;
 
-        private InputStore input;
+        private InputStore input = null!;
         public bool StepMode = false;
         public bool ShouldStep = false;
-        private SimulationCallback simCallback;
+        private SimulationCallback simCallback = null!;
 
         public PhysxPhysicsSystem(World world) : base(world)
         {

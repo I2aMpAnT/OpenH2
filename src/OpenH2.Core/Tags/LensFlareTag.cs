@@ -26,7 +26,7 @@ namespace OpenH2.Core.Tags
         public TagRef<BitmapTag> Bitmap { get; set; }
 
         [ReferenceArray(64)]
-        public ReflectionInfo[] Reflections { get; set; }
+        public ReflectionInfo[] Reflections { get; set; } = Array.Empty<ReflectionInfo>();
 
         [FixedLength(48)]
         public class ReflectionInfo

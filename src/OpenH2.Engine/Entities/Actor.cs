@@ -4,7 +4,7 @@ namespace OpenH2.Engine.Entities
 {
     public class Actor : GameObjectEntity, IAiActor
     {
-        public IGameObject Driver => null;
+        public IGameObject? Driver => null;
 
 
     }

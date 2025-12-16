@@ -85,7 +85,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class DeviceGroupDefinition : IGameObjectDefinition<IDeviceGroup>
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(32)]
             public float Value { get; set; }

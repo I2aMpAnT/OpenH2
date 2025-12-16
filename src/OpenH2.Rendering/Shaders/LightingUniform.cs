@@ -8,7 +8,7 @@ namespace OpenH2.Rendering.Shaders
     public struct LightingUniform
     {
         [FieldOffset(0)]
-        public PointLightUniform[] PointLights;
+        public PointLightUniform[] PointLights = Array.Empty<PointLightUniform>();
 
         public static readonly int Size = Marshal.SizeOf<LightingUniform>();
     }

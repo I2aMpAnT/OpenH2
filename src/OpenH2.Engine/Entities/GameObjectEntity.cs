@@ -9,9 +9,9 @@ namespace OpenH2.Engine.Entities
 {
     public abstract class GameObjectEntity : Entity, IGameObject
     {
-        public TransformComponent Transform { get; private set; }
-        public SoundEmitterComponent SoundEmitter { get; private set; }
-        public IPhysicsProxy Physics { get; protected set; }
+        public TransformComponent Transform { get; private set; } = null!;
+        public SoundEmitterComponent SoundEmitter { get; private set; } = null!;
+        public IPhysicsProxy Physics { get; protected set; } = NullPhysicsProxy.Instance;
 
         public Vector3 Position => Transform.Position;
         public Vector3 EyeOffset { get; internal set; } = Vector3.Zero;
@@ -20,15 +20,14 @@ namespace OpenH2.Engine.Entities
         public float Shield { get; set; }
         public float Health { get; set; }
 
-        public IGameObject Parent { get; }
+        public IGameObject? Parent { get; }
 
-        public IAiActorDefinition Ai { get; }
+        public IAiActorDefinition? Ai { get; }
 
         public bool IsAlive { get; }
 
         public GameObjectEntity()
         {
-            this.Components = new[] { SoundEmitter };
         }
 
         public void SetComponents(TransformComponent xform,

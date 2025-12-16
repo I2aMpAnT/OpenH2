@@ -16,16 +16,16 @@ namespace OpenH2.MccUtil
     public class PatchTagCommandLineArguments
     {
         [Option('p', "patch", Required = true, HelpText = "The tag patch to load")]
-        public string TagPatchPath { get; set; }
+        public string TagPatchPath { get; set; } = string.Empty;
 
         [Option('m', "map", HelpText = "The map to apply the patch to")]
-        public string MapPath { get; set; }
+        public string MapPath { get; set; } = string.Empty;
     }
 
 
     public class PatchTagTask
     {
-        private H2mccMap scene;
+        private H2mccMap scene = null!;
 
         public PatchTagCommandLineArguments Args { get; }
 
@@ -54,7 +54,7 @@ namespace OpenH2.MccUtil
 
             var tagPatcher = new TagPatcher(scene, inmemMap);
             var settings = new JsonSerializerOptions() { ReadCommentHandling = JsonCommentHandling.Skip };
-            var patches = JsonSerializer.Deserialize<TagPatch[]>(File.ReadAllText(this.Args.TagPatchPath), settings);
+            var patches = JsonSerializer.Deserialize<TagPatch[]>(File.ReadAllText(this.Args.TagPatchPath), settings) ?? Array.Empty<TagPatch>();
             foreach(var patch in patches)
                 tagPatcher.Apply(patch);
 

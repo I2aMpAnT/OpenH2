@@ -9,7 +9,7 @@ namespace OpenH2.Engine.Components
     public class RigidBodyComponent : Component, IRigidBody
     {
         public IPhysicsProxy PhysicsImplementation { get; set; } = NullPhysicsProxy.Instance;
-        public ICollider Collider { get; set; }
+        public ICollider Collider { get; set; } = null!;
         public ITransform Transform { get; }
 
         public bool IsDynamic { get; set; }

@@ -18,10 +18,10 @@ namespace OpenH2.Core.Tags
         public TagRef<RenderModelTag> Model { get; set; }
 
         [ReferenceArray(28)]
-        public Obj28[] Obj28s { get; set; }
+        public Obj28[] Obj28s { get; set; } = Array.Empty<Obj28>();
 
         [ReferenceArray(120)]
-        public Obj120[] Obj120s { get; set; }
+        public Obj120[] Obj120s { get; set; } = Array.Empty<Obj120>();
 
 
         [FixedLength(12)]
@@ -47,7 +47,7 @@ namespace OpenH2.Core.Tags
             public TagRef<LensFlareTag> LensFlare { get; set; }
 
             [ReferenceArray(44)]
-            public Obj120_44[] obj120_44s { get; set; }
+            public Obj120_44[] obj120_44s { get; set; } = Array.Empty<Obj120_44>();
         }
 
         [FixedLength(40)]

@@ -18,7 +18,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class StartingProfileDefinition : IGameObjectDefinition<IStartingProfile>
         {
             [StringValue(0, 40)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(44)]
             public TagRef<WeaponTag> PrimaryWeapon { get; set; }

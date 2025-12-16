@@ -12,16 +12,16 @@ namespace OpenH2.Core.Tags
         {
         }
 
-        [ReferenceArray(0)]  public Obj0[] Obj0s { get; set; }
-        [ReferenceArray(8)]  public Obj8[] Obj8s { get; set; }
-        [ReferenceArray(16)] public NameInfo[] NameInfos { get; set; }
-        [ReferenceArray(24)] public Obj24[] Obj24s { get; set; }
-        [ReferenceArray(32)] public SoundEntry[] SoundEntries { get; set; }
-        [ReferenceArray(40)] public NamedSoundSample[] NamedSoundClips { get; set; }
-        [ReferenceArray(56)] public byte[] ZeroPadding { get; set; }
-        [ReferenceArray(64)] public SoundDataChunk[] SoundDataChunks { get; set; }
-        [ReferenceArray(72)] public Obj72[] Obj72s { get; set; }
-        [ReferenceArray(80)] public DataInfo[] DataInfos { get; set; }
+        [ReferenceArray(0)]  public Obj0[] Obj0s { get; set; } = Array.Empty<Obj0>();
+        [ReferenceArray(8)]  public Obj8[] Obj8s { get; set; } = Array.Empty<Obj8>();
+        [ReferenceArray(16)] public NameInfo[] NameInfos { get; set; } = Array.Empty<NameInfo>();
+        [ReferenceArray(24)] public Obj24[] Obj24s { get; set; } = Array.Empty<Obj24>();
+        [ReferenceArray(32)] public SoundEntry[] SoundEntries { get; set; } = Array.Empty<SoundEntry>();
+        [ReferenceArray(40)] public NamedSoundSample[] NamedSoundClips { get; set; } = Array.Empty<NamedSoundSample>();
+        [ReferenceArray(56)] public byte[] ZeroPadding { get; set; } = Array.Empty<byte>();
+        [ReferenceArray(64)] public SoundDataChunk[] SoundDataChunks { get; set; } = Array.Empty<SoundDataChunk>();
+        [ReferenceArray(72)] public Obj72[] Obj72s { get; set; } = Array.Empty<Obj72>();
+        [ReferenceArray(80)] public DataInfo[] DataInfos { get; set; } = Array.Empty<DataInfo>();
 
         [FixedLength(56)]
         public class Obj0
@@ -77,7 +77,7 @@ namespace OpenH2.Core.Tags
         public class NameInfo
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
         }
 
         [FixedLength(10)]
@@ -169,8 +169,8 @@ namespace OpenH2.Core.Tags
         [FixedLength(28)]
         public class Obj72
         {
-            [ReferenceArray(0)] public Obj72_0[] Obj0s { get; set; }
-            [ReferenceArray(8)] public Obj72_8[] Obj8s { get; set; }
+            [ReferenceArray(0)] public Obj72_0[] Obj0s { get; set; } = Array.Empty<Obj72_0>();
+            [ReferenceArray(8)] public Obj72_8[] Obj8s { get; set; } = Array.Empty<Obj72_8>();
 
             [FixedLength(16)]
             public class Obj72_0
@@ -229,7 +229,7 @@ namespace OpenH2.Core.Tags
             public uint DataLengthMaybe { get; set; }
 
             [ReferenceArray(24)]
-            public SubResourceInfo[] SubResources { get; set; }
+            public SubResourceInfo[] SubResources { get; set; } = Array.Empty<SubResourceInfo>();
 
             [PrimitiveValue(32)]
             public TagRef UghRef { get; set; }

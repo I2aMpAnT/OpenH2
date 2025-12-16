@@ -7,7 +7,7 @@ namespace OpenH2.Rendering.OpenGL
 {
     public static class OpenGLShaderCompiler
     {
-        private static OpenGLHost host;
+        private static OpenGLHost host = null!;
         private static GL gl => host.gl;
 
         public static void UseHost(OpenGLHost host) { OpenGLShaderCompiler.host = host; }
@@ -15,9 +15,9 @@ namespace OpenH2.Rendering.OpenGL
         public static uint CreateShader(Shader shader)
         {
             var shaderName = shader.ToString();
-            string vertSrc = null;
-            string fragSrc = null;
-            string geomSrc = null;
+            string? vertSrc = null;
+            string? fragSrc = null;
+            string? geomSrc = null;
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), "Shaders", shaderName);
 

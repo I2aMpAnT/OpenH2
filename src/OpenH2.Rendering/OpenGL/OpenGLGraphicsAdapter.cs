@@ -33,7 +33,7 @@ namespace OpenH2.Rendering.OpenGL
         }
 
         private Dictionary<IMaterial<BitmapTag>, MaterialBindings> boundMaterials = new Dictionary<IMaterial<BitmapTag>, MaterialBindings>();
-        private ITextureBinder textureBinder;
+        private ITextureBinder textureBinder = null!;
 
         private Action?[] shaderBeginActions = new Action?[(int)Shader.MAX_VALUE];
         private Action?[] shaderEndActions = new Action?[(int)Shader.MAX_VALUE];

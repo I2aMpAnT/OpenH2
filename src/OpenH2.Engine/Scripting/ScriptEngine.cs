@@ -39,7 +39,7 @@
             this.rng = new Random(42);
         }
 
-        public T GetReference<T>(string reference)
+        public T? GetReference<T>(string reference)
         {
             return default(T);
         }
@@ -345,7 +345,7 @@
         }
 
         /// <summary>returns an item in an object list.</summary>
-        public IGameObject list_get(GameObjectList object_list, int index)
+        public IGameObject? list_get(GameObjectList object_list, int index)
         {
             if(object_list.Objects.Length > index)
                 return object_list.Objects[index];

@@ -6,8 +6,8 @@ namespace OpenH2.Engine.Components
     public class StaticGeometryComponent : Component
     {
         public TransformComponent Transform { get; }
-        public ICollider Collider { get; internal set; }
-        public object PhysicsActor { get; set; }
+        public ICollider Collider { get; internal set; } = null!;
+        public object? PhysicsActor { get; set; }
 
         public StaticGeometryComponent(Entity parent, TransformComponent xform) : base(parent)
         {

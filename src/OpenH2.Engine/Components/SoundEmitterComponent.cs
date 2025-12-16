@@ -5,7 +5,7 @@ namespace OpenH2.Engine.Components
 {
     public class SoundEmitterComponent : Component
     {
-        public ISoundEmitter Emitter { get; set; }
+        public ISoundEmitter? Emitter { get; set; }
         public TransformComponent Transform { get; }
 
         public SoundEmitterComponent(Entity parent, TransformComponent xform) : base(parent)

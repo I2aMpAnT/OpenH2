@@ -24,7 +24,7 @@ namespace OpenH2.MccBulkPatcher
         public string PatchFilter { get; set; } = "*";
 
         [Option("maps", HelpText = "Source of clean maps, will auto detect windows store MCC installation folder")]
-        public string RawMapsDirectory { get; set; } = null;
+        public string? RawMapsDirectory { get; set; }
 
         [Option("out", HelpText = "Destination of patched maps, will default to 'done' in current folder")]
         public string PatchedMapsDirectory { get; set; } = Path.Combine(Environment.CurrentDirectory, "done");
@@ -46,7 +46,7 @@ namespace OpenH2.MccBulkPatcher
                 Console.WriteLine("Please enter the path to your 'clean' maps");
                 Console.Write(">");
 
-                args.RawMapsDirectory = Console.ReadLine().Trim();
+                args.RawMapsDirectory = Console.ReadLine()?.Trim() ?? string.Empty;
             }
 
             var patches = FindDirectory(args.PatchesDirectory);
@@ -77,7 +77,7 @@ namespace OpenH2.MccBulkPatcher
 
                 H2mccCompression.Decompress(rawMap, patchedMap);
 
-                var factory = new MapFactory(Path.GetDirectoryName(rawMapPath));
+                var factory = new MapFactory(Path.GetDirectoryName(rawMapPath) ?? string.Empty);
                 var scene = factory.LoadSingleH2mccMap(patchedMap);
 
                 var tagPatches = Directory.GetFiles(patchDir, "*.tagpatch", SearchOption.AllDirectories);
@@ -89,7 +89,7 @@ namespace OpenH2.MccBulkPatcher
                     Console.WriteLine($"TagPatching '{scene.Header.Name}' with '{tagPatchPath.Substring(patchDir.Length)}'");
 
                     var settings = new JsonSerializerOptions() { ReadCommentHandling = JsonCommentHandling.Skip };
-                    var patches = JsonSerializer.Deserialize<TagPatch[]>(File.ReadAllText(tagPatchPath), settings);
+                    var patches = JsonSerializer.Deserialize<TagPatch[]>(File.ReadAllText(tagPatchPath), settings) ?? Array.Empty<TagPatch>();
                     foreach (var patch in patches)
                         tagPatcher.Apply(patch);
                 }

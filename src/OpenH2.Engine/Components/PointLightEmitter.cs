@@ -5,7 +5,7 @@ namespace OpenH2.Engine.Components
 {
     public class PointLightEmitterComponent : Component
     {
-        public PointLight Light { get; set; }
+        public PointLight Light { get; set; } = null!;
 
         public PointLightEmitterComponent(Entity parent) : base(parent)
         {

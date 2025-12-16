@@ -15,10 +15,10 @@ namespace OpenH2.Engine.Systems
         private readonly ActorSystem actorSystem;
         private readonly AnimationSystem animationSystem;
         private bool run = false;
-        private InterpretingScriptExecutor executor;
-        private ScriptEngine engine;
-        private Stopwatch stopwatch;
-        private InputStore inputStore;
+        private InterpretingScriptExecutor executor = null!;
+        private ScriptEngine engine = null!;
+        private Stopwatch stopwatch = null!;
+        private InputStore inputStore = null!;
 
         public ScriptSystem(World world, 
             AudioSystem audioSystem,

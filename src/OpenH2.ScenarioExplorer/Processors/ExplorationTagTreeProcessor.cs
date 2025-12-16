@@ -57,7 +57,7 @@ namespace OpenH2.ScenarioExplorer.Processors
                     continue;
                 }
 
-                string tagLabel = "";
+                string tagLabel = string.Empty;
 
                 if(childTag is UnknownTag uk)
                 {
@@ -67,7 +67,7 @@ namespace OpenH2.ScenarioExplorer.Processors
                 {
                     if(TagLabels.TryGetValue(childTag.GetType(), out tagLabel) == false)
                     {
-                        tagLabel = childTag.GetType().GetCustomAttribute<TagLabelAttribute>().Label.ToString();
+                        tagLabel = childTag.GetType().GetCustomAttribute<TagLabelAttribute>()?.Label.ToString() ?? string.Empty;
                         TagLabels.Add(childTag.GetType(), tagLabel);
                     }
                 }
@@ -114,7 +114,7 @@ namespace OpenH2.ScenarioExplorer.Processors
                 TagReferenceArrayPropertyCache.TryGetValue(currType, out var tagRefArrayProps);
                 TagReferenceObjectPropertyCache.TryGetValue(currType, out var tagRefObjectProps);
 
-                PropertyInfo[] allProperties = null;
+                PropertyInfo[]? allProperties = null;
                 if ((tagRefProps ?? tagRefArrayProps ?? tagRefObjectProps) == null)
                 {
                     allProperties = current.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);

@@ -13,9 +13,9 @@ namespace OpenH2.Foundation._3D
         {
             public Vector3 Point { get; set; }
             public int Index { get; set; }
-            public Face Face { get; set; }
-            public Vertex NextVertex { get; set; }
-            public Vertex PreviousVertex { get; set; }
+            public Face Face { get; set; } = null!;
+            public Vertex? NextVertex { get; set; }
+            public Vertex? PreviousVertex { get; set; }
         }
 
         private class HalfEdge
@@ -23,33 +23,33 @@ namespace OpenH2.Foundation._3D
             /// <summary>
             /// The vertex associated with the head of this half-edge.
             /// </summary>
-            public Vertex HeadVertex;
-            public Vertex TailVertex => PreviousEdge != null ? PreviousEdge.HeadVertex : null;
+            public Vertex HeadVertex = null!;
+            public Vertex? TailVertex => PreviousEdge != null ? PreviousEdge.HeadVertex : null;
 
             /// <summary>
             /// Triangular face associated with this half-edge.
             /// </summary>
-            public Face Face { get; set; }
+            public Face Face { get; set; } = null!;
 
             /// <summary>
             /// Returns the opposite triangular face associated with this half-edge.
             /// </summary>
-            public Face OppositeFace => OppositeEdge != null ? OppositeEdge.Face : null;
+            public Face? OppositeFace => OppositeEdge != null ? OppositeEdge.Face : null;
 
             /// <summary>
             /// Next half-edge in the triangle.
             /// </summary>
-            public HalfEdge NextEdge { get; set; }
+            public HalfEdge NextEdge { get; set; } = null!;
 
             /// <summary>
             /// Previous half-edge in the triangle.
             /// </summary>
-            public HalfEdge PreviousEdge { get; set; }
+            public HalfEdge PreviousEdge { get; set; } = null!;
 
             /// <summary>
             /// Half-edge associated with the opposite triangle adjacent to this edge.
             /// </summary>
-            public HalfEdge OppositeEdge { get; private set; }
+            public HalfEdge? OppositeEdge { get; private set; }
 
             /// <summary>
             /// Constructs a HalfEdge with head vertex <code>v</code> and
@@ -119,11 +119,11 @@ namespace OpenH2.Foundation._3D
             public Vector3 Normal { get; private set; }
             public int VertexCount { get; private set; }
             public Vector3 Centroid { get; private set; }
-            public HalfEdge HalfEdge { get; private set; }
+            public HalfEdge HalfEdge { get; private set; } = null!;
             public double Area { get; private set; }
-            public Face Next { get; set; }
+            public Face? Next { get; set; }
             public int Mark { get; set; } = VISIBLE;
-            public Vertex Outside { get; set; }
+            public Vertex? Outside { get; set; }
 
             public Face()
             {
@@ -152,7 +152,7 @@ namespace OpenH2.Foundation._3D
                     // make the normal more robust by removing
                     // components parallel to the longest edge
 
-                    HalfEdge hedgeMax = null;
+                    HalfEdge? hedgeMax = null;
                     double lenSqrMax = 0;
                     HalfEdge hedge = HalfEdge;
                     do
@@ -312,7 +312,7 @@ namespace OpenH2.Foundation._3D
              * @param vh head point
              * @return the half-edge, or null if none is found.
              */
-            public HalfEdge FindEdge(Vertex vt, Vertex vh)
+            public HalfEdge? FindEdge(Vertex vt, Vertex vh)
             {
                 HalfEdge he = HalfEdge;
                 do
@@ -341,7 +341,7 @@ namespace OpenH2.Foundation._3D
 
             public string GetVertexString()
             {
-                string s = null;
+                string? s = null;
                 HalfEdge he = HalfEdge;
                 do
                 {
@@ -371,14 +371,14 @@ namespace OpenH2.Foundation._3D
                 while (he != HalfEdge);
             }
 
-            private Face ConnectHalfEdges(HalfEdge hedgePrev, HalfEdge hedge)
+            private Face? ConnectHalfEdges(HalfEdge hedgePrev, HalfEdge hedge)
             {
-                Face discardedFace = null;
+                Face? discardedFace = null;
 
                 if (hedgePrev.OppositeFace == hedge.OppositeFace)
                 { // then there is a redundant edge that we can get rid off
 
-                    Face oppFace = hedge.OppositeFace;
+                    Face? oppFace = hedge.OppositeFace;
                     HalfEdge hedgeOpp;
 
                     if (hedgePrev == HalfEdge)
@@ -559,11 +559,11 @@ namespace OpenH2.Foundation._3D
                 }
 
                 Vertex v0 = HalfEdge.HeadVertex;
-                Face prevFace = null;
+                Face? prevFace = null;
 
                 hedge = HalfEdge.NextEdge;
-                HalfEdge oppPrev = hedge.OppositeEdge;
-                Face face0 = null;
+                HalfEdge oppPrev = hedge.OppositeEdge!;
+                Face? face0 = null;
 
                 for (hedge = hedge.NextEdge; hedge != HalfEdge.PreviousEdge; hedge = hedge.NextEdge)
                 {
@@ -619,9 +619,9 @@ namespace OpenH2.Foundation._3D
         private static ArrayPool<Vertex> pointPool = ArrayPool<Vertex>.Create();
         private static ArrayPool<int> indexPool = ArrayPool<int>.Create();
 
-        private Vertex[] pointBuffer;
-        private int[] vertexPointIndices;
-        private Face[] discardedFaces = new Face[3];
+        private Vertex[] pointBuffer = Array.Empty<Vertex>();
+        private int[] vertexPointIndices = Array.Empty<int>();
+        private Face?[] discardedFaces = new Face?[3];
         
 
         /// <summary>
@@ -951,7 +951,7 @@ namespace OpenH2.Foundation._3D
                 }
 
                 maxDist = Tolerance;
-                Face maxFace = null;
+                Face? maxFace = null;
 
                 for (int k = 0; k < 4; k++)
                 {
@@ -1059,13 +1059,13 @@ namespace OpenH2.Foundation._3D
 
         private void ResolveUnclaimedPoints(FaceList newFaces)
         {
-            Vertex vtxNext = unclaimed.First();
-            for (Vertex vtx = vtxNext; vtx != null; vtx = vtxNext)
+            Vertex? vtxNext = unclaimed.First();
+            for (Vertex? vtx = vtxNext; vtx != null; vtx = vtxNext)
             {
                 vtxNext = vtx.NextVertex;
 
                 double maxDist = Tolerance;
-                Face maxFace = null;
+                Face? maxFace = null;
                 for (Face newFace = newFaces.First(); newFace != null;
                      newFace = newFace.Next)
                 {
@@ -1090,9 +1090,9 @@ namespace OpenH2.Foundation._3D
             }
         }
 
-        private void DeleteFacePoints(Face face, Face absorbingFace)
+        private void DeleteFacePoints(Face face, Face? absorbingFace)
         {
-            Vertex faceVtxs = RemoveAllPointsFromFace(face);
+            Vertex? faceVtxs = RemoveAllPointsFromFace(face);
             if (faceVtxs != null)
             {
                 if (absorbingFace == null)
@@ -1101,8 +1101,8 @@ namespace OpenH2.Foundation._3D
                 }
                 else
                 {
-                    Vertex vtxNext = faceVtxs;
-                    for (Vertex vtx = vtxNext; vtx != null; vtx = vtxNext)
+                    Vertex? vtxNext = faceVtxs;
+                    for (Vertex? vtx = vtxNext; vtx != null; vtx = vtxNext)
                     {
                         vtxNext = vtx.NextVertex;
                         double dist = absorbingFace.DistanceToPlane(vtx.Point);
@@ -1151,11 +1151,11 @@ namespace OpenH2.Foundation._3D
             claimed.Delete(vtx);
         }
 
-        private Vertex RemoveAllPointsFromFace(Face face)
+        private Vertex? RemoveAllPointsFromFace(Face face)
         {
             if (face.Outside != null)
             {
-                Vertex end = face.Outside;
+                Vertex? end = face.Outside;
                 while (end.NextVertex != null && end.NextVertex.Face == face)
                 {
                     end = end.NextVertex;
@@ -1172,7 +1172,7 @@ namespace OpenH2.Foundation._3D
             }
         }
 
-        private Vertex NextPointToAdd()
+        private Vertex? NextPointToAdd()
         {
             if (claimed.isEmpty())
             {
@@ -1180,8 +1180,8 @@ namespace OpenH2.Foundation._3D
             }
             else
             {
-                Face eyeFace = claimed.First().Face;
-                Vertex eyeVtx = null;
+                Face eyeFace = claimed.First()!.Face;
+                Vertex? eyeVtx = null;
                 double maxDist = 0;
                 for (Vertex vtx = eyeFace.Outside;
                      vtx != null && vtx.Face == eyeFace;
@@ -1198,12 +1198,12 @@ namespace OpenH2.Foundation._3D
             }
         }
 
-        private HalfEdge FindHalfEdge(Vertex tail, Vertex head)
+        private HalfEdge? FindHalfEdge(Vertex tail, Vertex head)
         {
             // brute force ... OK, since setHull is not used much
             foreach (var face in faces)
             {
-                HalfEdge he = face.FindEdge(tail, head);
+                HalfEdge? he = face.FindEdge(tail, head);
                 if (he != null)
                 {
                     return he;
@@ -1294,7 +1294,7 @@ namespace OpenH2.Foundation._3D
             return false;
         }
 
-        private void CalculateHorizon(Vector3 eyePnt, HalfEdge edge0, Face face)
+        private void CalculateHorizon(Vector3 eyePnt, HalfEdge? edge0, Face face)
         {
             DeleteFacePoints(face, null);
             face.Mark = Face.DELETED;
@@ -1342,8 +1342,8 @@ namespace OpenH2.Foundation._3D
         {
             this.newFaces.Clear();
 
-            HalfEdge hedgeSidePrev = null;
-            HalfEdge hedgeSideBegin = null;
+            HalfEdge? hedgeSidePrev = null;
+            HalfEdge? hedgeSideBegin = null;
 
             foreach (var horizonHe in horizon)
             {
@@ -1404,7 +1404,7 @@ namespace OpenH2.Foundation._3D
 
         protected void BuildHull()
         {
-            Vertex eyeVtx;
+            Vertex? eyeVtx;
 
             ComputeMaxAndMin();
             CreateInitialSimplex();
@@ -1464,7 +1464,7 @@ namespace OpenH2.Foundation._3D
             }
         }
 
-        private bool CheckFaceConvexity(Face face, double tol, StringBuilder ps)
+        private bool CheckFaceConvexity(Face face, double tol, StringBuilder? ps)
         {
             double dist;
             HalfEdge he = face.HalfEdge;
@@ -1508,7 +1508,7 @@ namespace OpenH2.Foundation._3D
             return true;
         }
 
-        protected bool CheckFaces(double tol, StringBuilder ps)
+        protected bool CheckFaces(double tol, StringBuilder? ps)
         {
             // check edge convexity
             bool convex = true;
@@ -1536,8 +1536,8 @@ namespace OpenH2.Foundation._3D
                     indexPool?.Return(this.vertexPointIndices);
                 }
 
-                this.pointBuffer = null;
-                this.vertexPointIndices = null;
+                this.pointBuffer = null!;
+                this.vertexPointIndices = null!;
                 disposedValue = true;
             }
         }
@@ -1551,8 +1551,8 @@ namespace OpenH2.Foundation._3D
 
         private class VertexList
         {
-            private Vertex head;
-            private Vertex tail;
+            private Vertex? head;
+            private Vertex? tail;
 
             /**
              * Clears this list.
@@ -1669,7 +1669,7 @@ namespace OpenH2.Foundation._3D
             /// Returns the first element in this list.
             /// </summary>
             /// <returns></returns>
-            public Vertex First()
+            public Vertex? First()
             {
                 return head;
             }
@@ -1686,8 +1686,8 @@ namespace OpenH2.Foundation._3D
 
         private class FaceList
         {
-            private Face head;
-            private Face tail;
+            private Face? head;
+            private Face? tail;
 
             /// <summary>
             /// Clears this list.
@@ -1715,7 +1715,7 @@ namespace OpenH2.Foundation._3D
                 tail = vtx;
             }
 
-            public Face First()
+            public Face? First()
             {
                 return head;
             }

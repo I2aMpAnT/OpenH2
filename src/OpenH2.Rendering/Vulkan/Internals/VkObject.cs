@@ -7,7 +7,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
     public abstract class VkObject
     {
         public readonly Vk vk;
-        public readonly VulkanMemoryAllocator vma;
+        public readonly VulkanMemoryAllocator? vma;
 
         public VkObject(Vk vk, VulkanMemoryAllocator vma)
         {

@@ -21,7 +21,7 @@ namespace OpenH2.OpenAL.Audio
     public class ALSoundEmitter : ISoundEmitter, IDisposable
     {
         private readonly uint source;
-        private readonly AL al;
+        private readonly AL al = null!;
         private uint primarySamples;
         private int primarySampleRate;
         private uint primaryBuffer;

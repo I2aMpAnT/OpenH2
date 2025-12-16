@@ -14,6 +14,6 @@ namespace OpenH2.Rendering
     {
         public ModelFlags Flags;
         public Matrix4x4 Transform;
-        public DrawCommand[] DrawCommands;
+        public DrawCommand[] DrawCommands = Array.Empty<DrawCommand>();
     }
 }

@@ -7,7 +7,7 @@ namespace OpenH2.ScenarioExplorer.Preferences
 {
     public class PreferencesManager
     {
-        private string prefRoot;
+        private string prefRoot = null!;
 
         private string appPreferencesPath => Path.Combine(prefRoot, "app.prefs");
 

@@ -12,19 +12,19 @@ namespace OpenH2.Core.Tags
         }
 
         [ReferenceArray(192)]
-        public SoundInfo[] SoundInfos { get; set; }
+        public SoundInfo[] SoundInfos { get; set; } = Array.Empty<SoundInfo>();
 
         [ReferenceArray(336)]
-        public MaterialDefinition[] MaterialDefinitions { get; set; }
+        public MaterialDefinition[] MaterialDefinitions { get; set; } = Array.Empty<MaterialDefinition>();
 
         [FixedLength(180)]
         public class MaterialDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [InternedString(4)]
-            public string ParentName { get; set; }
+            public string ParentName { get; set; } = string.Empty;
 
             [PrimitiveValue(8)]
             public ushort Flags { get; set; }
@@ -33,10 +33,10 @@ namespace OpenH2.Core.Tags
             public ushort OldMaterialType { get; set; }
 
             [InternedString(16)]
-            public string GeneralArmor { get; set; }
+            public string GeneralArmor { get; set; } = string.Empty;
 
             [InternedString(20)]
-            public string SpecificArmor { get; set; }
+            public string SpecificArmor { get; set; } = string.Empty;
 
             [PrimitiveValue(28)]
             public float Friction { get; set; }

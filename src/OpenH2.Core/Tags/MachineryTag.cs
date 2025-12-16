@@ -34,7 +34,7 @@ namespace OpenH2.Core.Tags
         public uint FootId { get; set; }
 
         [ReferenceArray(148)]
-        public DeviceSound[] Sounds { get; set; }
+        public DeviceSound[] Sounds { get; set; } = Array.Empty<DeviceSound>();
 
         [PrimitiveValue(196)]
         public float ValueA { get; set; }
@@ -58,7 +58,7 @@ namespace OpenH2.Core.Tags
             public TagRef<LoopingSoundTag> Sound { get; set; }
 
             [InternedString(8)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
         }
     }
 }

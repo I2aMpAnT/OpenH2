@@ -9,12 +9,12 @@ namespace OpenH2.AvaloniaControls.HexViewerImpl
     {
         public int Start { get; set; }
         public int Length { get; set; }
-        public IBrush Brush { get; set; }
-        public IBrush ActiveBrush { get; set; }
+        public IBrush Brush { get; set; } = null!;
+        public IBrush ActiveBrush { get; set; } = null!;
 
-        public Action<HexViewerFeature> OnFocus { get; set; }
+        public Action<HexViewerFeature>? OnFocus { get; set; }
 
-        public HexViewerFeature(int start, int length, IBrush brush = null, IBrush activeBrush = null)
+        public HexViewerFeature(int start, int length, IBrush? brush = null, IBrush? activeBrush = null)
         {
             this.Start = start;
             this.Length = length;

@@ -13,14 +13,14 @@ namespace OpenH2.Core.Tags
         }
 
         [ReferenceArray(4)]
-        public ShaderReference[] Shaders { get; set; }
+        public ShaderReference[] Shaders { get; set; } = Array.Empty<ShaderReference>();
 
 
         [FixedLength(20)]
         public class ShaderReference
         {
             [ReferenceArray(4)]
-            public byte[] ShaderData { get; set; }
+            public byte[] ShaderData { get; set; } = Array.Empty<byte>();
         }
     }
 }

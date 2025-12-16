@@ -12,10 +12,10 @@ namespace OpenH2.MccUtil
     public class PatchScriptCommandLineArguments
     {
         [Option('s', "script", Required = true, HelpText = "The script patch to load")]
-        public string ScriptPatchPath { get; set; }
+        public string ScriptPatchPath { get; set; } = string.Empty;
 
         [Option('m', "map", HelpText = "The map to apply the patch to")]
-        public string MapPath { get; set; }
+        public string MapPath { get; set; } = string.Empty;
     }
 
 

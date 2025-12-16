@@ -6,8 +6,8 @@ namespace OpenH2.Engine.Systems
 {
     public class ActorSystem : WorldSystem
     {
-        private List<Player> players = new();
-        public Player[] Players { get; private set; }
+        private List<Player> players = new List<Player>();
+        public Player[] Players { get; private set; } = Array.Empty<Player>();
 
         public ActorSystem(World world) : base(world)
         {

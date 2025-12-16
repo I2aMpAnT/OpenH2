@@ -9,9 +9,9 @@ namespace OpenH2.Engine.Systems
 {
     public class BspSystem : WorldSystem
     {
-        private InputStore inputStore;
+        private InputStore inputStore = null!;
 
-        private Dictionary<int, List<Entity>> bspEntities = new();
+        private Dictionary<int, List<Entity>> bspEntities = new Dictionary<int, List<Entity>>();
 
         private BitArray loadedBsps = new BitArray(0);
         private BitArray bspsToLoad = new BitArray(0);

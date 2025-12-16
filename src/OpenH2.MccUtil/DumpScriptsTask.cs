@@ -19,7 +19,7 @@ namespace OpenH2.MccUtil
     public class DumpScriptsCommandLineArguments
     {
         [Option('d', "directory", Required = true, HelpText = "Working directory to search for files under")]
-        public string WorkingDirectory { get; set; }
+        public string WorkingDirectory { get; set; } = string.Empty;
 
         [Option('f', "filter", HelpText = "File glob, defaults to *")]
         public string FileFilter { get; set; } = "*";

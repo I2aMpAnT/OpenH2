@@ -13,7 +13,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class AiSquadGroupDefinition : IAiActorDefinition
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(32)]
             public ushort ParentGroupIndex { get; set; }
@@ -21,7 +21,7 @@ namespace OpenH2.Core.Tags.Scenario
             [PrimitiveValue(34)]
             public ushort Index2 { get; set; }
 
-            public IAiActor Actor { get; set; }
+            public IAiActor Actor { get; set; } = null!;
         }
 
         [FixedLength(116)]
@@ -29,7 +29,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class AiSquadDefinition : IAiActorDefinition
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(32)]
             public ushort ValueA { get; set; }
@@ -87,19 +87,19 @@ namespace OpenH2.Core.Tags.Scenario
             public ushort AiOrderIndex { get; set; }
 
             [InternedString(68)]
-            public string Variant { get; set; }
+            public string Variant { get; set; } = null!;
 
             [ReferenceArray(72)]
-            public StartingLocation[] StartingLocations { get; set; }
+            public StartingLocation[] StartingLocations { get; set; } = null!;
 
-            public IAiActor Actor { get; set; }
+            public IAiActor Actor { get; set; } = null!;
 
             [FixedLength(100)]
             [DebuggerDisplay("{Description}")]
             public class StartingLocation : IAiActorDefinition
             {
                 [InternedString(0)]
-                public string Description { get; set; }
+                public string Description { get; set; } = null!;
 
                 [PrimitiveValue(4)]
                 public Vector3 Position { get; set; }
@@ -149,7 +149,7 @@ namespace OpenH2.Core.Tags.Scenario
                 public ushort UnitCount { get; set; }
 
                 [InternedString(48)]
-                public string Variant { get; set; }
+                public string Variant { get; set; } = null!;
 
                 [PrimitiveValue(52)]
                 public ushort Index14 { get; set; }
@@ -167,14 +167,14 @@ namespace OpenH2.Core.Tags.Scenario
                 public ushort Zero7Sometimes { get; set; }
 
                 [StringValue(64, 32)]
-                public string StartupScript { get; set; }
+                public string StartupScript { get; set; } = null!;
 
                 [PrimitiveValue(96)]
                 public uint ScriptIndex { get; set; }
 
                 public int SquadIndex { get; set; }
 
-                public IAiActor Actor { get; set; }
+                public IAiActor Actor { get; set; } = null!;
             }
         }
 
@@ -183,7 +183,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class Obj360_String
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(32)]
             public uint ValueA { get; set; }
@@ -192,10 +192,10 @@ namespace OpenH2.Core.Tags.Scenario
             public uint ValueB { get; set; }
 
             [ReferenceArray(40)]
-            public Obj40[] Obj40s { get; set; }
+            public Obj40[] Obj40s { get; set; } = null!;
 
             [ReferenceArray(48)]
-            public Obj48[] Obj48s { get; set; }
+            public Obj48[] Obj48s { get; set; } = null!;
 
             [FixedLength(32)]
             public class Obj40
@@ -230,7 +230,7 @@ namespace OpenH2.Core.Tags.Scenario
             public class Obj48
             {
                 [StringValue(0, 32)]
-                public string Description { get; set; }
+                public string Description { get; set; } = null!;
 
                 [PrimitiveValue(36)]
                 public Vector3 Position { get; set; }
@@ -242,7 +242,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class ScriptVariableDefinition
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(32)]
             public ScriptDataType DataType { get; set; }
@@ -265,7 +265,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class ScriptMethodDefinition
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = null!;
 
             [PrimitiveValue(32)]
             public Lifecycle Lifecycle { get; set; }
