@@ -5,9 +5,9 @@ namespace OpenH2.Core.Maps.MCC
 {
     public class H2mccMap : H2BaseMap<H2mccMapHeader>
     {
-        public ScenarioTag Scenario { get; internal set; }
-        public SoundMappingTag LocalSounds { get; internal set; }
-        public GlobalsTag Globals { get; internal set; }
+        public ScenarioTag Scenario { get; internal set; } = null!;
+        public SoundMappingTag LocalSounds { get; internal set; } = null!;
+        public GlobalsTag Globals { get; internal set; } = null!;
 
         public override void LoadWellKnownTags()
         {

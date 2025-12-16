@@ -1,5 +1,6 @@
 ﻿using OpenBlam.Serialization.Layout;
 using OpenBlam.Serialization.Materialization;
+using System;
 using System.IO;
 
 namespace OpenH2.Core.Maps.MCC
@@ -8,7 +9,7 @@ namespace OpenH2.Core.Maps.MCC
     public class H2mccCompressionV13Sections
     {
         [PrimitiveArray(4096, 1024)]
-        public CompressionSection[] Sections { get; set; }
+        public CompressionSection[] Sections { get; set; } = Array.Empty<CompressionSection>();
 
         [FixedLength(8)]
         public struct CompressionSection

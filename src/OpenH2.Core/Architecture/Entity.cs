@@ -37,7 +37,7 @@ namespace OpenH2.Core.Architecture
             return this.Components;
         }
 
-        public bool TryGetChild<T>(out T component) where T : Component
+        public bool TryGetChild<T>(out T? component) where T : Component
         {
             component = null;
 

@@ -341,11 +341,11 @@ namespace OpenH2.Foundation._3D
 
             public string GetVertexString()
             {
-                string? s = null;
+                string s = string.Empty;
                 HalfEdge he = HalfEdge;
                 do
                 {
-                    if (s == null)
+                    if (s == string.Empty)
                     {
                         s = "" + he.HeadVertex.Index;
                     }
@@ -1482,13 +1482,13 @@ namespace OpenH2.Foundation._3D
                     }
                     return false;
                 }
-                dist = OppFaceDistance(he.OppositeEdge);
+                dist = OppFaceDistance(he.OppositeEdge!);
                 if (dist > tol)
                 {
                     if (ps != null)
                     {
                         ps.AppendLine("Opposite edge " +
-                                    he.OppositeEdge.getVertexString() +
+                                    he.OppositeEdge!.getVertexString() +
                                     " non-convex by " + dist);
                     }
                     return false;
