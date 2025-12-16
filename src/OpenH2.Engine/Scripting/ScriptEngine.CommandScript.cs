@@ -116,7 +116,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>Actor faces exactly the point for the remainder of the cs, or until overridden (overrides aim, look)</summary>
-        public void cs_face(bool boolean, ISpatialPoint point = null)
+        public void cs_face(bool boolean, ISpatialPoint? point = null)
         {
         }
 
@@ -221,7 +221,7 @@ namespace OpenH2.Engine.Scripting
         }
 
         /// <summary>Actor looks at the point for the remainder of the cs, or until overridden</summary>
-        public void cs_look(bool boolean, ISpatialPoint point = null)
+        public void cs_look(bool boolean, ISpatialPoint? point = null)
         {
         }
 

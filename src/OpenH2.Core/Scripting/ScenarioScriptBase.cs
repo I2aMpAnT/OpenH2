@@ -143,9 +143,9 @@ namespace OpenH2.Core.Scripting
 
         public void ai_vehicle_enter(IAiActorDefinition ai, string unit) => Engine.ai_vehicle_enter(ai, unit);
 
-        public void ai_vehicle_enter(IAiActorDefinition ai, IUnit unit, string unit_seat_mapping = null) => Engine.ai_vehicle_enter(ai, unit, unit_seat_mapping);
+        public void ai_vehicle_enter(IAiActorDefinition ai, IUnit unit, string? unit_seat_mapping = null) => Engine.ai_vehicle_enter(ai, unit, unit_seat_mapping);
 
-        public void ai_vehicle_enter_immediate(IAiActorDefinition ai, IUnit unit, string seat = null) => Engine.ai_vehicle_enter_immediate(ai, unit, seat);
+        public void ai_vehicle_enter_immediate(IAiActorDefinition ai, IUnit unit, string? seat = null) => Engine.ai_vehicle_enter_immediate(ai, unit, seat);
 
         public void ai_vehicle_exit(IAiActorDefinition ai) => Engine.ai_vehicle_exit(ai);
 
@@ -271,7 +271,7 @@ namespace OpenH2.Core.Scripting
 
         public void cs_enable_targeting(bool boolean) => Engine.cs_enable_targeting(boolean);
 
-        public void cs_face(bool boolean, ISpatialPoint point = null) => Engine.cs_face(boolean, point);
+        public void cs_face(bool boolean, ISpatialPoint? point = null) => Engine.cs_face(boolean, point);
 
         public void cs_face_object(bool boolean, IGameObject entity) => Engine.cs_face_object(boolean, entity);
 
@@ -311,7 +311,7 @@ namespace OpenH2.Core.Scripting
 
         public void cs_jump_to_point(float real, float real1) => Engine.cs_jump_to_point(real, real1);
 
-        public void cs_look(bool boolean, ISpatialPoint point = null) => Engine.cs_look(boolean, point);
+        public void cs_look(bool boolean, ISpatialPoint? point = null) => Engine.cs_look(boolean, point);
 
         public void cs_look_object(bool boolean, IGameObject entity) => Engine.cs_look_object(boolean, entity);
 
@@ -707,9 +707,9 @@ namespace OpenH2.Core.Scripting
 
         public Task sleep(int ticks) => Engine.sleep(ticks);
 
-        public Task sleep(short ticks, IScriptMethodReference script = null) => Engine.sleep(ticks, script);
+        public Task sleep(short ticks, IScriptMethodReference? script = null) => Engine.sleep(ticks, script);
 
-        public void sleep_forever(IScriptMethodReference script = null) => Engine.sleep_forever(script);
+        public void sleep_forever(IScriptMethodReference? script = null) => Engine.sleep_forever(script);
 
         public Task sleep_until(Func<Task<bool>> condition, int ticks = 60, int timeout = -1) => Engine.sleep_until(condition, ticks, timeout);
 

@@ -21,7 +21,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             this.vma = device.vma;
         }
 
-        protected static void SUCCESS(Result result, string description = null)
+        protected static void SUCCESS(Result result, string? description = null)
         {
             if (result != Result.Success)
             {
@@ -29,7 +29,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             }
         }
 
-        protected static void SUCCESS(bool result, string description = null)
+        protected static void SUCCESS(bool result, string? description = null)
         {
             if (!result)
             {

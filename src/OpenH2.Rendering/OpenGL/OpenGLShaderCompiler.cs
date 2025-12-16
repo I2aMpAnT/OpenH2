@@ -41,7 +41,7 @@ namespace OpenH2.Rendering.OpenGL
             return 0;
         }
 
-        public static uint CreateShader(string shaderName, string vertexSource, string fragmentSource, string geomSource = null)
+        public static uint CreateShader(string shaderName, string vertexSource, string fragmentSource, string? geomSource = null)
         {
             var vertexShader = 0u;
             var fragmentShader = 0u;

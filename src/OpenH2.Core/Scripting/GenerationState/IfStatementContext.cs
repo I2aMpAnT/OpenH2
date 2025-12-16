@@ -19,9 +19,9 @@ namespace OpenH2.Core.Scripting.GenerationState
 
         public override bool CreatesScope => true;
 
-        private IdentifierNameSyntax resultVariable;
+        private IdentifierNameSyntax resultVariable = null!;
 
-        private ExpressionSyntax condition = null;
+        private ExpressionSyntax? condition = null;
 
         private bool doneWithTrueBlock = false;
 
