@@ -527,7 +527,7 @@ namespace OpenH2.Foundation._3D
                 }
 
                 // handle the half edges at the head
-                Face discardedFace;
+                Face? discardedFace;
 
                 discardedFace = ConnectHalfEdges(hedgeOppPrev, hedgeAdjNext);
                 if (discardedFace != null)
@@ -589,7 +589,7 @@ namespace OpenH2.Foundation._3D
                 ComputeNormalAndCentroid(minArea);
                 CheckConsistency();
 
-                for (Face face = face0; face != null; face = face.Next)
+                for (Face? face = face0; face != null; face = face.Next)
                 {
                     face.CheckConsistency();
                 }
@@ -712,7 +712,7 @@ namespace OpenH2.Foundation._3D
                 }
             }
 
-            for (Face face = newFaces.First(); face != null; face = face.Next)
+            for (Face? face = newFaces.First(); face != null; face = face.Next)
             {
                 faces.Add(face);
             }
@@ -1065,7 +1065,7 @@ namespace OpenH2.Foundation._3D
 
                 double maxDist = Tolerance;
                 Face? maxFace = null;
-                for (Face newFace = newFaces.First(); newFace != null;
+                for (Face? newFace = newFaces.First(); newFace != null;
                      newFace = newFace.Next)
                 {
                     if (newFace.Mark == Face.VISIBLE)
@@ -1375,18 +1375,18 @@ namespace OpenH2.Foundation._3D
             // first merge pass ... merge faces which are non-convex
             // as determined by the larger face
 
-            for (Face face = newFaces.First(); face != null; face = face.Next)
+            for (Face? face = newFaces.First(); face != null; face = face.Next)
             {
                 if (face.Mark == Face.VISIBLE)
                 {
                     while (DoAdjacentMerge(face, NONCONVEX_WRT_LARGER_FACE))
-                    { 
+                    {
                     }
                 }
             }
             // second merge pass ... merge faces which are non-convex
-            // wrt either face      
-            for (Face face = newFaces.First(); face != null; face = face.Next)
+            // wrt either face
+            for (Face? face = newFaces.First(); face != null; face = face.Next)
             {
                 if (face.Mark == Face.NON_CONVEX)
                 {
