@@ -13,7 +13,11 @@ namespace OpenH2.Rendering
 
     public struct DrawGroup
     {
-        public DrawGroup() { }
+        public DrawGroup()
+        {
+            Flags = default;
+            Transform = default;
+        }
         public ModelFlags Flags;
         public Matrix4x4 Transform;
         public DrawCommand[] DrawCommands = Array.Empty<DrawCommand>();

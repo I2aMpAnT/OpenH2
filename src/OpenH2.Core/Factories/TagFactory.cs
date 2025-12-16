@@ -76,7 +76,7 @@ namespace OpenH2.Core.Factories
                         Label = t.GetCustomAttribute<TagLabelAttribute>()?.Label,
                         Type = t
                     })
-                    .Where(e => e != null && Enum.IsDefined(typeof(TagName), e.Label.Value))
+                    .Where(e => e != null && e.Label.HasValue && Enum.IsDefined(typeof(TagName), e.Label.Value))
                     .ToDictionary(e => e.Label.Value, e => e.Type);
             }
 
