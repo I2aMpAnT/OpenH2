@@ -7,7 +7,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.weap)]
     public class WeaponTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public WeaponTag(uint id) : base(id)
         {
         }
@@ -16,10 +16,10 @@ namespace OpenH2.Core.Tags
         public TagRef<HaloModelTag> Hlmt { get; set; }
 
         [PrimitiveArray(108, 9)]
-        public float[] RotationMatrix { get; set; }
+        public float[] RotationMatrix { get; set; } = Array.Empty<float>();
 
         [ReferenceArray(260)]
-        public BitmapWrapper[] Bitmaps { get; set; }
+        public BitmapWrapper[] Bitmaps { get; set; } = Array.Empty<BitmapWrapper>();
 
         [PrimitiveValue(300)]
         public WeaponFlags Flags { get; set; }
@@ -32,13 +32,13 @@ namespace OpenH2.Core.Tags
         public float AutoAimAmount { get; set; }
 
         [InternedString(648)]
-        public string WeaponClass { get; set; }
+        public string WeaponClass { get; set; } = string.Empty;
 
         [InternedString(652)]
-        public string WeaponName { get; set; }
+        public string WeaponName { get; set; } = string.Empty;
 
         [ReferenceArray(680)]
-        public FirstPersonAnimation[] FirstPersonAnimations { get; set; }
+        public FirstPersonAnimation[] FirstPersonAnimations { get; set; } = Array.Empty<FirstPersonAnimation>();
 
         [FixedLength(8)]
         public class BitmapWrapper

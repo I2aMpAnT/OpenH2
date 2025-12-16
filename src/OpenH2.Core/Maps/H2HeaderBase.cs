@@ -6,7 +6,7 @@ namespace OpenH2.Core.Maps
     public class H2HeaderBase
     {
         [StringValue(0, 4)]
-        public string FileHead { get; set; }
+        public string FileHead { get; set; } = null!;
 
         [PrimitiveValue(4)]
         public int Version { get; set; }

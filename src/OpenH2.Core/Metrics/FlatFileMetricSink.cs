@@ -9,8 +9,8 @@ namespace OpenH2.Core.Metrics
         private CancellationTokenSource cts = new();
         private ConcurrentQueue<string> messages = new();
         private Thread? worker = null;
-        private FileStream outFile;
-        private TextWriter outWriter;
+        private FileStream outFile = null!;
+        private TextWriter outWriter = null!;
 
         public FlatFileMetricSink(string path)
         {

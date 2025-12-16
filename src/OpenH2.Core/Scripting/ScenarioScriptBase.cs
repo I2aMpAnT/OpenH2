@@ -10,21 +10,21 @@ namespace OpenH2.Core.Scripting
 {
     public abstract class ScenarioScriptBase : IScriptEngine
     {
-        public ScenarioTag Scenario { get; protected set; }
+        public ScenarioTag Scenario { get; protected set; } = null!;
 
         public short TicksPerSecond => Engine.TicksPerSecond;
 
-        protected IScriptEngine Engine;
-        public ITeam player;
-        public ITeam human;
-        public ITeam prophet;
-        public ITeam covenant;
-        public ITeam sentinel;
-        public ITeam heretic;
+        protected IScriptEngine Engine = null!;
+        public ITeam player = null!;
+        public ITeam human = null!;
+        public ITeam prophet = null!;
+        public ITeam covenant = null!;
+        public ITeam sentinel = null!;
+        public ITeam heretic = null!;
         public short cinematic_letterbox_style;
-        public IAiActorDefinition ai_current_actor;
-        public IAiActorDefinition ai_current_squad;
-        public IAIBehavior guard;
+        public IAiActorDefinition ai_current_actor = null!;
+        public IAiActorDefinition ai_current_squad = null!;
+        public IAIBehavior guard = null!;
         public short ai_combat_status_active;
         public short ai_combat_status_alert;
         public short ai_combat_status_idle;
@@ -37,9 +37,9 @@ namespace OpenH2.Core.Scripting
         public short ai_movement_combat;
         public short ai_movement_patrol;
         public short ai_movement_flee;
-        public IDamageState destroyed;
-        public INavigationPoint _default;
-        public INavigationPoint default_red;
+        public IDamageState destroyed = null!;
+        public INavigationPoint _default = null!;
+        public INavigationPoint default_red = null!;
 
         public abstract void InitializeData(ScenarioTag scenario, Scene scene);
 

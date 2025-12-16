@@ -6,7 +6,7 @@ namespace OpenH2.Core.Patching
 {
     public class TagPatch
     {
-        public string TagName { get; set; }
+        public string TagName { get; set; } = string.Empty;
 
         public TagPropertyPatch[] PropertyPatches { get; set; } = Array.Empty<TagPropertyPatch>();
         public TagBinaryPatch[] BinaryPatches { get; set; } = Array.Empty<TagBinaryPatch>();
@@ -14,7 +14,7 @@ namespace OpenH2.Core.Patching
 
     public class TagPropertyPatch
     {
-        public string PropertySelector { get; set; }
+        public string PropertySelector { get; set; } = string.Empty;
 
         public JsonElement Value { get; set; }
     }
@@ -30,7 +30,7 @@ namespace OpenH2.Core.Patching
         /// The data to replace with
         /// </summary>
         [JsonConverter(typeof(HexBytesConverter))]
-        public byte[] Data { get; set; }
+        public byte[] Data { get; set; } = null!;
 
         private class HexBytesConverter : JsonConverter<byte[]>
         {

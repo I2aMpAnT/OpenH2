@@ -7,7 +7,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.spas)]
     public class ShaderPassTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public ShaderPassTag(uint id) : base(id)
         {
         }

@@ -6,7 +6,7 @@ namespace OpenH2.Core.Scripting
 {
     public static class ScriptOps
     {
-        private static string[] opToName;
+        private static string[] opToName = Array.Empty<string>();
 
         static ScriptOps()
         {

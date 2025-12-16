@@ -6,7 +6,7 @@ namespace OpenH2.Core.Maps
     [DebuggerDisplay("{Tag}")]
     public class TagListEntry
     {
-        public TagListEntry Parent { get; set; }
+        public TagListEntry? Parent { get; set; }
 
         public HashSet<TagListEntry> Children = new HashSet<TagListEntry>();
 

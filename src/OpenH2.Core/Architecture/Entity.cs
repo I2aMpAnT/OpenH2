@@ -8,7 +8,7 @@ namespace OpenH2.Core.Architecture
     {
         public Guid Id { get; private set; }
         public string? FriendlyName { get; set; }
-        protected Component[] Components;
+        protected Component[] Components = Array.Empty<Component>();
 
         public Entity()
         {

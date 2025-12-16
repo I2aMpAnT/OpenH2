@@ -17,7 +17,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.bitm)]
     public class BitmapTag : BaseTag, IEquatable<BitmapTag>
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public BitmapTag(uint id) : base(id)
         {
@@ -39,16 +39,16 @@ namespace OpenH2.Core.Tags
         public short MipMapCount { get; set; }
 
         [ReferenceArray(60)]
-        public AtlasInfo[] AtlasInfos { get; set; }
+        public AtlasInfo[] AtlasInfos { get; set; } = Array.Empty<AtlasInfo>();
 
         [ReferenceArray(68)]
-        public TextureInfo[] TextureInfos { get; set; }
+        public TextureInfo[] TextureInfos { get; set; } = Array.Empty<TextureInfo>();
 
         [FixedLength(60)]
         public class AtlasInfo
         {
             [ReferenceArray(52)]
-            public SubImageInfo[] SubImages { get; set; }
+            public SubImageInfo[] SubImages { get; set; } = Array.Empty<SubImageInfo>();
 
             [FixedLength(32)]
             public class SubImageInfo
@@ -83,7 +83,7 @@ namespace OpenH2.Core.Tags
         public class TextureInfo
         {
             [StringValue(0, 4)]
-            public string Tag { get; set; }
+            public string Tag { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public short Width { get; set; }
@@ -116,12 +116,12 @@ namespace OpenH2.Core.Tags
             public short PixelOffset { get; set; }
 
             [PrimitiveArray(28, 6)]
-            public uint[] LodOffsets { get; set; }
+            public uint[] LodOffsets { get; set; } = Array.Empty<uint>();
 
             [PrimitiveArray(52, 6)]
-            public uint[] LodSizes { get; set; }
+            public uint[] LodSizes { get; set; } = Array.Empty<uint>();
 
-            public BitmapLevelOfDetail[] LevelsOfDetail { get; set; }
+            public BitmapLevelOfDetail[] LevelsOfDetail { get; set; } = Array.Empty<BitmapLevelOfDetail>();
 
             [PrimitiveValue(76)]
             public uint ID { get; set; }

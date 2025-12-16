@@ -8,17 +8,17 @@ namespace OpenH2.Core.Tags
     [ArbitraryLength]
     public abstract class BaseTag
     {
-        public virtual string Name { get; set; }
+        public virtual string? Name { get; set; }
 
         public uint Id { get; private set; }
 
         public uint Offset { get; set; }
-        
+
         public uint Length { get; set; }
 
-        public TagIndexEntry TagIndexEntry { get; set; }
+        public TagIndexEntry TagIndexEntry { get; set; } = null!;
 
-        public DataFile DataFile { get; set; }
+        public DataFile DataFile { get; set; } = null!
 
         public int InternalSecondaryMagic { get; set; }
 

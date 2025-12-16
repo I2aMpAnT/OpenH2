@@ -7,7 +7,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.eqip)]
     public class EquipmentTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public EquipmentTag(uint id) : base(id)
         {
         }

@@ -64,7 +64,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.phmo)]
     public class PhysicsModelTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public PhysicsModelTag(uint id) : base(id)
         {
@@ -74,72 +74,72 @@ namespace OpenH2.Core.Tags
         public Vector3 Params { get; set; }
 
         [ReferenceArray(40)]
-        public Phantom[] Phantoms { get; set; }
+        public Phantom[] Phantoms { get; set; } = Array.Empty<Phantom>();
 
         [ReferenceArray(48)]
-        public NodeEdge[] NodeEdges { get; set; }
+        public NodeEdge[] NodeEdges { get; set; } = Array.Empty<NodeEdge>();
 
         [ReferenceArray(56)]
-        public RigidBody[] RigidBodies { get; set; }
+        public RigidBody[] RigidBodies { get; set; } = Array.Empty<RigidBody>();
 
         [ReferenceArray(64)]
-        public MaterialReference[] MaterialReferences { get; set; }
+        public MaterialReference[] MaterialReferences { get; set; } = Array.Empty<MaterialReference>();
 
         [ReferenceArray(72)]
-        public SphereDefinition[] Spheres { get; set; }
+        public SphereDefinition[] Spheres { get; set; } = Array.Empty<SphereDefinition>();
 
         // unused
         [ReferenceArray(80)]
-        public MultiSphereDefinition[] MultiSpheres { get; set; }
+        public MultiSphereDefinition[] MultiSpheres { get; set; } = Array.Empty<MultiSphereDefinition>();
 
         [ReferenceArray(88)]
-        public CapsuleDefinition[] CapsuleDefinitions { get; set; }
+        public CapsuleDefinition[] CapsuleDefinitions { get; set; } = Array.Empty<CapsuleDefinition>();
 
         [ReferenceArray(96)]
-        public BoxDefinition[] BoxDefinitions { get; set; }
+        public BoxDefinition[] BoxDefinitions { get; set; } = Array.Empty<BoxDefinition>();
 
         // unused
         [ReferenceArray(104)]
-        public TriangleDefinition[] TriangleDefinitions { get; set; }
+        public TriangleDefinition[] TriangleDefinitions { get; set; } = Array.Empty<TriangleDefinition>();
 
         [ReferenceArray(112)]
-        public PolyhedraDefinition[] PolyhedraDefinitions { get; set; }
+        public PolyhedraDefinition[] PolyhedraDefinitions { get; set; } = Array.Empty<PolyhedraDefinition>();
 
         [ReferenceArray(120)]
-        public TetrahedralHull[] PolyhedraAlternativeDefinitions { get; set; }
+        public TetrahedralHull[] PolyhedraAlternativeDefinitions { get; set; } = Array.Empty<TetrahedralHull>();
 
         [ReferenceArray(128)]
-        public PolyhedronPlane[] PolyhedronPlanes { get; set; }
+        public PolyhedronPlane[] PolyhedronPlanes { get; set; } = Array.Empty<PolyhedronPlane>();
 
         // unused? baked away?
         [ReferenceArray(136)]
-        public MassDistributionBlock[] MassDistributionBlocks { get; set; }
+        public MassDistributionBlock[] MassDistributionBlocks { get; set; } = Array.Empty<MassDistributionBlock>();
 
         [ReferenceArray(144)]
-        public List[] Lists { get; set; }
+        public List[] Lists { get; set; } = Array.Empty<List>();
 
         [ReferenceArray(152)]
-        public ListShape[] ListShapes { get; set; }
+        public ListShape[] ListShapes { get; set; } = Array.Empty<ListShape>();
 
         // mopps @160
 
         [ReferenceArray(168)]
-        public byte[] MoppCodes { get; set; }
+        public byte[] MoppCodes { get; set; } = Array.Empty<byte>();
 
         [ReferenceArray(176)]
-        public HingeConstraint[] HingeContraints { get; set; }
+        public HingeConstraint[] HingeContraints { get; set; } = Array.Empty<HingeConstraint>();
 
         [ReferenceArray(184)]
-        public RagdollConstraint[] RagdollConstraints { get; set; }
+        public RagdollConstraint[] RagdollConstraints { get; set; } = Array.Empty<RagdollConstraint>();
 
         [ReferenceArray(192)]
-        public Region[] Regions { get; set; }
+        public Region[] Regions { get; set; } = Array.Empty<Region>();
 
         [ReferenceArray(200)]
-        public Node[] Nodes { get; set; }
+        public Node[] Nodes { get; set; } = Array.Empty<Node>();
 
         [ReferenceArray(232)]
-        public LimitedHingeConstraint[] LimitedHingeConstraints { get; set; }
+        public LimitedHingeConstraint[] LimitedHingeConstraints { get; set; } = Array.Empty<LimitedHingeConstraint>();
 
         // ball and socket constraints @240
 
@@ -177,7 +177,7 @@ namespace OpenH2.Core.Tags
             public ushort Flags { get; set; }
 
             [InternedString(8)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(32)]
             public float ValueC { get; set; }
@@ -215,13 +215,13 @@ namespace OpenH2.Core.Tags
             public ushort ValD { get; set; }
 
             [ReferenceArray(8)]
-            public Obj48_8[] Obj8s { get; set; }
+            public Obj48_8[] Obj8s { get; set; } = Array.Empty<Obj48_8>();
 
             [InternedString(16)]
-            public string MaterialNameA { get; set; }
+            public string MaterialNameA { get; set; } = string.Empty;
 
             [InternedString(20)]
-            public string MaterialNameB { get; set; }
+            public string MaterialNameB { get; set; } = string.Empty;
 
             [FixedLength(12)]
             public class Obj48_8
@@ -326,10 +326,10 @@ namespace OpenH2.Core.Tags
         public class MaterialReference
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [InternedString(4)]
-            public string GlobalMaterialName { get; set; }
+            public string GlobalMaterialName { get; set; } = string.Empty;
 
             [PrimitiveValue(8)]
             public ushort PhantomIndex { get; set; }
@@ -342,7 +342,7 @@ namespace OpenH2.Core.Tags
         public class SphereDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Material { get; set; }
@@ -395,7 +395,7 @@ namespace OpenH2.Core.Tags
         public class MultiSphereDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Material { get; set; }
@@ -432,7 +432,7 @@ namespace OpenH2.Core.Tags
 
 
             [PrimitiveArray(36, 24)]
-            public float[] Spheres { get; set; }
+            public float[] Spheres { get; set; } = Array.Empty<float>();
         }
 
 
@@ -440,7 +440,7 @@ namespace OpenH2.Core.Tags
         public class CapsuleDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; } 
+            public string Name { get; set; } = string.Empty; 
 
             [PrimitiveValue(4)]
             public ushort Material { get; set; }
@@ -490,7 +490,7 @@ namespace OpenH2.Core.Tags
         public class BoxDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Material { get; set; }
@@ -538,7 +538,7 @@ namespace OpenH2.Core.Tags
         public class TriangleDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Material { get; set; }
@@ -581,7 +581,7 @@ namespace OpenH2.Core.Tags
         public class PolyhedraDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Material { get; set; }
@@ -635,7 +635,7 @@ namespace OpenH2.Core.Tags
             public short HullFlags { get; set; }
 
             [PrimitiveArray(96, 3)]
-            public TetrahedralHull[] InlineHulls { get; set; }
+            public TetrahedralHull[] InlineHulls { get; set; } = Array.Empty<TetrahedralHull>();
 
             // must be prepopulated by consumer
             public int ExternalHullsOffset { get; set; }
@@ -697,7 +697,7 @@ namespace OpenH2.Core.Tags
             public int Capacity { get; set; }
 
             [PrimitiveArray(24, 16)]
-            public ushort[] InlineShapes { get; set; }
+            public ushort[] InlineShapes { get; set; } = Array.Empty<ushort>();
 
             public int ExternalShapesOffset { get; set; }
         }
@@ -723,34 +723,34 @@ namespace OpenH2.Core.Tags
         public class HingeConstraint
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
         }
 
         [FixedLength(148)]
         public class RagdollConstraint
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
         }
 
         [FixedLength(12)]
         public class Region
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [ReferenceArray(4)]
-            public Permutation[] Permutations { get; set; }
+            public Permutation[] Permutations { get; set; } = Array.Empty<Permutation>();
 
 
             [FixedLength(12)]
             public class Permutation
             {
                 [InternedString(0)]
-                public string Name { get; set; }
+                public string Name { get; set; } = string.Empty;
 
                 [ReferenceArray(4)]
-                public RigidBodyRef[] RigidBodies { get; set; }
+                public RigidBodyRef[] RigidBodies { get; set; } = Array.Empty<RigidBodyRef>();
 
 
                 [FixedLength(4)]
@@ -769,7 +769,7 @@ namespace OpenH2.Core.Tags
         public class Node
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort Flags { get; set; }
@@ -788,7 +788,7 @@ namespace OpenH2.Core.Tags
         public class LimitedHingeConstraint
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort NodeA { get; set; }
@@ -797,7 +797,7 @@ namespace OpenH2.Core.Tags
             public ushort NodeB { get; set; }
 
             [PrimitiveArray(8, 26)]
-            public float[] FloatsA { get; set; }
+            public float[] FloatsA { get; set; } = Array.Empty<float>();
 
 
             [PrimitiveValue(120)]

@@ -2,7 +2,7 @@
 {
     public abstract class RenderSystem
     {
-        protected World world;
+        protected World world = null!;
 
         public RenderSystem(World world)
         {

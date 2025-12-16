@@ -13,7 +13,7 @@ namespace OpenH2.Core.Maps.Xbox
     public class H2xMapHeader : IH2MapHeader
     {
         [StringValue(0, 4)]
-        public string FileHead { get; set; }
+        public string FileHead { get; set; } = null!;
 
         [PrimitiveValue(4)]
         public int Version { get; set; }
@@ -40,10 +40,10 @@ namespace OpenH2.Core.Maps.Xbox
         public int CombinedSize { get; set; }
 
         [StringValue(32, 32)]
-        public string MapOrigin { get; set; }
+        public string MapOrigin { get; set; } = null!;
 
         [StringValue(288, 32)]
-        public string Build { get; set; }
+        public string Build { get; set; } = null!;
 
         // 0x154 - sizeOfCrazy
         [PrimitiveValue(340)]
@@ -75,11 +75,11 @@ namespace OpenH2.Core.Maps.Xbox
 
         // 0x198 - mapName (36 chars)
         [StringValue(408, 36)]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         // 0x1BC - scenarioPath (64 chars for Xbox)
         [StringValue(444, 64)]
-        public string ScenarioPath { get; set; }
+        public string ScenarioPath { get; set; } = null!;
 
         // 0x2C0 - fileCount
         [PrimitiveValue(704)]
@@ -106,6 +106,6 @@ namespace OpenH2.Core.Maps.Xbox
         public TagRef<SoundMappingTag> LocalSounds { get; set; } = new TagRef<SoundMappingTag>(uint.MaxValue);
 
         [StringValue(2044, 4)]
-        public string Footer { get; set; }
+        public string Footer { get; set; } = null!;
     }
 }

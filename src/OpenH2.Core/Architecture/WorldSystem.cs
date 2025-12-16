@@ -2,7 +2,7 @@
 {
     public abstract class WorldSystem
     {
-        protected World world;
+        protected World world = null!;
 
         public WorldSystem(World world)
         {

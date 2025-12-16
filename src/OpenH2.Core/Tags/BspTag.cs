@@ -18,9 +18,9 @@ namespace OpenH2.Core.Tags
     public partial class BspTag : BaseTag
     {
         [JsonIgnore]
-        public byte[] RawMeta { get; set; }
+        public byte[] RawMeta { get; set; } = Array.Empty<byte>();
 
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public BspTag(uint id) : base(id)
         {
@@ -30,10 +30,10 @@ namespace OpenH2.Core.Tags
         public int Checksum { get; set; }
 
         [ReferenceArray(12)]
-        public CollisionMaterial[] PhysicsMaterials { get; set; }
+        public CollisionMaterial[] PhysicsMaterials { get; set; } = Array.Empty<CollisionMaterial>();
 
         [ReferenceArray(20)]
-        public CollisionInfo[] CollisionInfos { get; set; }
+        public CollisionInfo[] CollisionInfos { get; set; } = Array.Empty<CollisionInfo>();
 
 
         [PrimitiveValue(52)]
@@ -59,10 +59,10 @@ namespace OpenH2.Core.Tags
         //public object[] MiscObject1Cao { get; set; }
 
         [ReferenceArray(84)]
-        public ClusterPortal[] ClusterPortals { get; set; }
+        public ClusterPortal[] ClusterPortals { get; set; } = Array.Empty<ClusterPortal>();
 
-        [ReferenceArray(92)] 
-        public FogPlane[] FogPlanes { get; set; }
+        [ReferenceArray(92)]
+        public FogPlane[] FogPlanes { get; set; } = Array.Empty<FogPlane>();
 
         //[InternalReferenceValue(100)]
         //public Obj100[] Obj100s { get; set; } 
@@ -71,10 +71,10 @@ namespace OpenH2.Core.Tags
         //public object[] MiscObject5Cao { get; set; } 
 
         [ReferenceArray(156)]
-        public Cluster[] Clusters { get; set; }
+        public Cluster[] Clusters { get; set; } = Array.Empty<Cluster>();
 
         [ReferenceArray(164)]
-        public ModelShaderReference[] ModelShaderReferences { get; set; }
+        public ModelShaderReference[] ModelShaderReferences { get; set; } = Array.Empty<ModelShaderReference>();
 
         //[InternalReferenceValue(172)]
         //public object[] MiscObject8Cao { get; set; } 
@@ -86,7 +86,7 @@ namespace OpenH2.Core.Tags
         //public object[] MiscObject10Cao { get; set; }
 
         [ReferenceArray(244)]
-        public DecalInstance[] DecalInstances { get; set; }
+        public DecalInstance[] DecalInstances { get; set; } = Array.Empty<DecalInstance>();
 
 
         //[InternalReferenceValue(252)]
@@ -96,10 +96,10 @@ namespace OpenH2.Core.Tags
         //public object[] MiscObject12Cao { get; set; }
 
         [ReferenceArray(312)]
-        public InstancedGeometryDefinition[] InstancedGeometryDefinitions { get; set; }
+        public InstancedGeometryDefinition[] InstancedGeometryDefinitions { get; set; } = Array.Empty<InstancedGeometryDefinition>();
 
-        [ReferenceArray(320)] 
-        public InstancedGeometryInstance[] InstancedGeometryInstances { get; set; }
+        [ReferenceArray(320)]
+        public InstancedGeometryInstance[] InstancedGeometryInstances { get; set; } = Array.Empty<InstancedGeometryInstance>();
 
         //[InternalReferenceValue(328)]
         //public object[] MiscObject15Cao { get; set; }
@@ -108,7 +108,7 @@ namespace OpenH2.Core.Tags
         //public object[] MiscObject16Cao { get; set; }
 
         [ReferenceArray(344)]
-        public Obj344[] Obj344s { get; set; }
+        public Obj344[] Obj344s { get; set; } = Array.Empty<Obj344>();
 
         //[InternalReferenceValue(464)]
         //public object[] MiscObject18Cao { get; set; }
@@ -116,8 +116,8 @@ namespace OpenH2.Core.Tags
         //[InternalReferenceValue(480)]
         //public object[] MiscObject19Cao { get; set; }
 
-        [ReferenceArray(524)] 
-        public Obj524[] Obj524s { get; set; }
+        [ReferenceArray(524)]
+        public Obj524[] Obj524s { get; set; } = Array.Empty<Obj524>();
 
 
         //[InternalReferenceValue(540)]
@@ -215,28 +215,28 @@ namespace OpenH2.Core.Tags
         public class CollisionInfo : ICollisionInfo
         {
             [ReferenceArray(0)]
-            public Node3D[] Node3Ds { get; set; }
+            public Node3D[] Node3Ds { get; set; } = Array.Empty<Node3D>();
 
             [ReferenceArray(8)]
-            public Common.Collision.Plane[] Planes { get; set; }
+            public Common.Collision.Plane[] Planes { get; set; } = Array.Empty<Common.Collision.Plane>();
 
             [ReferenceArray(16)]
-            public RawObject3[] RawObject3s { get; set; }
+            public RawObject3[] RawObject3s { get; set; } = Array.Empty<RawObject3>();
 
             //[ReferenceArray(24)]
-            public RawObject4[] RawObject4s { get; set; }
+            public RawObject4[] RawObject4s { get; set; } = Array.Empty<RawObject4>();
 
             [ReferenceArray(32)]
-            public Node2D[] Node2Ds { get; set; }
+            public Node2D[] Node2Ds { get; set; } = Array.Empty<Node2D>();
 
             [ReferenceArray(40)]
-            public Face[] Faces { get; set; }
+            public Face[] Faces { get; set; } = Array.Empty<Face>();
 
             [ReferenceArray(48)]
-            public HalfEdgeContainer[] HalfEdges { get; set; }
+            public HalfEdgeContainer[] HalfEdges { get; set; } = Array.Empty<HalfEdgeContainer>();
 
             [ReferenceArray(56)]
-            public Vertex[] Vertices { get; set; }
+            public Vertex[] Vertices { get; set; } = Array.Empty<Vertex>();
 
             [PrimitiveValue(64)]
             public int Unknown { get; set; }
@@ -346,11 +346,11 @@ namespace OpenH2.Core.Tags
             public uint ResourceSubsectionSize { get; set; }
 
             [ReferenceArray(56)]
-            public ModelResource[] Resources { get; set; }
+            public ModelResource[] Resources { get; set; } = Array.Empty<ModelResource>();
 
-            public ModelResourceBlockHeader Header { get; set; }
+            public ModelResourceBlockHeader Header { get; set; } = null!;
 
-            public MeshCollection Model { get; set; }
+            public MeshCollection Model { get; set; } = null!;
         }
 
         [FixedLength(16)] 
@@ -385,7 +385,7 @@ namespace OpenH2.Core.Tags
             public GeometryCompressionFlags CompressionFlags { get; set; }
 
             [ReferenceArray(24)]
-            public CompressionInfo[] CompressionInfos { get; set; }
+            public CompressionInfo[] CompressionInfos { get; set; } = Array.Empty<CompressionInfo>();
 
             [PrimitiveValue(40)]
             public uint DataBlockRawOffset { get; set; }
@@ -399,41 +399,41 @@ namespace OpenH2.Core.Tags
             [PrimitiveValue(52)]
             public uint DataBodySize { get; set; }
 
-            public ModelResourceBlockHeader Header { get; set; }
+            public ModelResourceBlockHeader Header { get; set; } = null!;
 
             [ReferenceArray(56)]
-            public ModelResource[] Resources { get; set; }
-            public MeshCollection Model { get; set; }
+            public ModelResource[] Resources { get; set; } = Array.Empty<ModelResource>();
+            public MeshCollection Model { get; set; } = null!;
 
             [ReferenceArray(112)]
-            public Node3D[] Node3Ds { get; set; }
+            public Node3D[] Node3Ds { get; set; } = Array.Empty<Node3D>();
 
             [ReferenceArray(120)]
-            public Common.Collision.Plane[] Planes { get; set; }
+            public Common.Collision.Plane[] Planes { get; set; } = Array.Empty<Common.Collision.Plane>();
 
             [ReferenceArray(128)]
-            public RawObject3[] RawObject3s { get; set; }
+            public RawObject3[] RawObject3s { get; set; } = Array.Empty<RawObject3>();
 
             //[ReferenceArray(136)]
-            public RawObject4[] RawObject4s { get; set; }
+            public RawObject4[] RawObject4s { get; set; } = Array.Empty<RawObject4>();
 
             [ReferenceArray(144)]
-            public Node2D[] Node2Ds { get; set; }
+            public Node2D[] Node2Ds { get; set; } = Array.Empty<Node2D>();
 
             [ReferenceArray(152)]
-            public Face[] Faces { get; set; }
+            public Face[] Faces { get; set; } = Array.Empty<Face>();
 
             [ReferenceArray(160)]
-            public HalfEdgeContainer[] HalfEdges { get; set; }
+            public HalfEdgeContainer[] HalfEdges { get; set; } = Array.Empty<HalfEdgeContainer>();
 
             [ReferenceArray(168)]
-            public Vertex[] Vertices { get; set; }
+            public Vertex[] Vertices { get; set; } = Array.Empty<Vertex>();
 
             [FixedLength(56)]
             public class CompressionInfo
             {
                 [PrimitiveArray(0, 10)]
-                public float[] Floats { get; set; }
+                public float[] Floats { get; set; } = Array.Empty<float>();
             }
 
             // Likely the Havok collision info
@@ -461,7 +461,7 @@ namespace OpenH2.Core.Tags
             public float Scale { get; set; }
 
             [PrimitiveArray(4, 9)]
-            public float[] RotationMatrix { get; set; }
+            public float[] RotationMatrix { get; set; } = Array.Empty<float>();
 
             [PrimitiveValue(40)]
             public Vector3 Position { get; set; }
@@ -483,11 +483,11 @@ namespace OpenH2.Core.Tags
             public ushort Unknown { get; set; }
 
             [PrimitiveArray(4, 4)]
-            public float[] Values { get; set; }
+            public float[] Values { get; set; } = Array.Empty<float>();
         }
 
-        [FixedLength(32)] 
-        public class Obj524 
+        [FixedLength(32)]
+        public class Obj524
         {
             [PrimitiveValue(0)]
             public ushort Max { get; set; }
@@ -502,7 +502,7 @@ namespace OpenH2.Core.Tags
             public ushort Zero { get; set; }
 
             [PrimitiveArray(8,6)]
-            public float[] Values{ get; set; }
+            public float[] Values{ get; set; } = Array.Empty<float>();
         }
 
         

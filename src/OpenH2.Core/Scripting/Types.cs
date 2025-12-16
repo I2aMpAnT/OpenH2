@@ -26,7 +26,7 @@
         public ScriptMethodReference(ScriptMethod method)
         {
             var attr = method.Method.GetCustomAttribute<ScriptMethodAttribute>();
-            this.id = attr.Id;
+            this.id = attr?.Id ?? 0;
         }
     }
 
@@ -144,7 +144,7 @@
             this.reference = item;
         }
 
-        private IGameObjectDefinition<IGameObject> reference;
+        private IGameObjectDefinition<IGameObject> reference = null!;
         public int Identifier { get; }
         public TItem? Entity => reference.GameObject == null 
             ? default(TItem)

@@ -12,81 +12,81 @@ namespace OpenH2.Core.Tags.Scenario
     [TagLabel(TagName.scnr)]
     public partial class ScenarioTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
         public ScenarioTag(uint id) : base(id)
         {
         }
 
-        
-        
-        [ReferenceArray(296)] public Obj296[] Obj296s { get; set; }
-        [ReferenceArray(360)] public Obj360_String[] Obj360s_Locations { get; set; }
-        [ReferenceArray(368)] public Obj368[] Obj368s { get; set; }
-        [ReferenceArray(560)] public Obj560[] Obj560s { get; set; }        
-        [ReferenceArray(656)] public Obj656[] Obj656s { get; set; }
-        [ReferenceArray(792)] public Obj792[] Obj792s { get; set; }
-        [ReferenceArray(896)] public Obj896[] Obj896s { get; set; }
-        
-        [ReferenceArray(8)] public SkyboxInstance[] SkyboxInstances { get; set; }
-        [ReferenceArray(72)] public EntityReference[] WellKnownItems { get; set; }
-        [ReferenceArray(80)] public SceneryInstance[] SceneryInstances { get; set; }
-        [ReferenceArray(88)] public SceneryDefinition[] SceneryDefinitions { get; set; }
-        [ReferenceArray(96)] public BipedInstance[] BipedInstances { get; set; }
-        [ReferenceArray(104)] public BipedDefinition[] BipedDefinitions { get; set; }
-        [ReferenceArray(112)] public VehicleInstance[] VehicleInstances { get; set; }
-        [ReferenceArray(120)] public VehicleDefinition[] VehicleDefinitions { get; set; }
-        [ReferenceArray(128)] public EquipmentPlacement[] EquipmentPlacements { get; set; }
-        [ReferenceArray(136)] public EquipmentDefinition[] EquipmentDefinitions { get; set; }
-        [ReferenceArray(144)] public WeaponPlacement[] WeaponPlacements { get; set; }
-        [ReferenceArray(152)] public WeaponDefinition[] WeaponDefinitions { get; set; }
-        [ReferenceArray(160)] public DeviceGroupDefinition[] DeviceGroupDefinitions { get; set; }
-        [ReferenceArray(168)] public MachineryInstance[] MachineryInstances { get; set; }
-        [ReferenceArray(176)] public MachineryDefinition[] MachineryDefinitions { get; set; }
-        [ReferenceArray(184)] public ControllerInstance[] ControllerInstances { get; set; }
-        [ReferenceArray(192)] public ControllerDefinition[] ControllerDefinitions { get; set; }
-        [ReferenceArray(216)] public SoundSceneryInstance[] SoundSceneryInstances { get; set; }
-        [ReferenceArray(224)] public SoundSceneryDefinition[] SoundSceneryDefinitions { get; set; }
-        [ReferenceArray(232)] public LightInstance[] LightInstances { get; set; }
-        [ReferenceArray(240)] public LightDefinition[] LightDefinitions { get; set; }
-        [ReferenceArray(248)] public StartingProfileDefinition[] StartingProfileDefinitions { get; set; }
-        [ReferenceArray(256)] public PlayerSpawnMarker[] PlayerSpawnMarkers { get; set; }
-        [ReferenceArray(264)] public TriggerVolume[] TriggerVolumes { get; set; }
-        [ReferenceArray(280)] public GameModeMarker[] GameModeMarkers { get; set; }
-        [ReferenceArray(288)] public ItemCollectionPlacement[] ItemCollectionPlacements { get; set; }
-        [ReferenceArray(304)] public BspTransitionTrigger[] BspTransitions { get; set; }
-        [ReferenceArray(312)] public DecalInstance[] DecalInstances { get; set; }
-        [ReferenceArray(320)] public DecalDefinition[] DecalDefinitions { get; set; }
-        [ReferenceArray(336)] public StyleDefinition[] StyleDefinitions { get; set; }
-        [ReferenceArray(344)] public AiSquadGroupDefinition[] AiSquadGroupDefinitions { get; set; }
-        [ReferenceArray(352)] public AiSquadDefinition[] AiSquadDefinitions { get; set; }
-        [ReferenceArray(376)] public CharacterDefinition[] CharacterDefinitions { get; set; }
-        
-        [ReferenceArray(432), JsonIgnore] public byte[] ScriptStrings { get; set; }
-        [ReferenceArray(440)] public ScriptMethodDefinition[] ScriptMethods { get; set; }
-        [ReferenceArray(448)] public ScriptVariableDefinition[] ScriptVariables { get; set; }
-        [ReferenceArray(456)] public SoundDefinition[] SoundDefinitions { get; set; }
 
-        [ReferenceArray(472)] public SpatialPointStuff[] SpatialPointStuffs { get; set; }
-        [ReferenceArray(480)] public LocationFlagDefinition[] LocationFlagDefinitions { get; set; }
-        [ReferenceArray(488)] public CameraPathTarget[] CameraPathTargets { get; set; }
-        [ReferenceArray(496)] public CinematicTitleDefinition[] CinematicTitleDefinitions { get; set; }
-        [ReferenceArray(528)] public Terrain[] Terrains { get; set; }
-        [ReferenceArray(536)] public OriginatingData[] OriginatingDatas { get; set; }
-        [ReferenceArray(552)] public VehicleReference[] VehicleReferences { get; set; }
-        [ReferenceArray(568), JsonIgnore] public ScriptSyntaxNode[] ScriptSyntaxNodes { get; set; }
-        [ReferenceArray(576)] public AiOrderDefinition[] AiOrderDefinitions { get; set; }
-        [ReferenceArray(584)] public AiNamedTrigger[] AiNamedTriggers { get; set; }
-        [ReferenceArray(592)] public BackgroundSoundDefinition[] BackgroundSoundDefinitions { get; set; }
-        [ReferenceArray(600)] public SoundEnvironmentDefinition[] SoundEnvironmentDefinitions { get; set; }
-        [ReferenceArray(808)] public BlocInstance[] BlocInstances { get; set; }
-        [ReferenceArray(816)] public BlocDefinition[] BlocDefinitions { get; set; }
-        [ReferenceArray(832)] public AtmosphericFogDefinition[] AtmosphericFogDefinitions { get; set; }
-        [ReferenceArray(840)] public FogDefinition[] FogDefinitions { get; set; }
-        [ReferenceArray(848)] public CreatureDefinition[] CreatureDefinitions { get; set; }
-        [ReferenceArray(888)] public DecrDefinition[] DecrDefinitions { get; set; }
-        [ReferenceArray(904)] public BspLightingInfo[] BspLightingInfos { get; set; }
-        [ReferenceArray(920)] public LevelInfo[] LevelInfos { get; set; }
-        [ReferenceArray(944)] public MissionDialogMap[] MissionDialogMapping { get; set; }
+
+        [ReferenceArray(296)] public Obj296[] Obj296s { get; set; } = Array.Empty<Obj296>();
+        [ReferenceArray(360)] public Obj360_String[] Obj360s_Locations { get; set; } = Array.Empty<Obj360_String>();
+        [ReferenceArray(368)] public Obj368[] Obj368s { get; set; } = Array.Empty<Obj368>();
+        [ReferenceArray(560)] public Obj560[] Obj560s { get; set; } = Array.Empty<Obj560>();
+        [ReferenceArray(656)] public Obj656[] Obj656s { get; set; } = Array.Empty<Obj656>();
+        [ReferenceArray(792)] public Obj792[] Obj792s { get; set; } = Array.Empty<Obj792>();
+        [ReferenceArray(896)] public Obj896[] Obj896s { get; set; } = Array.Empty<Obj896>();
+        
+        [ReferenceArray(8)] public SkyboxInstance[] SkyboxInstances { get; set; } = Array.Empty<SkyboxInstance>();
+        [ReferenceArray(72)] public EntityReference[] WellKnownItems { get; set; } = Array.Empty<EntityReference>();
+        [ReferenceArray(80)] public SceneryInstance[] SceneryInstances { get; set; } = Array.Empty<SceneryInstance>();
+        [ReferenceArray(88)] public SceneryDefinition[] SceneryDefinitions { get; set; } = Array.Empty<SceneryDefinition>();
+        [ReferenceArray(96)] public BipedInstance[] BipedInstances { get; set; } = Array.Empty<BipedInstance>();
+        [ReferenceArray(104)] public BipedDefinition[] BipedDefinitions { get; set; } = Array.Empty<BipedDefinition>();
+        [ReferenceArray(112)] public VehicleInstance[] VehicleInstances { get; set; } = Array.Empty<VehicleInstance>();
+        [ReferenceArray(120)] public VehicleDefinition[] VehicleDefinitions { get; set; } = Array.Empty<VehicleDefinition>();
+        [ReferenceArray(128)] public EquipmentPlacement[] EquipmentPlacements { get; set; } = Array.Empty<EquipmentPlacement>();
+        [ReferenceArray(136)] public EquipmentDefinition[] EquipmentDefinitions { get; set; } = Array.Empty<EquipmentDefinition>();
+        [ReferenceArray(144)] public WeaponPlacement[] WeaponPlacements { get; set; } = Array.Empty<WeaponPlacement>();
+        [ReferenceArray(152)] public WeaponDefinition[] WeaponDefinitions { get; set; } = Array.Empty<WeaponDefinition>();
+        [ReferenceArray(160)] public DeviceGroupDefinition[] DeviceGroupDefinitions { get; set; } = Array.Empty<DeviceGroupDefinition>();
+        [ReferenceArray(168)] public MachineryInstance[] MachineryInstances { get; set; } = Array.Empty<MachineryInstance>();
+        [ReferenceArray(176)] public MachineryDefinition[] MachineryDefinitions { get; set; } = Array.Empty<MachineryDefinition>();
+        [ReferenceArray(184)] public ControllerInstance[] ControllerInstances { get; set; } = Array.Empty<ControllerInstance>();
+        [ReferenceArray(192)] public ControllerDefinition[] ControllerDefinitions { get; set; } = Array.Empty<ControllerDefinition>();
+        [ReferenceArray(216)] public SoundSceneryInstance[] SoundSceneryInstances { get; set; } = Array.Empty<SoundSceneryInstance>();
+        [ReferenceArray(224)] public SoundSceneryDefinition[] SoundSceneryDefinitions { get; set; } = Array.Empty<SoundSceneryDefinition>();
+        [ReferenceArray(232)] public LightInstance[] LightInstances { get; set; } = Array.Empty<LightInstance>();
+        [ReferenceArray(240)] public LightDefinition[] LightDefinitions { get; set; } = Array.Empty<LightDefinition>();
+        [ReferenceArray(248)] public StartingProfileDefinition[] StartingProfileDefinitions { get; set; } = Array.Empty<StartingProfileDefinition>();
+        [ReferenceArray(256)] public PlayerSpawnMarker[] PlayerSpawnMarkers { get; set; } = Array.Empty<PlayerSpawnMarker>();
+        [ReferenceArray(264)] public TriggerVolume[] TriggerVolumes { get; set; } = Array.Empty<TriggerVolume>();
+        [ReferenceArray(280)] public GameModeMarker[] GameModeMarkers { get; set; } = Array.Empty<GameModeMarker>();
+        [ReferenceArray(288)] public ItemCollectionPlacement[] ItemCollectionPlacements { get; set; } = Array.Empty<ItemCollectionPlacement>();
+        [ReferenceArray(304)] public BspTransitionTrigger[] BspTransitions { get; set; } = Array.Empty<BspTransitionTrigger>();
+        [ReferenceArray(312)] public DecalInstance[] DecalInstances { get; set; } = Array.Empty<DecalInstance>();
+        [ReferenceArray(320)] public DecalDefinition[] DecalDefinitions { get; set; } = Array.Empty<DecalDefinition>();
+        [ReferenceArray(336)] public StyleDefinition[] StyleDefinitions { get; set; } = Array.Empty<StyleDefinition>();
+        [ReferenceArray(344)] public AiSquadGroupDefinition[] AiSquadGroupDefinitions { get; set; } = Array.Empty<AiSquadGroupDefinition>();
+        [ReferenceArray(352)] public AiSquadDefinition[] AiSquadDefinitions { get; set; } = Array.Empty<AiSquadDefinition>();
+        [ReferenceArray(376)] public CharacterDefinition[] CharacterDefinitions { get; set; } = Array.Empty<CharacterDefinition>();
+        
+        [ReferenceArray(432), JsonIgnore] public byte[] ScriptStrings { get; set; } = Array.Empty<byte>();
+        [ReferenceArray(440)] public ScriptMethodDefinition[] ScriptMethods { get; set; } = Array.Empty<ScriptMethodDefinition>();
+        [ReferenceArray(448)] public ScriptVariableDefinition[] ScriptVariables { get; set; } = Array.Empty<ScriptVariableDefinition>();
+        [ReferenceArray(456)] public SoundDefinition[] SoundDefinitions { get; set; } = Array.Empty<SoundDefinition>();
+
+        [ReferenceArray(472)] public SpatialPointStuff[] SpatialPointStuffs { get; set; } = Array.Empty<SpatialPointStuff>();
+        [ReferenceArray(480)] public LocationFlagDefinition[] LocationFlagDefinitions { get; set; } = Array.Empty<LocationFlagDefinition>();
+        [ReferenceArray(488)] public CameraPathTarget[] CameraPathTargets { get; set; } = Array.Empty<CameraPathTarget>();
+        [ReferenceArray(496)] public CinematicTitleDefinition[] CinematicTitleDefinitions { get; set; } = Array.Empty<CinematicTitleDefinition>();
+        [ReferenceArray(528)] public Terrain[] Terrains { get; set; } = Array.Empty<Terrain>();
+        [ReferenceArray(536)] public OriginatingData[] OriginatingDatas { get; set; } = Array.Empty<OriginatingData>();
+        [ReferenceArray(552)] public VehicleReference[] VehicleReferences { get; set; } = Array.Empty<VehicleReference>();
+        [ReferenceArray(568), JsonIgnore] public ScriptSyntaxNode[] ScriptSyntaxNodes { get; set; } = Array.Empty<ScriptSyntaxNode>();
+        [ReferenceArray(576)] public AiOrderDefinition[] AiOrderDefinitions { get; set; } = Array.Empty<AiOrderDefinition>();
+        [ReferenceArray(584)] public AiNamedTrigger[] AiNamedTriggers { get; set; } = Array.Empty<AiNamedTrigger>();
+        [ReferenceArray(592)] public BackgroundSoundDefinition[] BackgroundSoundDefinitions { get; set; } = Array.Empty<BackgroundSoundDefinition>();
+        [ReferenceArray(600)] public SoundEnvironmentDefinition[] SoundEnvironmentDefinitions { get; set; } = Array.Empty<SoundEnvironmentDefinition>();
+        [ReferenceArray(808)] public BlocInstance[] BlocInstances { get; set; } = Array.Empty<BlocInstance>();
+        [ReferenceArray(816)] public BlocDefinition[] BlocDefinitions { get; set; } = Array.Empty<BlocDefinition>();
+        [ReferenceArray(832)] public AtmosphericFogDefinition[] AtmosphericFogDefinitions { get; set; } = Array.Empty<AtmosphericFogDefinition>();
+        [ReferenceArray(840)] public FogDefinition[] FogDefinitions { get; set; } = Array.Empty<FogDefinition>();
+        [ReferenceArray(848)] public CreatureDefinition[] CreatureDefinitions { get; set; } = Array.Empty<CreatureDefinition>();
+        [ReferenceArray(888)] public DecrDefinition[] DecrDefinitions { get; set; } = Array.Empty<DecrDefinition>();
+        [ReferenceArray(904)] public BspLightingInfo[] BspLightingInfos { get; set; } = Array.Empty<BspLightingInfo>();
+        [ReferenceArray(920)] public LevelInfo[] LevelInfos { get; set; } = Array.Empty<LevelInfo>();
+        [ReferenceArray(944)] public MissionDialogMap[] MissionDialogMapping { get; set; } = Array.Empty<MissionDialogMap>();
         //[ReferenceArray(984)] public uint[] FreeSpace { get; set; }
 
         public override void PopulateExternalData(MapStream reader)
@@ -110,7 +110,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class CreatureDefinition
         {
             [ReferenceArray(12)]
-            public Obj12[] Obj12s { get; set; }
+            public Obj12[] Obj12s { get; set; } = Array.Empty<Obj12>();
 
             [PrimitiveValue(44)]
             public TagRef Creature { get; set; }
@@ -119,7 +119,7 @@ namespace OpenH2.Core.Tags.Scenario
             public class Obj12
             {
                 [PrimitiveArray(0, 7)]
-                public float[] Floats { get; set; }
+                public float[] Floats { get; set; } = Array.Empty<float>();
             }
         }
 
@@ -127,7 +127,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class EntityReference : IGameObjectDefinition<IGameObject>
         {
             [StringValue(0, 32)]
-            public string Identifier { get; set; }
+            public string Identifier { get; set; } = string.Empty;
 
             [PrimitiveValue(32)]
             public WellKnownVarType ItemType { get; set; }
@@ -151,7 +151,7 @@ namespace OpenH2.Core.Tags.Scenario
                 _ => throw new System.NotImplementedException(),
             };
 
-            private ScenarioTag scenario;
+            private ScenarioTag scenario = null!;
             public void Initialize(ScenarioTag scenario)
             {
                 this.scenario = scenario;
@@ -224,7 +224,7 @@ namespace OpenH2.Core.Tags.Scenario
             public Vector3 Orientation { get; set; }
 
             [InternedString(52)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             public IUnit? GameObject { get; set; }
         }
@@ -233,7 +233,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class TriggerVolume : IGameObjectDefinition<ITriggerVolume>
         {
             [InternedString(0)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort ParentId { get; set; }
@@ -243,7 +243,7 @@ namespace OpenH2.Core.Tags.Scenario
 
             // Seems to only have a value when parented
             [InternedString(8)]
-            public string ParentDescription { get; set; }
+            public string ParentDescription { get; set; } = string.Empty;
 
             [PrimitiveValue(12)]
             public Vector3 ForwardRotation { get; set; }
@@ -367,23 +367,23 @@ namespace OpenH2.Core.Tags.Scenario
         public class SpatialPointStuff
         {
             [ReferenceArray(0)]
-            public SpatialPointCollection[] SpatialPointCollections { get; set; }
+            public SpatialPointCollection[] SpatialPointCollections { get; set; } = Array.Empty<SpatialPointCollection>();
 
             [FixedLength(48)]
             public class SpatialPointCollection
             {
                 [StringValue(0, 32)]
-                public string Description { get; set; }
+                public string Description { get; set; } = string.Empty;
 
                 [ReferenceArray(32)]
-                public SpatialPointDefinition[] SpatialPoints { get; set; }
+                public SpatialPointDefinition[] SpatialPoints { get; set; } = Array.Empty<SpatialPointDefinition>();
 
 
                 [FixedLength(60)]
                 public class SpatialPointDefinition : ISpatialPoint
                 {
                     [StringValue(0, 32)]
-                    public string Description { get; set; }
+                    public string Description { get; set; } = string.Empty;
 
                     [PrimitiveValue(32)]
                     public Vector3 Position { get; set; }
@@ -404,7 +404,7 @@ namespace OpenH2.Core.Tags.Scenario
             public uint Value { get; set; }
 
             [StringValue(4, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(36)]
             public Vector3 Position { get; set; }
@@ -420,7 +420,7 @@ namespace OpenH2.Core.Tags.Scenario
             public uint Value { get; set; }
 
             [StringValue(4, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(36)]
             public Vector3 Position { get; set; }
@@ -437,7 +437,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class CinematicTitleDefinition : IGameObjectDefinition<ICinematicTitle>
         {
             [InternedString(0)]
-            public string Title { get; set; }
+            public string Title { get; set; } = string.Empty;
 
             [PrimitiveValue(4)]
             public ushort OneHundred { get; set; }
@@ -487,7 +487,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class AiOrderDefinition : IGameObjectDefinition<IAiOrders>
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(32)]
             public uint ValueA { get; set; }
@@ -496,10 +496,10 @@ namespace OpenH2.Core.Tags.Scenario
             public uint ValueB { get; set; }
 
             [ReferenceArray(84)]
-            public Obj84[] Obj84s { get; set; }
+            public Obj84[] Obj84s { get; set; } = Array.Empty<Obj84>();
 
             [ReferenceArray(116)]
-            public Obj116[] Obj116s { get; set; }
+            public Obj116[] Obj116s { get; set; } = Array.Empty<Obj116>();
 
 
             [FixedLength(60)]
@@ -521,10 +521,10 @@ namespace OpenH2.Core.Tags.Scenario
         public class AiNamedTrigger
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [ReferenceArray(40)]
-            public Obj40[] Obj40s { get; set; }
+            public Obj40[] Obj40s { get; set; } = Array.Empty<Obj40>();
 
 
             [FixedLength(56)]
@@ -543,7 +543,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class BackgroundSoundDefinition
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(36)]
             public TagRef<LoopingSoundTag> LoopingSound1 { get; set; }
@@ -562,7 +562,7 @@ namespace OpenH2.Core.Tags.Scenario
         public class SoundEnvironmentDefinition
         {
             [StringValue(0, 32)]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
 
             [PrimitiveValue(36)]
             public TagRef SndeReference { get; set; }
@@ -581,10 +581,10 @@ namespace OpenH2.Core.Tags.Scenario
             public TagRef<BspTag> Bsp { get; set; }
 
             [ReferenceArray(8)]
-            public uint[] ValueAs { get; set; }
+            public uint[] ValueAs { get; set; } = Array.Empty<uint>();
 
             [ReferenceArray(16)]
-            public uint[] ValueBs { get; set; }
+            public uint[] ValueBs { get; set; } = Array.Empty<uint>();
 
             [PrimitiveValue(24)]
             public ushort Param1 { get; set; }
@@ -593,13 +593,13 @@ namespace OpenH2.Core.Tags.Scenario
             public ushort Param2 { get; set; }
 
             [ReferenceArray(28)]
-            public uint[] ValueCs { get; set; }
+            public uint[] ValueCs { get; set; } = Array.Empty<uint>();
 
             [ReferenceArray(36)]
-            public uint[] ValueDs { get; set; }
+            public uint[] ValueDs { get; set; } = Array.Empty<uint>();
 
             [ReferenceArray(44)]
-            public uint[] ValueEs { get; set; }
+            public uint[] ValueEs { get; set; } = Array.Empty<uint>();
         }
 
         // MP only?
@@ -614,13 +614,13 @@ namespace OpenH2.Core.Tags.Scenario
         public class AtmosphericFogDefinition
         {
             [InternedString(0)]
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
 
             [PrimitiveArray(4, 9)]
-            public float[] FloatsA { get; set; }
+            public float[] FloatsA { get; set; } = Array.Empty<float>();
 
             [PrimitiveArray(136, 10)]
-            public float[] FloatsB { get; set; }
+            public float[] FloatsB { get; set; } = Array.Empty<float>();
 
             [PrimitiveValue(212)]
             public TagRef FpchRef { get; set; }
@@ -656,7 +656,7 @@ namespace OpenH2.Core.Tags.Scenario
 
             // TODO: using Vector4[] for ReferenceArray isn't supported
             //[ReferenceArray(8)]
-            public Vector4[] LightPoints { get; set; }
+            public Vector4[] LightPoints { get; set; } = Array.Empty<Vector4>();
         }
 
         [FixedLength(24)]
@@ -666,10 +666,10 @@ namespace OpenH2.Core.Tags.Scenario
             public TagRef DescriptionUnicode { get; set; }
 
             [ReferenceArray(8)]
-            public CampaignInfo[] CampaignInfos { get; set; }
+            public CampaignInfo[] CampaignInfos { get; set; } = Array.Empty<CampaignInfo>();
 
             [ReferenceArray(16)]
-            public MultiplayerInfo[] MultiplayerInfos { get; set; }
+            public MultiplayerInfo[] MultiplayerInfos { get; set; } = Array.Empty<MultiplayerInfo>();
 
             [FixedLength(16)]
             public class CampaignInfo
@@ -684,10 +684,10 @@ namespace OpenH2.Core.Tags.Scenario
                 public TagRef<BitmapTag> BitmapRef { get; set; }
 
                 [Utf16StringValue(16, 32)]
-                public string EnglishName { get; set; }
+                public string EnglishName { get; set; } = string.Empty;
 
                 [Utf16StringValue(592, 128)]
-                public string EnglishDescription { get; set; }
+                public string EnglishDescription { get; set; } = string.Empty;
             }
 
             [FixedLength(16)]
@@ -700,10 +700,10 @@ namespace OpenH2.Core.Tags.Scenario
                 public TagRef<BitmapTag> BitmapRef { get; set; }
 
                 [Utf16StringValue(12, 32)]
-                public string EnglishName { get; set; }
+                public string EnglishName { get; set; } = string.Empty;
 
                 [Utf16StringValue(588, 128)]
-                public string EnglishDescription { get; set; }
+                public string EnglishDescription { get; set; } = string.Empty;
             }
         }
 

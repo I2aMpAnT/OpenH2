@@ -14,9 +14,9 @@ namespace OpenH2.Core.Maps.Xbox
     {
         private IMaterialFactory materialFactory = NullMaterialFactory.Instance;
 
-        public ScenarioTag Scenario { get; private set; }
-        public SoundMappingTag LocalSounds { get; set; }
-        public GlobalsTag Globals { get; private set; }
+        public ScenarioTag Scenario { get; private set; } = null!;
+        public SoundMappingTag LocalSounds { get; set; } = null!;
+        public GlobalsTag Globals { get; private set; } = null!;
 
         public override void Load(byte selfIdentifier, MapStream mapStream)
         {

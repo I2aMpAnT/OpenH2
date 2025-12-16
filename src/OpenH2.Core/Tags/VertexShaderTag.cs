@@ -6,7 +6,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.vrtx)]
     public class VertexShaderTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public VertexShaderTag(uint id) : base(id)
         {

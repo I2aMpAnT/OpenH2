@@ -13,7 +13,7 @@ namespace OpenH2.Core.Maps.Xbox
         public int SecondaryMagic { get; set; }
 
         [InPlaceObject(0)]
-        public H2xMapHeader Header { get; set; }
+        public H2xMapHeader Header { get; set; } = null!;
         IH2MapHeader IH2MapInfo.Header => this.Header;
 
         public void Load(byte selfIdentifier, MapStream mapStream)

@@ -7,7 +7,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.hlmt)]
     public class HaloModelTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public HaloModelTag(uint id) : base(id)
         {
@@ -29,11 +29,11 @@ namespace OpenH2.Core.Tags
         public TagRef<PhysicsModelTag> PhysicsModel { get; set; }
 
         [PrimitiveArray(40, 8)]
-        public float[] Params { get; set; }
+        public float[] Params { get; set; } = Array.Empty<float>();
 
 
         [ReferenceArray(80)]
-        public Variant[] Variants { get; set; }
+        public Variant[] Variants { get; set; } = Array.Empty<Variant>();
 
         [FixedLength(56)]
         public class Variant
@@ -43,10 +43,10 @@ namespace OpenH2.Core.Tags
 
 
             [ReferenceArray(20)]
-            public VariantEffects[] Effects { get; set; }
+            public VariantEffects[] Effects { get; set; } = Array.Empty<VariantEffects>();
 
             [ReferenceArray(28)]
-            public VariantChildren[] Children { get; set; }
+            public VariantChildren[] Children { get; set; } = Array.Empty<VariantChildren>();
 
 
             [FixedLength(120)]

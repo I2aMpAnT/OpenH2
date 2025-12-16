@@ -6,7 +6,7 @@ namespace OpenH2.Core.Scripting.Execution
     public abstract class BaseScriptExecutor : IScriptExecutor, IMetricSource
     {
         private bool metricsEnabled = false;
-        private IMetricSink metricSink;
+        private IMetricSink? metricSink;
 
         public abstract ValueTask Delay(int ticks);
         public abstract ValueTask Delay(ushort methodId, int ticks);

@@ -8,7 +8,7 @@ namespace OpenH2.Core.Tags
     [TagLabel(TagName.scen)]
     public class SceneryTag : BaseTag
     {
-        public override string Name { get; set; }
+        public override string? Name { get; set; }
 
         public SceneryTag(uint id) : base(id)
         {
@@ -36,7 +36,7 @@ namespace OpenH2.Core.Tags
         public uint FootId { get; set; }
 
         [PrimitiveArray(120, 6)]
-        public float[] Params { get; set; }
+        public float[] Params { get; set; } = Array.Empty<float>();
 
         //[InternalReferenceValue(12)]
         //public ShaderInfo[] Shaders { get; set; }

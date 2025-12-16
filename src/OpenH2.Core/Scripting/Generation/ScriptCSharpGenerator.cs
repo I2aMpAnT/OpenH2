@@ -19,8 +19,8 @@ namespace OpenH2.Core.Scripting.Generation
     public class ScriptCSharpGenerator
     {
         private readonly ScenarioTag scenario;
-        private readonly ClassDeclarationSyntax classDecl;
-        private readonly NamespaceDeclarationSyntax nsDecl;
+        private readonly ClassDeclarationSyntax classDecl = null!;
+        private readonly NamespaceDeclarationSyntax nsDecl = null!;
         private readonly List<StatementSyntax> constructorStatements = new List<StatementSyntax>();
         private readonly List<MethodDeclarationSyntax> methods = new List<MethodDeclarationSyntax>();
         private readonly List<FieldDeclarationSyntax> fields = new List<FieldDeclarationSyntax>();
@@ -32,8 +32,8 @@ namespace OpenH2.Core.Scripting.Generation
             .ToDictionary(p => p.Name);
 
         private Scope currentScope => scopes.Peek();
-        private Stack<Scope> scopes;
-        private ContinuationStack<int> childIndices;
+        private Stack<Scope> scopes = null!;
+        private ContinuationStack<int> childIndices = null!;
 
         public ScriptCSharpGenerator(ScenarioTag scnr, MemberNameRepository nameRepo, string[] refrences = null, AttributeSyntax[] classAttributes = null)
         {

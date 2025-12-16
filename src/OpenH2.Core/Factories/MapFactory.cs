@@ -39,7 +39,7 @@ namespace OpenH2.Core.Factories
         private const string MultiPlayerSharedName = "shared.map";
         private const string SinglePlayerSharedName = "single_player_shared.map";
         private readonly string mapRoot;
-        private MapLoader loader;
+        private MapLoader loader = null!;
 
         public MapFactory(string mapRoot) : this(mapRoot, null)
         {
@@ -94,7 +94,7 @@ namespace OpenH2.Core.Factories
         public static IH2MapInfo LoadInformational(string mapPath)
         {
             // Not using ancillary maps here, just info from map header
-            var singleLoader = MapLoader.FromRoot(Path.GetDirectoryName(mapPath));
+            var singleLoader = MapLoader.FromRoot(Path.GetDirectoryName(mapPath) ?? string.Empty);
 
             Span<byte> header = new byte[2048];
             using (var peek = File.OpenRead(mapPath))
