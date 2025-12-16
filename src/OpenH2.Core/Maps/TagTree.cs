@@ -12,7 +12,7 @@ namespace OpenH2.Core.Maps
 
         private TagListEntry? lookupChild(string? key)
         {
-            if (key.IsSignificant() == false)
+            if (key == null || key.IsSignificant() == false)
                 return null;
 
             if (children.TryGetValue(key, out var child))
@@ -27,13 +27,13 @@ namespace OpenH2.Core.Maps
             var p = lookupChild(parent);
             var c = lookupChild(tag);
 
-            if(gp == null && grandparent.IsSignificant())
+            if(gp == null && grandparent != null && grandparent.IsSignificant())
             {
                 gp = new TagListEntry(grandparent);
                 children.Add(grandparent, gp);
             }
 
-            if (p == null && parent.IsSignificant())
+            if (p == null && parent != null && parent.IsSignificant())
             {
                 p = new TagListEntry(parent);
                 children.Add(parent, p);
