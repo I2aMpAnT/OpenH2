@@ -91,11 +91,22 @@ namespace OpenH2.Launcher.ViewModels
             }
         }
 
-        public void Launch()
+        public async Task Launch()
         {
-            if (this.SelectedMap == null) return;
+            if (this.SelectedMap == null)
+            {
+                await ShowError("No map selected", "Please select a map from the list first.");
+                return;
+            }
 
-            EngineConnector.Start(this.SelectedMap.FullPath);
+            try
+            {
+                EngineConnector.Start(this.SelectedMap.FullPath);
+            }
+            catch (Exception ex)
+            {
+                await ShowError("Failed to launch engine", ex.Message);
+            }
         }
 
         public async Task QuickLoadMap()
@@ -132,7 +143,14 @@ namespace OpenH2.Launcher.ViewModels
                 }
 
                 // Launch the map directly
-                EngineConnector.Start(mapPath);
+                try
+                {
+                    EngineConnector.Start(mapPath);
+                }
+                catch (Exception ex)
+                {
+                    await ShowError("Failed to launch engine", ex.Message);
+                }
             }
         }
 
@@ -183,7 +201,14 @@ namespace OpenH2.Launcher.ViewModels
 
         public void Exit()
         {
-            this.Exit();
+            this.window.Close();
+        }
+
+        private async Task ShowError(string title, string message)
+        {
+            var msgBox = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxStandardWindow(title, message);
+            await msgBox.Show();
         }
     }
 }
