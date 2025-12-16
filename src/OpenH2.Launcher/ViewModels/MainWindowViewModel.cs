@@ -81,9 +81,11 @@ namespace OpenH2.Launcher.ViewModels
 
         private void LoadMaps(string folder)
         {
+            Log($"Loading maps from: {folder}");
             this.AvailableMaps.Clear();
 
             var maps = Directory.GetFiles(folder, "*.map");
+            Log($"Found {maps.Length} map files");
 
             foreach (var map in maps)
             {
@@ -91,21 +93,24 @@ namespace OpenH2.Launcher.ViewModels
             }
         }
 
-        public async Task Launch()
+        public void Launch()
         {
             if (this.SelectedMap == null)
             {
-                await ShowError("No map selected", "Please select a map from the list first.");
+                Log("ERROR: No map selected");
                 return;
             }
 
             try
             {
+                Log($"Launching map: {this.SelectedMap.FullPath}");
                 EngineConnector.Start(this.SelectedMap.FullPath);
+                Log("Engine started successfully");
             }
             catch (Exception ex)
             {
-                await ShowError("Failed to launch engine", ex.Message);
+                Log($"ERROR: Failed to launch engine: {ex.Message}");
+                Log($"Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -145,11 +150,14 @@ namespace OpenH2.Launcher.ViewModels
                 // Launch the map directly
                 try
                 {
+                    Log($"Quick loading map: {mapPath}");
                     EngineConnector.Start(mapPath);
+                    Log("Engine started successfully");
                 }
                 catch (Exception ex)
                 {
-                    await ShowError("Failed to launch engine", ex.Message);
+                    Log($"ERROR: Failed to launch engine: {ex.Message}");
+                    Log($"Stack trace: {ex.StackTrace}");
                 }
             }
         }
@@ -204,11 +212,9 @@ namespace OpenH2.Launcher.ViewModels
             this.window.Close();
         }
 
-        private async Task ShowError(string title, string message)
+        private static void Log(string message)
         {
-            var msgBox = MessageBox.Avalonia.MessageBoxManager
-                .GetMessageBoxStandardWindow(title, message);
-            await msgBox.Show();
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
         }
     }
 }

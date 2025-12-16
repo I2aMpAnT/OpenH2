@@ -11,14 +11,20 @@ namespace OpenH2.Launcher
 
         private static string LocateEngine()
         {
+            Console.WriteLine($"[EngineConnector] Looking for engine...");
+            Console.WriteLine($"[EngineConnector] Current directory: {Directory.GetCurrentDirectory()}");
+
             var enginePath = Environment.GetEnvironmentVariable("openh2_engine");
+            Console.WriteLine($"[EngineConnector] Env var 'openh2_engine': {enginePath ?? "(not set)"}");
 
             if (enginePath != null && File.Exists(enginePath))
             {
+                Console.WriteLine($"[EngineConnector] Found engine at env var path");
                 return enginePath;
             }
 
             enginePath = Path.Combine(Directory.GetCurrentDirectory(), "OpenH2.Engine.exe");
+            Console.WriteLine($"[EngineConnector] Checking: {enginePath} - Exists: {File.Exists(enginePath)}");
 
             if(File.Exists(enginePath))
             {
@@ -26,12 +32,14 @@ namespace OpenH2.Launcher
             }
 
             enginePath = Path.Combine(Directory.GetCurrentDirectory(), "engine", "OpenH2.Engine.exe");
+            Console.WriteLine($"[EngineConnector] Checking: {enginePath} - Exists: {File.Exists(enginePath)}");
 
             if (File.Exists(enginePath))
             {
                 return enginePath;
             }
 
+            Console.WriteLine("[EngineConnector] ERROR: Could not find OpenH2.Engine.exe");
             throw new Exception("Cannot find OpenH2.Engine executable");
         }
 
