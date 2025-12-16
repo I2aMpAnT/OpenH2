@@ -17,8 +17,11 @@ namespace OpenH2.Core.Maps
             this.Tag = tag;
         }
 
-        internal void Add(TagListEntry entry)
+        internal void Add(TagListEntry? entry)
         {
+            if (entry == null)
+                return;
+
             if(entry.Parent != null)
             {
                 entry.Parent.Remove(entry);

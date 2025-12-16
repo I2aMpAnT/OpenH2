@@ -559,7 +559,6 @@ namespace OpenH2.Foundation._3D
                 }
 
                 Vertex v0 = HalfEdge.HeadVertex;
-                Face? prevFace = null;
 
                 hedge = HalfEdge.NextEdge;
                 HalfEdge oppPrev = hedge.OppositeEdge ?? throw new InvalidOperationException("OppositeEdge is null");
