@@ -45,11 +45,11 @@ namespace OpenH2.ScenarioExplorer.ViewModels
 
         public uint Id { get; set; }
 
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public Memory<byte> Data { get; set; }
 
-        private string _tagJson;
+        private string? _tagJson;
         public string OriginalTagJson { get
             {
                 if(_tagJson == null)
@@ -70,7 +70,7 @@ namespace OpenH2.ScenarioExplorer.ViewModels
             }
         }
 
-        private BaseTag _originalTag;
+        private BaseTag _originalTag = null!;
 
         [DoNotCheckEquality]
         public BaseTag OriginalTag
@@ -88,7 +88,7 @@ namespace OpenH2.ScenarioExplorer.ViewModels
             }
         }
 
-        public TagPreviewViewModel TagPreview { get; set; }
+        public TagPreviewViewModel? TagPreview { get; set; }
 
         public ObservableCollection<HexViewerFeature> Features { get; set; } = new ObservableCollection<HexViewerFeature>();
 

@@ -19,7 +19,7 @@ namespace OpenH2.Core.Generators.Scripting
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var scriptEngine = context.Compilation.GetTypeByMetadataName("OpenH2.Core.Scripting.IScriptEngine");
+            var scriptEngine = context.Compilation.GetTypeByMetadataName("OpenH2.Core.Scripting.IScriptEngine")!;
 
             var cls = GeneratePartialClass(scriptEngine);
 
@@ -60,12 +60,12 @@ namespace OpenH2.Core.Generators.Scripting
             {
                 var attrs = mem.GetAttributes();
 
-                var implAttr = attrs.FirstOrDefault(a => a.AttributeClass.Name == "ScriptImplementationAttribute");
+                var implAttr = attrs.FirstOrDefault(a => a.AttributeClass?.Name == "ScriptImplementationAttribute");
 
                 if (implAttr == null)
                     continue;
 
-                var opCode = (int)implAttr.ConstructorArguments[0].Value;
+                var opCode = (int)implAttr.ConstructorArguments[0].Value!;
 
                 var body = new List<StatementSyntax>();
 
@@ -276,7 +276,7 @@ namespace OpenH2.Core.Generators.Scripting
 
             return assemblies
                 .Select(a => a.GetTypeByMetadataName(typeName))
-                .Single(a => a != null);
+                .Single(a => a != null)!;
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using OpenH2.Foundation.Physics;
+using System;
 using System.Numerics;
 
 namespace OpenH2.Physics.Colliders
@@ -6,7 +7,7 @@ namespace OpenH2.Physics.Colliders
     public class ConvexMeshCollider : IVertexBasedCollider
     {
         private readonly ITransform xform;
-        public Vector3[] Vertices { get; private set; }
+        public Vector3[] Vertices { get; private set; } = Array.Empty<Vector3>();
         public int PhysicsMaterial => -1;
 
         public ConvexMeshCollider(ITransform xform, Vector3[] verts)

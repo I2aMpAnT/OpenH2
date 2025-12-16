@@ -24,7 +24,7 @@ namespace OpenH2.AvaloniaControls.HexViewerImpl
             .Select(p => new BrushDetails(p))
             .ToList();
 
-        public BrushDetails HighlightColor { get; set; } 
+        public BrushDetails HighlightColor { get; set; } = null!; 
     }
 
     [AddINotifyPropertyChangedInterface]
@@ -33,11 +33,11 @@ namespace OpenH2.AvaloniaControls.HexViewerImpl
         public BrushDetails(PropertyInfo pi)
         {
             this.Name = pi.Name;
-            this.Brush = pi.GetValue(null) as IBrush;
+            this.Brush = pi.GetValue(null) as IBrush ?? Brushes.Black;
         }
 
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        public IBrush Brush { get; set; }
+        public IBrush Brush { get; set; } = null!;
     }
 }

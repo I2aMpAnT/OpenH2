@@ -7,13 +7,13 @@ namespace OpenH2.Physics.Colliders
     public class BoxCollider : IVertexBasedCollider
     {
         private static float[,] VertMultipliers = new float[,] {{1,1,1},{-1,1,1},{1,-1,1},{-1,-1,1},{1,1,-1},{-1,1,-1},{1,-1,-1},{-1,-1,-1}};
-        private ITransform transform;
+        private ITransform transform = null!;
 
         public Vector3 OriginOffset { get; }
         public Vector3 HalfWidths { get; set; }
         public Matrix4x4 Transform => transform.TransformationMatrix;
         public Vector3 Position => transform.Position;
-        public Vector3[] Vertices { get; private set; }
+        public Vector3[] Vertices { get; private set; } = Array.Empty<Vector3>();
         public int PhysicsMaterial { get; set; } = -1;
 
         public BoxCollider(ITransform xform, Vector3 HalfWidths, Vector3 originOffset = default)

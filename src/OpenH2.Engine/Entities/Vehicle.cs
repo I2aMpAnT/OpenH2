@@ -7,7 +7,7 @@ namespace OpenH2.Engine.Entities
 {
     public class Vehicle : GameObjectEntity, IVehicle
     {
-        public IGameObject Driver { get; private set; }
+        public IGameObject? Driver { get; private set; }
 
         public void SetComponents(
             TransformComponent xform,

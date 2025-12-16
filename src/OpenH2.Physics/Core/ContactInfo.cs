@@ -10,6 +10,6 @@ namespace OpenH2.Physics.Core
         public Vector3 Point { get; set; }
         public float DynamicFriction { get; set; }
         public bool IsGroundContact { get; set; }
-        public object Material { get; set; }
+        public object Material { get; set; } = null!;
     }
 }

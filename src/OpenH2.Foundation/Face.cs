@@ -1,11 +1,12 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace OpenH2.Foundation
 {
     public class Face
     {
         public Vector3 Normal { get; private set; }
-        public Vector3[] Vertices { get; private set; }
+        public Vector3[] Vertices { get; private set; } = Array.Empty<Vector3>();
         public Vector3 Position { get; private set; }
 
         public Face(Vector3[] verts)

@@ -129,8 +129,8 @@ namespace OpenH2.Physx.Proxies
                     return true;
                 }
 
-                controller = default;
-                other = default;
+                controller = null!;
+                other = null!;
                 return false;
             }
         }

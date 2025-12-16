@@ -15,33 +15,33 @@ namespace OpenH2.Core.Tags
         }
 
         [ReferenceArray(88)]
-        public ShaderInfo[] ShaderInfos { get; set; }
+        public ShaderInfo[] ShaderInfos { get; set; } = Array.Empty<ShaderInfo>();
 
         [FixedLength(40)]
         public class ShaderInfo
         {
             [ReferenceArray(0)]
-            public Obj0[] Obj0s { get; set; }
+            public Obj0[] Obj0s { get; set; } = Array.Empty<Obj0>();
 
             [ReferenceArray(8)]
-            public Obj8[] Unknown2s { get; set; }
+            public Obj8[] Unknown2s { get; set; } = Array.Empty<Obj8>();
 
             [ReferenceArray(16)]
-            public ShaderLod[] Lods { get; set; }
+            public ShaderLod[] Lods { get; set; } = Array.Empty<ShaderLod>();
 
             [ReferenceArray(24)]
-            public Obj24[] Obj24s { get; set; }
+            public Obj24[] Obj24s { get; set; } = Array.Empty<Obj24>();
 
 
             // Default values?
             [ReferenceArray(32)]
-            public Obj32[] Obj32s { get; set; }
+            public Obj32[] Obj32s { get; set; } = Array.Empty<Obj32>();
 
             [FixedLength(10)]
             public class Obj0
             {
                 [PrimitiveArray(0, 5)]
-                public ushort[] Data { get; set; }
+                public ushort[] Data { get; set; } = Array.Empty<ushort>();
             }
 
             [FixedLength(2)]
@@ -102,7 +102,7 @@ namespace OpenH2.Core.Tags
             public TagRef<ShaderPassTag> ShaderPass { get; set; }
 
             [PrimitiveArray(0, 2)]
-            public ushort[] Data { get; set; }
+            public ushort[] Data { get; set; } = Array.Empty<ushort>();
         }
     }
 }

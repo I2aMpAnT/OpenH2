@@ -12,10 +12,10 @@ namespace OpenH2.Rendering.OpenGL
 {
     public class OpenGLHost : IGraphicsHost, IGameLoopSource, IDisposable
     {
-        internal GL gl;
-        private IGraphicsAdapter adapter;
-        private IWindow window;
-        private IInputContext inputContext;
+        internal GL gl = null!;
+        private IGraphicsAdapter adapter = null!;
+        private IWindow window = null!;
+        private IInputContext inputContext = null!;
 
         public bool AspectRatioChanged { get; private set; }
 

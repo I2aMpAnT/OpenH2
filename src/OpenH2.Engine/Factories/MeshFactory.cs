@@ -16,8 +16,8 @@ namespace OpenH2.Engine.Factories
     {
         private static Mesh<BitmapTag>[] EmptyModel = Array.Empty<Mesh<BitmapTag>>();
 
-        private static ConcurrentDictionary<ulong, Mesh<BitmapTag>[]> meshes = new();
-        private static ConcurrentDictionary<object, Mesh<BitmapTag>[]> colliderModels = new();
+        private static ConcurrentDictionary<ulong, Mesh<BitmapTag>[]> meshes = new ConcurrentDictionary<ulong, Mesh<BitmapTag>[]>();
+        private static ConcurrentDictionary<object, Mesh<BitmapTag>[]> colliderModels = new ConcurrentDictionary<object, Mesh<BitmapTag>[]>();
 
         private static Material<BitmapTag> BoneMaterial = new Material<BitmapTag>() { DiffuseColor = new Vector4(1f, 0, 0, 1f) };
 

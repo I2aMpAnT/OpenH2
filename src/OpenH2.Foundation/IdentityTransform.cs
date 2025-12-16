@@ -8,7 +8,7 @@ namespace OpenH2.Foundation
     /// </summary>
     public class IdentityTransform : ITransform
     {
-        private static IdentityTransform instance;
+        private static IdentityTransform instance = null!;
 
         public static IdentityTransform Instance
         {

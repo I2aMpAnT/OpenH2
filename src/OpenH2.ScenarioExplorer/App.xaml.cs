@@ -11,7 +11,7 @@ namespace OpenH2.ScenarioExplorer
     [DoNotNotifyAttribute]
     class App : Application
     {
-        public static string[] StartupArgs;
+        public static string[] StartupArgs = Array.Empty<string>();
 
         [STAThread]
         static void Main(string[] args)

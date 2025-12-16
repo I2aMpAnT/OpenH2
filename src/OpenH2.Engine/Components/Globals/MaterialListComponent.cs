@@ -7,7 +7,7 @@ namespace OpenH2.Engine.Components.Globals
 {
     public class MaterialListComponent : Component
     {
-        private Dictionary<int, PhysicsMaterial> physicsMaterials;
+        private Dictionary<int, PhysicsMaterial> physicsMaterials = new Dictionary<int, PhysicsMaterial>();
 
         public MaterialListComponent(Entity parent) : base(parent)
         {
@@ -19,7 +19,7 @@ namespace OpenH2.Engine.Components.Globals
             physicsMaterials[material.Id] = material;
         }
 
-        public PhysicsMaterial GetPhysicsMaterial(int id)
+        public PhysicsMaterial? GetPhysicsMaterial(int id)
         {
             physicsMaterials.TryGetValue(id, out var mat);
             return mat;

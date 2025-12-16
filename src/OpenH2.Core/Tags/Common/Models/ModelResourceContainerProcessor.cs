@@ -25,7 +25,7 @@ namespace OpenH2.Core.Tags.Common.Models
             public MeshElementType ElementType;
         }
 
-        public static ModelMesh[] ProcessContainer(IModelResourceContainer container, ModelShaderReference[] shaders, string note = null)
+        public static ModelMesh[] ProcessContainer(IModelResourceContainer container, ModelShaderReference[] shaders, string? note = null)
         {
             var parts = new List<PartDescription>((int)container.Header.PartInfoCount);
 

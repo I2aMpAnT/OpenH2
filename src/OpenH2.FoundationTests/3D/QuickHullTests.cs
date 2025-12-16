@@ -21,12 +21,12 @@ namespace OpenH2.Foundation.Tests._3D
         const int EDGE_DEGENERACY = 1;
         const int VERTEX_DEGENERACY = 2;
         private readonly ITestOutputHelper output;
-        Random rand; // random number generator
+        Random rand = null!; // random number generator, initialized in constructor
 
         static bool testRotation = true;
         static int degeneracyTest = VERTEX_DEGENERACY;
         static double epsScale = 2.0;
-        double[] coords = null;
+        double[]? coords = null;
 
         /**
          * Creates a testing object.
@@ -427,9 +427,14 @@ namespace OpenH2.Foundation.Tests._3D
             return coords;
         }
 
-        void explicitFaceCheck(QuickHull hull, int[][] checkFaces)
+        void explicitFaceCheck(QuickHull hull, int[][]? checkFaces)
         {
-            int[][] faceIndices = hull.GetFaces();
+            if (checkFaces == null)
+            {
+                throw new ArgumentNullException(nameof(checkFaces));
+            }
+
+            int[]?[] faceIndices = hull.GetFaces();
             if (faceIndices.Length != checkFaces.Length)
             {
                 throw new Exception("Error: " + faceIndices.Length + " faces vs. " + checkFaces.Length);
@@ -440,7 +445,7 @@ namespace OpenH2.Foundation.Tests._3D
 
             for (int j = 0; j < faceIndices.Length; j++)
             {
-                int[] idxs = faceIndices[j];
+                int[] idxs = faceIndices[j]!;
                 for (int k = 0; k < idxs.Length; k++)
                 {
                     idxs[k] = vtxIndices[idxs[k]];
@@ -463,7 +468,7 @@ namespace OpenH2.Foundation.Tests._3D
                 }
                 if (j == faceIndices.Length)
                 {
-                    String s = "";
+                    string s = "";
                     for (int k = 0; k < cf.Length; k++)
                     {
                         s += cf[k] + " ";
@@ -475,7 +480,7 @@ namespace OpenH2.Foundation.Tests._3D
 
         int cnt = 0;
 
-        void singleTest(double[] coords, int[][] checkFaces)
+        void singleTest(double[] coords, int[][]? checkFaces)
         {
             using var hull = new QuickHull(coords);
 
@@ -593,8 +598,8 @@ namespace OpenH2.Foundation.Tests._3D
 
         void testException(double[] coords, string msg)
         {
-            QuickHull hull = null;
-            Exception ex = null;
+            QuickHull? hull = null;
+            Exception? ex = null;
             try
             {
                 hull = new QuickHull(coords);
@@ -626,7 +631,7 @@ namespace OpenH2.Foundation.Tests._3D
             }
         }
 
-        void test(double[] coords, int[][] checkFaces)
+        void test(double[] coords, int[][]? checkFaces)
         {
 
             double[][] rpyList = new double[][]

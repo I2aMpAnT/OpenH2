@@ -9,15 +9,15 @@ namespace OpenH2.ScenarioExplorer.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class TagTreeEntryViewModel
     {
-        public string TagFourCC { get; set; }
+        public string TagFourCC { get; set; } = string.Empty;
 
-        public string TagName { get; set; }
+        public string TagName { get; set; } = string.Empty;
 
         public uint Id { get; set; }
 
         public string Description => $"{TagName} ({Id})";
 
-        public TagTreeEntryViewModel[] Children { get; set; } = null;
+        public TagTreeEntryViewModel[]? Children { get; set; } = null;
 
         public bool NullChildren => Children == null;
 

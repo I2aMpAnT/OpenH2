@@ -26,13 +26,13 @@ namespace OpenH2.Engine
     public class Engine : IDisposable
     {
         IDisposable? graphicsHostDisposable = null;
-        IGraphicsHost graphicsHost;
-        IAudioHost audioHost;
-        IGameLoopSource gameLoop;
-        Func<IInputContext> gameInputGetter;
+        IGraphicsHost graphicsHost = null!;
+        IAudioHost audioHost = null!;
+        IGameLoopSource gameLoop = null!;
+        Func<IInputContext> gameInputGetter = null!;
 
-        private World world;
-        private FlatFileMetricSink sink;
+        private World world = null!;
+        private FlatFileMetricSink sink = null!;
 
         public Engine()
         {

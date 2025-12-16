@@ -5,7 +5,7 @@ namespace OpenH2.Foundation
 {
     public class Model<TTexture>
     {
-        public Mesh<TTexture>[] Meshes { get; set; }
+        public Mesh<TTexture>[] Meshes { get; set; } = Array.Empty<Mesh<TTexture>>();
 
         public Vector3 Position { get; set; } = Vector3.Zero;
 
@@ -13,7 +13,7 @@ namespace OpenH2.Foundation
 
         public Vector3 Scale { get; set; } = Vector3.One;
 
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
 
         public ModelFlags Flags { get; set; }
 

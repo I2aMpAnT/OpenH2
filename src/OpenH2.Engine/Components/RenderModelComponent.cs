@@ -9,7 +9,7 @@ namespace OpenH2.Engine.Components
     {
         public Model<BitmapTag> RenderModel { get; }
 
-        public DrawCommand[] DrawCommands { get; private set; }
+        public DrawCommand[] DrawCommands { get; private set; } = Array.Empty<DrawCommand>();
         public ref DrawCommand this[int i] => ref this.DrawCommands[i];
 
         public RenderModelComponent(Entity parent, Model<BitmapTag> model) : base(parent)

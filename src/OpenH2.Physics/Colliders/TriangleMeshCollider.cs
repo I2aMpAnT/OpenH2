@@ -11,17 +11,17 @@ namespace OpenH2.Physics.Colliders
     {
         public int PhysicsMaterial => -1;
 
-        public Vector3[] Vertices { get; set; }
+        public Vector3[] Vertices { get; set; } = Array.Empty<Vector3>();
 
         /// <summary>
         /// Array of vertex indices, where each three items constitutes a single triangle
         /// </summary>
-        public int[] TriangleIndices { get; set; }
+        public int[] TriangleIndices { get; set; } = Array.Empty<int>();
 
         /// <summary>
         /// Array of material indices, where each item is the given triangles global material index
         /// </summary>
-        public int[] MaterialIndices { get; set; }
+        public int[] MaterialIndices { get; set; } = Array.Empty<int>();
 
         public Vector3[] GetTransformedVertices() => Vertices;
 

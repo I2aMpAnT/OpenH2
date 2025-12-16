@@ -34,8 +34,8 @@ namespace OpenH2.ModelDumper
                 return;
             }
 
-            var factory = new MapFactory(Path.GetDirectoryName(mapPath));
-            var h2map = factory.Load(Path.GetFileName(mapPath));
+            var factory = new MapFactory(Path.GetDirectoryName(mapPath) ?? string.Empty);
+            var h2map = factory.Load(Path.GetFileName(mapPath) ?? string.Empty);
 
             if (h2map is not H2vMap scene)
             {

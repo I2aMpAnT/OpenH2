@@ -13,10 +13,10 @@ namespace OpenH2.MccUtil
     public class PackCommandLineArguments
     {
         [Option('f', "file", Required = true, HelpText = "File to pack")]
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
         [Option('o', "out-file", Required = true, HelpText = "Destination of packed file")]
-        public string OutPath { get; set; }
+        public string OutPath { get; set; } = string.Empty;
     }
 
     public class PackTask

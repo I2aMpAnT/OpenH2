@@ -15,7 +15,7 @@ namespace OpenH2.AiAnalysis
     public static class Program
     {
         static StringBuilder outb = new StringBuilder();
-        public static void Write(string s = null)
+        public static void Write(string? s = null)
         {
             Console.WriteLine(s);
             outb.AppendLine(s);
@@ -64,7 +64,7 @@ namespace OpenH2.AiAnalysis
 
 
             var mapPath = @"D:\H2vMaps\03a_oldmombasa.map";
-            var factory = new MapFactory(Path.GetDirectoryName(mapPath));
+            var factory = new MapFactory(Path.GetDirectoryName(mapPath)!);
 
             var characterWeapons = new Dictionary<string, HashSet<string>>();
 
@@ -78,7 +78,7 @@ namespace OpenH2.AiAnalysis
             var outPath = @"C:\Users\ronal\source\Rampancy\src\H2Randomizer\Levels";
 
             //var path = mapPath;
-            foreach (var path in Directory.GetFiles(Path.GetDirectoryName(mapPath), "*.map"))
+            foreach (var path in Directory.GetFiles(Path.GetDirectoryName(mapPath)!, "*.map"))
             {
                 var h2map = factory.Load(Path.GetFileName(path));
                 if (h2map is not H2vMap map)
@@ -207,7 +207,7 @@ namespace OpenH2.AiAnalysis
 
                         return name;
 
-                        }).Where(s => !string.IsNullOrWhiteSpace(s)));
+                        }).Where(s => !string.IsNullOrWhiteSpace(s))!);
 
                     output.AppendLine($"\tpublic override {mapName}Characters[] ValidCharacters => new[]{{{chars}}};");
                 }
@@ -224,7 +224,7 @@ namespace OpenH2.AiAnalysis
 
                         return name;
 
-                    }).Where(s => !string.IsNullOrWhiteSpace(s)));
+                    }).Where(s => !string.IsNullOrWhiteSpace(s))!);
 
                     output.AppendLine($"\tpublic override {mapName}Weapons[] ValidWeapons => new[]{{{chars}}};");
                 }

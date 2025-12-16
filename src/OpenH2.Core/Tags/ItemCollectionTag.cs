@@ -12,7 +12,7 @@ namespace OpenH2.Core.Tags
         }
 
         [ReferenceArray(0)]
-        public Item[] Items { get; set; }
+        public Item[] Items { get; set; } = Array.Empty<Item>();
 
         [PrimitiveValue(8)]
         public int SpawnTime { get; set; }
@@ -29,7 +29,7 @@ namespace OpenH2.Core.Tags
             public TagRef ItemTag { get; set; }
 
             [InternedString(12)]
-            public string Variant { get; set; }
+            public string Variant { get; set; } = string.Empty;
         }
     }
 }

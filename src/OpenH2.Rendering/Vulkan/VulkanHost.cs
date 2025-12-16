@@ -11,9 +11,9 @@ namespace OpenH2.Rendering.Vulkan
 {
     public sealed unsafe class VulkanHost : IGraphicsHost, IGameLoopSource, IDisposable
     {
-        private VulkanGraphicsAdapter adapter;
-        private IInputContext inputContext;
-        internal IWindow window;
+        private VulkanGraphicsAdapter adapter = null!;
+        private IInputContext inputContext = null!;
+        internal IWindow window = null!;
 
         public readonly Vk vk;
 

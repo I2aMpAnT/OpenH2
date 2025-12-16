@@ -13,7 +13,7 @@ namespace OpenH2.Core.Tags
 
 
         [ReferenceArray(0)]
-        public VehicleReference[] VehicleReferences { get; set; }
+        public VehicleReference[] VehicleReferences { get; set; } = Array.Empty<VehicleReference>();
 
         [FixedLength(20)]
         public class VehicleReference

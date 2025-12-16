@@ -14,8 +14,8 @@ namespace OpenH2.OpenAL.Audio
 
     public unsafe class OpenALHost : IAudioHost
     {
-        public readonly AL al;
-        private readonly ALContext alc;
+        public readonly AL al = null!;
+        private readonly ALContext alc = null!;
         private readonly Device* device;
         private readonly Context* context;
         internal readonly Vector3 forward;
@@ -40,7 +40,7 @@ namespace OpenH2.OpenAL.Audio
             //var devices = alc.GetStringList(GetEnumerationStringList.DeviceSpecifier);
 
             // Get the default device, then go though all devices and select the AL soft device if it exists.
-            string deviceName = alc.GetContextProperty(null, GetContextString.DeviceSpecifier);
+            string deviceName = alc.GetContextProperty(null, GetContextString.DeviceSpecifier) ?? string.Empty;
             //foreach (var d in devices)
             //{
             //    if (d.Contains("OpenAL Soft"))

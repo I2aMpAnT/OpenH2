@@ -13,8 +13,8 @@ namespace OpenH2.Engine.Systems
 {
     public class AudioSystem : WorldSystem
     {
-        private Scene scene;
-        private SoundMappingTag soundMapping;
+        private Scene scene = null!;
+        private SoundMappingTag soundMapping = null!;
         private ISoundListener listener;
         private ISoundEmitter globalEmitter;
         private readonly IAudioAdapter audioAdapter;

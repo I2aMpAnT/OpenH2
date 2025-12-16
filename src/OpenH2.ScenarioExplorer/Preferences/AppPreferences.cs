@@ -4,7 +4,7 @@ namespace OpenH2.ScenarioExplorer.Preferences
 {
     public class AppPreferences
     {
-        public string[] RecentFiles { get; set; } = new string[0];
+        public string[] RecentFiles { get; set; } = Array.Empty<string>();
         public bool DiscoveryMode { get; set; } = false;
         public string LastBrowseLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     }

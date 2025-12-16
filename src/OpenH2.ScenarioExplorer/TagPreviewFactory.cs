@@ -215,7 +215,7 @@ namespace OpenH2.ScenarioExplorer
 #region Render Helpers
 
         private static DebugProc callback = DebugCallbackF;
-        private static GL gl;
+        private static GL gl = null!;
 
         public static void DebugCallbackF(GLEnum source, GLEnum type, int id, GLEnum severity, int length, IntPtr message, IntPtr userParam)
         {

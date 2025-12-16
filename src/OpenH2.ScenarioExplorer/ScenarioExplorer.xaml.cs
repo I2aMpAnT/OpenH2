@@ -20,12 +20,12 @@ namespace OpenH2.ScenarioExplorer
     [DoNotNotify]
     public class ScenarioExplorer : Window
     {
-        private ScenarioExplorerViewModel DataCtx;
-        private PreferencesManager prefManager;
-        private AppPreferences prefs;
+        private ScenarioExplorerViewModel DataCtx = null!;
+        private PreferencesManager prefManager = null!;
+        private AppPreferences prefs = null!;
         private List<Window> childWindows = new List<Window>();
 
-        private string loadedMap = null;
+        private string? loadedMap = null;
 
         public ScenarioExplorer()
         {
@@ -102,7 +102,7 @@ namespace OpenH2.ScenarioExplorer
             {
                 if(model.Children == null)
                 {
-                    result = null;
+                    result = null!;
                     return false;
                 }
 
@@ -122,7 +122,7 @@ namespace OpenH2.ScenarioExplorer
                     }
                 }
 
-                result = null;
+                result = null!;
                 return false;
             }
         }

@@ -14,7 +14,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
         private readonly MainRenderPass renderPass;
         private readonly TextureSet textureSet;
         private readonly ShadowMapPass shadowPass;
-        private PipelineConfig[] shaderConfigs = new PipelineConfig[(int)Shader.MAX_VALUE];
+        private PipelineConfig?[] shaderConfigs = new PipelineConfig?[(int)Shader.MAX_VALUE];
         private PipelineBinding[] defaultBindings = new PipelineBinding[]
         {
             new (0, DescriptorType.UniformBuffer),

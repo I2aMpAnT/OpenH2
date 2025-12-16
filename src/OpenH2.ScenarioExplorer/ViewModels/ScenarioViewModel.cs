@@ -16,18 +16,18 @@ namespace OpenH2.ScenarioExplorer.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class ScenarioViewModel
     {
-        public List<TagViewModel> Tags { get; set; }
+        public List<TagViewModel> Tags { get; set; } = new List<TagViewModel>();
 
         public Dictionary<uint, TagViewModel> TagLookup = new Dictionary<uint, TagViewModel>();
 
-        public IH2Map Scene { get; }
+        public IH2Map Scene { get; } = null!;
         private readonly bool discoveryMode;
 
-        private ITagTreeProcessor treeProcessor;
+        private ITagTreeProcessor treeProcessor = null!;
 
-        public TagTreeEntryViewModel[] TreeRoots { get; set; }
+        public TagTreeEntryViewModel[] TreeRoots { get; set; } = Array.Empty<TagTreeEntryViewModel>();
 
-        public ReactiveCommand<Unit, Unit> GenerateCaoCode { get; set; }
+        public ReactiveCommand<Unit, Unit> GenerateCaoCode { get; set; } = null!;
 
         public int PrimaryMagic => Scene.PrimaryMagic;
         public int SecondaryMagic => Scene.SecondaryMagic;

@@ -30,6 +30,6 @@ namespace OpenH2.Rendering
         public int IndexBase;
         public fixed int ShaderUniformHandle[(int)Shader.MAX_VALUE];
         public Vector4 ColorChangeData;
-        public Mesh<BitmapTag> Mesh;
+        public Mesh<BitmapTag> Mesh = null!;
     }
 }

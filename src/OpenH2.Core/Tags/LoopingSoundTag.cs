@@ -22,7 +22,7 @@ namespace OpenH2.Core.Tags
         public TagRef CdmgTag { get; set; }
 
         [ReferenceArray(36)]
-        public SoundReference[] SoundReferences { get; set; }
+        public SoundReference[] SoundReferences { get; set; } = Array.Empty<SoundReference>();
 
         [FixedLength(48)]
         public class SoundReference
@@ -44,7 +44,7 @@ namespace OpenH2.Core.Tags
 
             [PrimitiveArray(24, 4)]
             // Maybe indicating sound coverage of a circle? to simulate directional sound?
-            public float[] PiValues { get; set; }
+            public float[] PiValues { get; set; } = Array.Empty<float>();
         }
     }
 }

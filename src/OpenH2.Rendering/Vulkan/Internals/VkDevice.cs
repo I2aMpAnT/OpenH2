@@ -14,8 +14,8 @@ namespace OpenH2.Rendering.Vulkan.Internals
     {
         private PhysicalDevice physicalDevice;
         private Device device;
-        private VkInstance instance;
-        private KhrSurface khrSurfaceExtension;
+        private VkInstance instance = null!;
+        private KhrSurface khrSurfaceExtension = null!;
 
         private SurfaceKHR surface;
         private SurfaceFormatKHR format;
@@ -44,7 +44,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
 
         public CommandPool CommandPool { get; private set; }
 
-        private VulkanShaderCompiler shaderCompiler;
+        private VulkanShaderCompiler shaderCompiler = null!;
         public new readonly VulkanMemoryAllocator vma;
 
         public Extent2D Extent => ChooseSwapExtent();

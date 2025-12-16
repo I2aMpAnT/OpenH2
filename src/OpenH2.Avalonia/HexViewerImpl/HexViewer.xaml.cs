@@ -31,8 +31,8 @@ namespace OpenH2.AvaloniaControls
         public static readonly DirectProperty<HexViewer, ObservableCollection<HexViewerFeature>> FeaturesProperty =
             AvaloniaProperty.RegisterDirect<HexViewer, ObservableCollection<HexViewerFeature>>(nameof(Features), h => h.Features, (h, v) => h.Features = v);
 
-        public static readonly DirectProperty<HexViewer, HexViewerFeature> SelectedFeatureProperty =
-            AvaloniaProperty.RegisterDirect<HexViewer, HexViewerFeature>(nameof(SelectedFeature), h => h.SelectedFeature, (h, v) => h.SelectedFeature = v);
+        public static readonly DirectProperty<HexViewer, HexViewerFeature?> SelectedFeatureProperty =
+            AvaloniaProperty.RegisterDirect<HexViewer, HexViewerFeature?>(nameof(SelectedFeature), h => h.SelectedFeature, (h, v) => h.SelectedFeature = v);
 
         public static readonly DirectProperty<HexViewer, int> SelectedOffsetProperty =
             AvaloniaProperty.RegisterDirect<HexViewer, int>(nameof(SelectedOffset), h => h.SelectedOffset, (h, v) => { h.SelectedOffset = v; h.BringIntoView(v); }, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
@@ -49,7 +49,7 @@ namespace OpenH2.AvaloniaControls
             }
         }
 
-        private ObservableCollection<HexViewerFeature> _features;
+        private ObservableCollection<HexViewerFeature> _features = null!;
         private ObservableCollection<HexViewerFeature> Features
         {
             get => _features;
@@ -60,8 +60,8 @@ namespace OpenH2.AvaloniaControls
             }
         }
 
-        private HexViewerFeature _selectedFeature;
-        private HexViewerFeature SelectedFeature
+        private HexViewerFeature? _selectedFeature;
+        private HexViewerFeature? SelectedFeature
         {
             get => _selectedFeature;
             set
@@ -88,17 +88,17 @@ namespace OpenH2.AvaloniaControls
         private int visibleOffset = 0;
         private int visibleLength = 12;
 
-        private Grid HexGrid { get; set; }
-        private ScrollBar Scroller { get; set; }
-        private TextPresenter AddressBox { get; set; }
-        private TextPresenter HexBox { get; set; }
-        private TextPresenter AsciiBox { get; set; }
-        private Button ExportButton { get; set; }
-        private TextBox GotoBox { get; }
-        private TextBox BasisBox { get; }
-        private TextPresenter[] Boxes { get; set; }
+        private Grid HexGrid { get; set; } = null!;
+        private ScrollBar Scroller { get; set; } = null!;
+        private TextPresenter AddressBox { get; set; } = null!;
+        private TextPresenter HexBox { get; set; } = null!;
+        private TextPresenter AsciiBox { get; set; } = null!;
+        private Button ExportButton { get; set; } = null!;
+        private TextBox GotoBox { get; } = null!;
+        private TextBox BasisBox { get; } = null!;
+        private TextPresenter[] Boxes { get; set; } = null!;
 
-        private HexViewerViewModel DataVM { get; set; }
+        private HexViewerViewModel DataVM { get; set; } = null!;
 
         
 
@@ -288,7 +288,7 @@ namespace OpenH2.AvaloniaControls
                         return;
 
                     File.WriteAllBytes(path, this.allData.ToArray());
-                    LastSaveLocation = Path.GetDirectoryName(path);
+                    LastSaveLocation = Path.GetDirectoryName(path) ?? LastSaveLocation;
                 }
                 catch (Exception e)
                 {

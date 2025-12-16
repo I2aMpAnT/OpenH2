@@ -48,8 +48,8 @@ namespace OpenH2.TextureDumper
                 return;
             }
 
-            var factory = new MapFactory(Path.GetDirectoryName(mapPath));
-            var h2map = factory.Load(Path.GetFileName(mapPath));
+            var factory = new MapFactory(Path.GetDirectoryName(mapPath) ?? string.Empty);
+            var h2map = factory.Load(Path.GetFileName(mapPath) ?? string.Empty);
 
             if (h2map is not H2vMap scene)
             {
@@ -62,8 +62,8 @@ namespace OpenH2.TextureDumper
 
             foreach(var bitmap in bitmaps)
             {
-                var writePath = Path.Combine(outPath, Path.GetDirectoryName(bitmap.Name));
-                var writeName = Path.GetFileName(bitmap.Name) + ".dds";
+                var writePath = Path.Combine(outPath, Path.GetDirectoryName(bitmap.Name) ?? string.Empty);
+                var writeName = (Path.GetFileName(bitmap.Name) ?? "unnamed") + ".dds";
 
                 if(Directory.Exists(writePath) == false)
                 {

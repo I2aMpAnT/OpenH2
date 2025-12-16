@@ -309,23 +309,23 @@ namespace OpenH2.Core.Tags.Scenario
             public TagRef StyleReference { get; set; }
         }
 
-        [FixedLength(84)] 
-        public class Obj368 
+        [FixedLength(84)]
+        public class Obj368
         {
             [PrimitiveValue(0)]
             public uint Val1 { get; set; }
 
             //[ReferenceArray(16)]
-            public Obj16[] Obj16s { get; set; }
+            public Obj16[] Obj16s { get; set; } = null!;
 
             [PrimitiveValue(24)]
             public uint Val3 { get; set; }
 
             //[ReferenceArray(32)]
-            public Obj32[] Obj32s { get; set; }
+            public Obj32[] Obj32s { get; set; } = null!;
 
             //[ReferenceArray(40)]
-            public Obj40[] Obj40s { get; set; }
+            public Obj40[] Obj40s { get; set; } = null!;
 
             // More here
 

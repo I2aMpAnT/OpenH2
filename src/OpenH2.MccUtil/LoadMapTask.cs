@@ -12,7 +12,7 @@ namespace OpenH2.MccUtil
     public class LoadMapCommandLineArguments
     {
         [Option('f', "file", Required = true, HelpText = "The map file to load")]
-        public string File { get; set; }
+        public string File { get; set; } = string.Empty;
     }
 
     public class LoadMapTask

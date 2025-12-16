@@ -41,7 +41,7 @@ namespace OpenH2.ScenarioExplorer
                 }
             }
 
-            private string searchValue = "";
+            private string searchValue = string.Empty;
             public string SearchValue
             {
                 get { return searchValue; }

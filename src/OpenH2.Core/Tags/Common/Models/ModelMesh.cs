@@ -9,9 +9,9 @@ namespace OpenH2.Core.Tags.Common.Models
     public class ModelMesh : IEquatable<ModelMesh>
     {
         [JsonIgnore]
-        public int[] Indices { get; set; }
+        public int[] Indices { get; set; } = Array.Empty<int>();
         [JsonIgnore]
-        public VertexFormat[] Verticies { get; set; }
+        public VertexFormat[] Verticies { get; set; } = Array.Empty<VertexFormat>();
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public MeshElementType ElementType { get; set; }
@@ -20,9 +20,9 @@ namespace OpenH2.Core.Tags.Common.Models
         public bool Compressed { get; set; }
 
         [JsonIgnore]
-        public byte[] RawData { get; set; }
+        public byte[] RawData { get; set; } = Array.Empty<byte>();
 
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
         public override bool Equals(object obj)
         {

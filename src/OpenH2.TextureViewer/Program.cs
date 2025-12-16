@@ -20,7 +20,7 @@ namespace OpenH2.TextureViewer
 {
     class Program
     {
-        private static BitmapTag[] Bitmaps { get; set; }
+        private static BitmapTag[] Bitmaps { get; set; } = null!;
         private static int CurrentBitmap { get; set; } = 0;
 
         private static Dictionary<int, int> BitmTextureIdLookup = new Dictionary<int, int>();
@@ -28,12 +28,12 @@ namespace OpenH2.TextureViewer
         public static uint MatriciesUniformHandle;
         public static GlobalUniform MatriciesUniform;
         private static uint QuadMeshId;
-        private static Mesh<BitmapTag> quadMesh;
+        private static Mesh<BitmapTag> quadMesh = null!;
         private static uint ShaderHandle;
-        private static OpenGLTextureBinder textureBinder;
-        private static IWindow window;
-        private static IInputContext input;
-        private static GL gl;
+        private static OpenGLTextureBinder textureBinder = null!;
+        private static IWindow window = null!;
+        private static IInputContext input = null!;
+        private static GL gl = null!;
 
         static void Main(string[] args)
         {
@@ -51,8 +51,8 @@ namespace OpenH2.TextureViewer
                 return;
             }
 
-            var factory = new MapFactory(Path.GetDirectoryName(mapPath));
-            var h2map = factory.Load(Path.GetFileName(mapPath));
+            var factory = new MapFactory(Path.GetDirectoryName(mapPath) ?? string.Empty);
+            var h2map = factory.Load(Path.GetFileName(mapPath) ?? string.Empty);
 
             if (h2map is not H2vMap scene)
             {
@@ -253,7 +253,7 @@ namespace OpenH2.TextureViewer
             if (severity == GLEnum.DebugSeverityNotification)
                 return;
 
-            string msg = Marshal.PtrToStringAnsi(message, length);
+            string msg = Marshal.PtrToStringAnsi(message, length) ?? string.Empty;
             Console.WriteLine(msg);
         }
     }

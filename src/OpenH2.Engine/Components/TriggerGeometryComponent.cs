@@ -12,8 +12,8 @@ namespace OpenH2.Engine.Components
     public class TriggerGeometryComponent : Component
     {
         public TriggerGeometryShape Shape { get; }
-        public string Name { get; private set; }
-        public ITransform Transform { get; private set; }
+        public string Name { get; private set; } = string.Empty;
+        public ITransform Transform { get; private set; } = null!;
         public Vector3 Size { get; private set; }
 
         private TriggerGeometryComponent(Entity parent, TriggerGeometryShape shape) : base(parent)

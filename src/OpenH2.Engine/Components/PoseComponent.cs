@@ -5,7 +5,7 @@ namespace OpenH2.Engine.Components
 {
     public class PoseComponent : Component
     {
-        public AnimationNodeTransform[,] CurrentAnimation { get; set; }
+        public AnimationNodeTransform[,] CurrentAnimation { get; set; } = null!;
         public int CurrentFrame { get; set; }
 
         public PoseComponent(Entity parent) : base(parent)

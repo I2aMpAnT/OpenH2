@@ -30,7 +30,7 @@ namespace OpenH2.AudioDemo
             }
 
             var device = ALC.OpenDevice(deviceName);
-            var context = ALC.CreateContext(device, (int[])null);
+            var context = ALC.CreateContext(device, (int[]?)null);
             ALC.MakeContextCurrent(context);
 
             CheckALError("Start");
@@ -46,8 +46,8 @@ namespace OpenH2.AudioDemo
 
             // var get samples from map
             var map = @"D:\H2vMaps\01a_tutorial.map";
-            var factory = new MapFactory(Path.GetDirectoryName(map));
-            var h2map = factory.Load(Path.GetFileName(map));
+            var factory = new MapFactory(Path.GetDirectoryName(map) ?? string.Empty);
+            var h2map = factory.Load(Path.GetFileName(map) ?? string.Empty);
 
             if (h2map is not H2vMap scene)
             {

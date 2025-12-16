@@ -5,7 +5,7 @@ namespace OpenH2.OpenAL.Audio
 {
     public class OpenALAudioAdapter : IAudioAdapter
     {
-        private readonly OpenALHost host;
+        private readonly OpenALHost host = null!;
 
         internal OpenALAudioAdapter(OpenALHost host)
         {

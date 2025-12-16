@@ -28,23 +28,23 @@ namespace OpenH2.Core.Tags
         public float AccelerationScale { get; set; }
 
         //[InternedString(52)]
-        public string DefaultModelVariant { get; set; }
+        public string DefaultModelVariant { get; set; } = string.Empty;
 
         [PrimitiveValue(56)]
         public TagRef<HaloModelTag> Model { get; set; }
 
 
         [ReferenceArray(92)]
-        public AiProperty[] AiProperties { get; set; }
+        public AiProperty[] AiProperties { get; set; } = Array.Empty<AiProperty>();
 
         [ReferenceArray(148)]
-        public Obj148[] obj148s { get; set; }
+        public Obj148[] obj148s { get; set; } = Array.Empty<Obj148>();
 
         [ReferenceArray(180)]
-        public Obj180[] obj180s { get; set; }
+        public Obj180[] obj180s { get; set; } = Array.Empty<Obj180>();
 
         [ReferenceArray(232)]
-        public Obj232[] obj232s { get; set; }
+        public Obj232[] obj232s { get; set; } = Array.Empty<Obj232>();
 
 
         [FixedLength(16)]
