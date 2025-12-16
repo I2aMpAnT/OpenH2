@@ -1425,8 +1425,8 @@ namespace VMASharp
 
         internal struct DedicatedAllocationHandler
         {
-            public List<Allocation> Allocations;
-            public ReaderWriterLockSlim Mutex;
+            public List<Allocation>? Allocations;
+            public ReaderWriterLockSlim? Mutex;
         }
 
         internal struct DedicatedAllocationInfo

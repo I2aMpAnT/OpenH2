@@ -158,7 +158,7 @@ namespace OpenH2.Core.Tags
         public class SoundDataChunk
         {
             [PrimitiveValue(0)]
-            public NormalOffset Offset { get; set; }
+            public NormalOffset Offset { get; set; } = null!;
 
             [PrimitiveValue(4)]
             public uint Length { get; set; }

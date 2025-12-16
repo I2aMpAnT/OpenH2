@@ -129,7 +129,7 @@ namespace OpenH2.Core.Tags
 
         public class BitmapLevelOfDetail
         {
-            public NormalOffset Offset { get; set; }
+            public NormalOffset Offset { get; set; } = null!;
 
             public uint Size { get; set; }
 

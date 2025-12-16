@@ -17,12 +17,12 @@ namespace OpenH2.Core.Maps.Vista
         public int TotalBytes { get; set; }
 
         [PrimitiveValue(16)]
-        public NormalOffset IndexOffset { get; set; }
+        public NormalOffset IndexOffset { get; set; } = null!;
 
         [PrimitiveValue(20)]
         public int RawSecondaryOffset { get; set; }
 
-        public PrimaryOffset SecondaryOffset { get; set; }
+        public PrimaryOffset SecondaryOffset { get; set; } = null!;
 
         [StringValue(32, 32)]
         public string MapOrigin { get; set; } = null!;

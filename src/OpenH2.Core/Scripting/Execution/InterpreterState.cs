@@ -10,7 +10,7 @@ namespace OpenH2.Core.Scripting.Execution
     [DebuggerDisplay("{OriginatingNode.NodeType}<{OriginatingNode.DataType}> op:{OriginatingNode.OperationId}")]
     public struct StackFrame
     {
-        public Queue<InterpreterResult> Locals;
+        public Queue<InterpreterResult>? Locals;
         public ScenarioTag.ScriptSyntaxNode OriginatingNode;
         public ScenarioTag.ScriptSyntaxNode Current;
         public ushort Next;
