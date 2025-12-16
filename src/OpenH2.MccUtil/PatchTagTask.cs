@@ -4,6 +4,7 @@ using OpenH2.Core.Factories;
 using OpenH2.Core.Maps;
 using OpenH2.Core.Patching;
 using OpenBlam.Serialization;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
