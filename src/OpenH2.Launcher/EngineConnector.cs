@@ -23,24 +23,30 @@ namespace OpenH2.Launcher
                 return enginePath;
             }
 
-            enginePath = Path.Combine(Directory.GetCurrentDirectory(), "OpenH2.Engine.exe");
-            Console.WriteLine($"[EngineConnector] Checking: {enginePath} - Exists: {File.Exists(enginePath)}");
-
-            if(File.Exists(enginePath))
-            {
-                return enginePath;
-            }
-
+            // Check engine/ subfolder first (where post-build copies complete files)
             enginePath = Path.Combine(Directory.GetCurrentDirectory(), "engine", "OpenH2.Engine.exe");
-            Console.WriteLine($"[EngineConnector] Checking: {enginePath} - Exists: {File.Exists(enginePath)}");
+            var dllPath = Path.Combine(Directory.GetCurrentDirectory(), "engine", "OpenH2.Engine.dll");
+            Console.WriteLine($"[EngineConnector] Checking: {enginePath}");
+            Console.WriteLine($"[EngineConnector]   EXE exists: {File.Exists(enginePath)}, DLL exists: {File.Exists(dllPath)}");
 
-            if (File.Exists(enginePath))
+            if (File.Exists(enginePath) && File.Exists(dllPath))
             {
                 return enginePath;
             }
 
-            Console.WriteLine("[EngineConnector] ERROR: Could not find OpenH2.Engine.exe");
-            throw new Exception("Cannot find OpenH2.Engine executable");
+            // Fallback to current directory
+            enginePath = Path.Combine(Directory.GetCurrentDirectory(), "OpenH2.Engine.exe");
+            dllPath = Path.Combine(Directory.GetCurrentDirectory(), "OpenH2.Engine.dll");
+            Console.WriteLine($"[EngineConnector] Checking: {enginePath}");
+            Console.WriteLine($"[EngineConnector]   EXE exists: {File.Exists(enginePath)}, DLL exists: {File.Exists(dllPath)}");
+
+            if (File.Exists(enginePath) && File.Exists(dllPath))
+            {
+                return enginePath;
+            }
+
+            Console.WriteLine("[EngineConnector] ERROR: Could not find OpenH2.Engine.exe with its DLL");
+            throw new Exception("Cannot find OpenH2.Engine executable (need both .exe and .dll)");
         }
 
         public static void Start(string mapPath)
