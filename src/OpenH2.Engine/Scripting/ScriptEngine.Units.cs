@@ -7,7 +7,7 @@ namespace OpenH2.Engine.Scripting
     public partial class ScriptEngine : IScriptEngine
     {
         /// <summary>converts an object to a unit.</summary>
-        public IUnit unit(IGameObject entity)
+        public IUnit? unit(IGameObject? entity)
         {
             return entity as IUnit;
         }
