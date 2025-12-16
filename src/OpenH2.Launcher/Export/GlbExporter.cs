@@ -1,5 +1,6 @@
 using OpenBlam.Core.Texturing;
 using OpenH2.Core.Enums.Texture;
+using OpenH2.Core.Extensions;
 using OpenH2.Core.Factories;
 using OpenH2.Core.Maps;
 using OpenH2.Core.Tags;
@@ -31,9 +32,20 @@ namespace OpenH2.Launcher.Export
         // glTF constants
         private const int FLOAT = 5126;
         private const int UNSIGNED_INT = 5125;
-        private const int UNSIGNED_BYTE = 5121;
         private const int ARRAY_BUFFER = 34962;
         private const int ELEMENT_ARRAY_BUFFER = 34963;
+
+        // Coordinate transform: Halo Z-up to glTF Y-up
+        private static readonly Matrix4x4 ExportRotation;
+
+        static GlbExporter()
+        {
+            float rotX = -90f * MathF.PI / 180f;
+            float rotY = -180f * MathF.PI / 180f;
+            var rotationX = Matrix4x4.CreateRotationX(rotX);
+            var rotationY = Matrix4x4.CreateRotationY(rotY);
+            ExportRotation = rotationX * rotationY;
+        }
 
         /// <summary>
         /// Export a single map to GLB format.
@@ -150,14 +162,14 @@ namespace OpenH2.Launcher.Export
                     continue;
                 }
 
-                // Extract clusters (main level geometry)
+                // Extract clusters (main level geometry) - no instance transform needed
                 foreach (var cluster in bsp.Clusters)
                 {
                     if (cluster.Model?.Meshes == null) continue;
 
                     foreach (var modelMesh in cluster.Model.Meshes)
                     {
-                        var primitive = ConvertMeshWithMaterial(map, modelMesh, exportData);
+                        var primitive = ConvertMesh(map, modelMesh, Matrix4x4.Identity, exportData);
                         if (primitive != null)
                         {
                             exportData.Primitives.Add(primitive);
@@ -165,17 +177,29 @@ namespace OpenH2.Launcher.Export
                     }
                 }
 
-                // Extract instanced geometry
-                foreach (var instanceDef in bsp.InstancedGeometryDefinitions)
+                // Extract instanced geometry WITH PROPER TRANSFORMS
+                // Iterate through instances (not definitions) to get world positions
+                if (bsp.InstancedGeometryInstances != null && bsp.InstancedGeometryDefinitions != null)
                 {
-                    if (instanceDef.Model?.Meshes == null) continue;
-
-                    foreach (var modelMesh in instanceDef.Model.Meshes)
+                    foreach (var instance in bsp.InstancedGeometryInstances)
                     {
-                        var primitive = ConvertMeshWithMaterial(map, modelMesh, exportData);
-                        if (primitive != null)
+                        // Get the definition this instance refers to
+                        if (instance.Index >= bsp.InstancedGeometryDefinitions.Length)
+                            continue;
+
+                        var definition = bsp.InstancedGeometryDefinitions[instance.Index];
+                        if (definition.Model?.Meshes == null) continue;
+
+                        // Build instance transform: Scale * Rotation * Translation
+                        var instanceTransform = BuildInstanceTransform(instance);
+
+                        foreach (var modelMesh in definition.Model.Meshes)
                         {
-                            exportData.Primitives.Add(primitive);
+                            var primitive = ConvertMesh(map, modelMesh, instanceTransform, exportData);
+                            if (primitive != null)
+                            {
+                                exportData.Primitives.Add(primitive);
+                            }
                         }
                     }
                 }
@@ -184,7 +208,31 @@ namespace OpenH2.Launcher.Export
             return exportData;
         }
 
-        private static GlbPrimitive? ConvertMeshWithMaterial(IH2PlayableMap map, OpenH2.Core.Tags.Common.Models.ModelMesh modelMesh, GlbExportData exportData)
+        private static Matrix4x4 BuildInstanceTransform(BspTag.InstancedGeometryInstance instance)
+        {
+            // Scale (uniform)
+            var scale = Matrix4x4.CreateScale(new Vector3(instance.Scale));
+
+            // Rotation from 3x3 matrix
+            var rotation = Matrix4x4.Identity;
+            if (instance.RotationMatrix != null && instance.RotationMatrix.Length >= 9)
+            {
+                var quat = QuaternionExtensions.From3x3Mat(instance.RotationMatrix);
+                rotation = Matrix4x4.CreateFromQuaternion(quat);
+            }
+
+            // Translation
+            var translation = Matrix4x4.CreateTranslation(instance.Position);
+
+            // Combine: Scale * Rotation * Translation
+            return scale * rotation * translation;
+        }
+
+        private static GlbPrimitive? ConvertMesh(
+            IH2PlayableMap map,
+            OpenH2.Core.Tags.Common.Models.ModelMesh modelMesh,
+            Matrix4x4 instanceTransform,
+            GlbExportData exportData)
         {
             if (modelMesh.Verticies == null || modelMesh.Verticies.Length == 0)
                 return null;
@@ -193,42 +241,40 @@ namespace OpenH2.Launcher.Export
 
             var primitive = new GlbPrimitive();
 
-            // Try to get texture for this mesh
+            // Get material/texture for this mesh
             primitive.MaterialIndex = GetOrCreateMaterial(map, modelMesh, exportData);
 
-            // Rotation matrix: Halo Z-up to glTF Y-up
-            float rotX = -90f * MathF.PI / 180f;
-            float rotY = -180f * MathF.PI / 180f;
-            var rotationX = Matrix4x4.CreateRotationX(rotX);
-            var rotationY = Matrix4x4.CreateRotationY(rotY);
-            var exportRotation = rotationX * rotationY;
+            // Combined transform: Instance transform first, then export rotation (Z-up to Y-up)
+            var combinedTransform = instanceTransform * ExportRotation;
 
             // Convert vertices
             foreach (var vertex in modelMesh.Verticies)
             {
-                // Apply coordinate transform
-                var rotated = Vector3.Transform(vertex.Position, exportRotation);
-                primitive.Positions.Add(rotated.X);
-                primitive.Positions.Add(rotated.Y);
-                primitive.Positions.Add(rotated.Z);
+                // Apply combined transform to position
+                var transformed = Vector3.Transform(vertex.Position, combinedTransform);
+                primitive.Positions.Add(transformed.X);
+                primitive.Positions.Add(transformed.Y);
+                primitive.Positions.Add(transformed.Z);
 
                 // Update bounds
-                primitive.MinX = MathF.Min(primitive.MinX, rotated.X);
-                primitive.MaxX = MathF.Max(primitive.MaxX, rotated.X);
-                primitive.MinY = MathF.Min(primitive.MinY, rotated.Y);
-                primitive.MaxY = MathF.Max(primitive.MaxY, rotated.Y);
-                primitive.MinZ = MathF.Min(primitive.MinZ, rotated.Z);
-                primitive.MaxZ = MathF.Max(primitive.MaxZ, rotated.Z);
+                primitive.MinX = MathF.Min(primitive.MinX, transformed.X);
+                primitive.MaxX = MathF.Max(primitive.MaxX, transformed.X);
+                primitive.MinY = MathF.Min(primitive.MinY, transformed.Y);
+                primitive.MaxY = MathF.Max(primitive.MaxY, transformed.Y);
+                primitive.MinZ = MathF.Min(primitive.MinZ, transformed.Z);
+                primitive.MaxZ = MathF.Max(primitive.MaxZ, transformed.Z);
 
                 // Fix UV coordinates (flip V)
                 primitive.UVs.Add(vertex.TexCoords.X);
                 primitive.UVs.Add(1.0f - vertex.TexCoords.Y);
 
-                // Transform normals
-                var rotatedNormal = Vector3.TransformNormal(vertex.Normal, exportRotation);
-                primitive.Normals.Add(rotatedNormal.X);
-                primitive.Normals.Add(rotatedNormal.Y);
-                primitive.Normals.Add(rotatedNormal.Z);
+                // Transform normals (rotation only, no translation)
+                var transformedNormal = Vector3.TransformNormal(vertex.Normal, combinedTransform);
+                if (transformedNormal.LengthSquared() > 0.0001f)
+                    transformedNormal = Vector3.Normalize(transformedNormal);
+                primitive.Normals.Add(transformedNormal.X);
+                primitive.Normals.Add(transformedNormal.Y);
+                primitive.Normals.Add(transformedNormal.Z);
             }
 
             // Convert indices based on element type
@@ -237,7 +283,6 @@ namespace OpenH2.Launcher.Export
 
             if (elementType == MeshElementType.TriangleStrip || elementType == MeshElementType.TriangleStripDecal)
             {
-                // Convert triangle strip to triangle list
                 ConvertTriangleStrip(indices, primitive.Indices);
             }
             else
@@ -246,8 +291,8 @@ namespace OpenH2.Launcher.Export
                 for (int i = 0; i < indices.Length - 2; i += 3)
                 {
                     primitive.Indices.Add((uint)indices[i]);
-                    primitive.Indices.Add((uint)indices[i + 2]); // Swapped
-                    primitive.Indices.Add((uint)indices[i + 1]); // Swapped
+                    primitive.Indices.Add((uint)indices[i + 2]);
+                    primitive.Indices.Add((uint)indices[i + 1]);
                 }
             }
 
@@ -257,49 +302,73 @@ namespace OpenH2.Launcher.Export
             return primitive;
         }
 
-        private static int GetOrCreateMaterial(IH2PlayableMap map, OpenH2.Core.Tags.Common.Models.ModelMesh modelMesh, GlbExportData exportData)
+        private static int GetOrCreateMaterial(
+            IH2PlayableMap map,
+            OpenH2.Core.Tags.Common.Models.ModelMesh modelMesh,
+            GlbExportData exportData)
         {
-            // Try to get shader and diffuse texture
             if (modelMesh.Shader.IsInvalid)
-                return 0; // Default material
+                return 0;
 
             try
             {
                 if (!map.TryGetTag(modelMesh.Shader, out var shader) || shader == null)
                     return 0;
 
-                // Try to get diffuse bitmap from shader
+                // Try to get diffuse bitmap using heuristic (like MaterialFactory)
                 BitmapTag? diffuseBitmap = null;
 
-                // First try legacy bitmap info
-                if (shader.BitmapInfos != null && shader.BitmapInfos.Length > 0)
+                // First check legacy bitmap info (BitmapInfos array)
+                if (shader.BitmapInfos != null)
                 {
-                    var bitmapInfo = shader.BitmapInfos[0];
-                    if (!bitmapInfo.DiffuseBitmap.IsInvalid)
+                    foreach (var info in shader.BitmapInfos)
                     {
-                        map.TryGetTag(bitmapInfo.DiffuseBitmap, out diffuseBitmap);
+                        if (!info.DiffuseBitmap.IsInvalid && map.TryGetTag(info.DiffuseBitmap, out var diff) && diff != null)
+                        {
+                            diffuseBitmap = diff;
+                            break;
+                        }
                     }
                 }
 
-                // If no legacy info, try shader arguments
+                // Then check shader arguments (BitmapArguments array)
                 if (diffuseBitmap == null && shader.Arguments != null && shader.Arguments.Length > 0)
                 {
                     var args = shader.Arguments[0];
-                    if (args.BitmapArguments != null && args.BitmapArguments.Length > 0)
+                    if (args.BitmapArguments != null)
                     {
-                        // Usually index 0 is diffuse
-                        for (int i = 0; i < Math.Min(3, args.BitmapArguments.Length); i++)
+                        foreach (var bitmRef in args.BitmapArguments)
                         {
-                            var bitmapArg = args.BitmapArguments[i];
-                            if (!bitmapArg.Bitmap.IsInvalid && map.TryGetTag(bitmapArg.Bitmap, out var testBitmap))
+                            if (bitmRef.Bitmap.IsInvalid)
+                                continue;
+
+                            if (!map.TryGetTag(bitmRef.Bitmap, out var bitm) || bitm == null)
+                                continue;
+
+                            // Skip invalid textures
+                            if (bitm.TextureInfos == null || bitm.TextureInfos.Length == 0)
+                                continue;
+
+                            // Skip very small textures (likely not diffuse/color maps)
+                            if (bitm.TextureInfos[0].Width <= 4 || bitm.TextureInfos[0].Height <= 4)
+                                continue;
+
+                            // Prefer explicit diffuse usage
+                            if (bitm.TextureUsage == TextureUsage.Diffuse)
                             {
-                                // Use the first valid texture (usually diffuse)
-                                if (testBitmap?.TextureUsage == TextureUsage.Diffuse || diffuseBitmap == null)
-                                {
-                                    diffuseBitmap = testBitmap;
-                                    if (testBitmap?.TextureUsage == TextureUsage.Diffuse)
-                                        break;
-                                }
+                                diffuseBitmap = bitm;
+                                break;
+                            }
+
+                            // Skip bump/normal maps
+                            if (bitm.TextureUsage == TextureUsage.Bump ||
+                                (bitm.Name != null && bitm.Name.Contains("bump", StringComparison.OrdinalIgnoreCase)))
+                                continue;
+
+                            // Take first valid non-bump texture if we haven't found one yet
+                            if (diffuseBitmap == null)
+                            {
+                                diffuseBitmap = bitm;
                             }
                         }
                     }
@@ -397,7 +466,7 @@ namespace OpenH2.Launcher.Export
                         Decode16Bit(data, rgba, width, height, pixelFormat);
                         break;
                     default:
-                        // Unsupported format - return gray
+                        // Unsupported format - return gray placeholder
                         for (int i = 0; i < rgba.Length; i += 4)
                         {
                             rgba[i] = 128;
@@ -459,7 +528,7 @@ namespace OpenH2.Launcher.Export
                             (byte)((colors[0][2] + colors[1][2]) / 2),
                             255
                         };
-                        colors[3] = new byte[] { 0, 0, 0, 0 }; // Transparent
+                        colors[3] = new byte[] { 0, 0, 0, 0 };
                     }
 
                     uint indices = (uint)(block[4] | (block[5] << 8) | (block[6] << 16) | (block[7] << 24));
@@ -500,12 +569,9 @@ namespace OpenH2.Launcher.Export
                     if (blockIndex * 16 + 16 > data.Length) return;
 
                     var block = data.Slice(blockIndex * 16, 16);
-
-                    // Alpha block (8 bytes)
                     var alphaBlock = block.Slice(0, 8);
-
-                    // Color block (8 bytes) - same as DXT1
                     var colorBlock = block.Slice(8, 8);
+
                     ushort c0 = (ushort)(colorBlock[0] | (colorBlock[1] << 8));
                     ushort c1 = (ushort)(colorBlock[2] | (colorBlock[3] << 8));
 
@@ -538,10 +604,9 @@ namespace OpenH2.Launcher.Export
                             int colorIndex = (int)((indices >> ((py * 4 + px) * 2)) & 0x3);
                             int outputIndex = (y * width + x) * 4;
 
-                            // Get alpha (4 bits per pixel)
                             int alphaByteIndex = py * 2 + px / 2;
                             int alphaNibble = (px % 2 == 0) ? (alphaBlock[alphaByteIndex] & 0x0F) : ((alphaBlock[alphaByteIndex] >> 4) & 0x0F);
-                            byte alpha = (byte)(alphaNibble * 17); // Scale 0-15 to 0-255
+                            byte alpha = (byte)(alphaNibble * 17);
 
                             output[outputIndex] = colors[colorIndex][0];
                             output[outputIndex + 1] = colors[colorIndex][1];
@@ -569,7 +634,6 @@ namespace OpenH2.Launcher.Export
 
                     var block = data.Slice(blockIndex * 16, 16);
 
-                    // Alpha block (8 bytes)
                     byte a0 = block[0];
                     byte a1 = block[1];
                     var alphas = new byte[8];
@@ -598,7 +662,6 @@ namespace OpenH2.Launcher.Export
                     ulong alphaIndices = (ulong)block[2] | ((ulong)block[3] << 8) | ((ulong)block[4] << 16) |
                                          ((ulong)block[5] << 24) | ((ulong)block[6] << 32) | ((ulong)block[7] << 40);
 
-                    // Color block (8 bytes) - same as DXT1
                     var colorBlock = block.Slice(8, 8);
                     ushort c0 = (ushort)(colorBlock[0] | (colorBlock[1] << 8));
                     ushort c1 = (ushort)(colorBlock[2] | (colorBlock[3] << 8));
@@ -650,7 +713,6 @@ namespace OpenH2.Launcher.Export
             int pixelCount = Math.Min(width * height, data.Length / 4);
             for (int i = 0; i < pixelCount; i++)
             {
-                // ARGB -> RGBA
                 output[i * 4] = data[i * 4 + 2];     // R
                 output[i * 4 + 1] = data[i * 4 + 1]; // G
                 output[i * 4 + 2] = data[i * 4];     // B
@@ -695,7 +757,6 @@ namespace OpenH2.Launcher.Export
 
                 try
                 {
-                    // Convert RGBA to BGRA for System.Drawing
                     var bgra = new byte[rgba.Length];
                     for (int i = 0; i < rgba.Length; i += 4)
                     {
@@ -732,7 +793,6 @@ namespace OpenH2.Launcher.Export
                 int i1 = indices[i + 1];
                 int i2 = indices[i + 2];
 
-                // Skip degenerate triangles
                 if (i0 != i1 && i0 != i2 && i1 != i2)
                 {
                     if (flip)
@@ -766,13 +826,12 @@ namespace OpenH2.Launcher.Export
             var materials = new List<object>();
             var samplers = new List<object>();
 
-            // Add default sampler
             samplers.Add(new
             {
-                magFilter = 9729, // LINEAR
-                minFilter = 9987, // LINEAR_MIPMAP_LINEAR
-                wrapS = 10497,    // REPEAT
-                wrapT = 10497     // REPEAT
+                magFilter = 9729,
+                minFilter = 9987,
+                wrapS = 10497,
+                wrapT = 10497
             });
 
             // Write texture images first
@@ -790,8 +849,7 @@ namespace OpenH2.Launcher.Export
                 textures.Add(new { source = images.Count - 1, sampler = 0 });
             }
 
-            // Create materials
-            // Always add default material first
+            // Create materials - default first
             materials.Add(new
             {
                 pbrMetallicRoughness = new
@@ -803,7 +861,6 @@ namespace OpenH2.Launcher.Export
                 doubleSided = true
             });
 
-            // Add materials with textures
             foreach (var mat in exportData.Materials)
             {
                 materials.Add(new
@@ -820,12 +877,10 @@ namespace OpenH2.Launcher.Export
 
             int accessorIndex = 0;
 
-            // Write geometry
             foreach (var primitive in exportData.Primitives)
             {
-                int positionAccessor = -1, uvAccessor = -1, normalAccessor = -1, indexAccessor = -1;
+                int positionAccessor, uvAccessor, normalAccessor, indexAccessor;
 
-                // Write positions
                 var posOffset = (int)binStream.Position;
                 foreach (var p in primitive.Positions)
                     binWriter.Write(p);
@@ -844,7 +899,6 @@ namespace OpenH2.Launcher.Export
                 });
                 positionAccessor = accessorIndex++;
 
-                // Write UVs
                 var uvOffset = (int)binStream.Position;
                 foreach (var uv in primitive.UVs)
                     binWriter.Write(uv);
@@ -861,7 +915,6 @@ namespace OpenH2.Launcher.Export
                 });
                 uvAccessor = accessorIndex++;
 
-                // Write normals
                 var normalOffset = (int)binStream.Position;
                 foreach (var n in primitive.Normals)
                     binWriter.Write(n);
@@ -878,7 +931,6 @@ namespace OpenH2.Launcher.Export
                 });
                 normalAccessor = accessorIndex++;
 
-                // Write indices
                 var indexOffset = (int)binStream.Position;
                 foreach (var idx in primitive.Indices)
                     binWriter.Write(idx);
@@ -895,7 +947,6 @@ namespace OpenH2.Launcher.Export
                 });
                 indexAccessor = accessorIndex++;
 
-                // Material index: 0 is default, materials with textures start at 1
                 var materialIndex = primitive.MaterialIndex == 0 ? 0 : primitive.MaterialIndex + 1;
 
                 meshPrimitives.Add(new
@@ -913,7 +964,6 @@ namespace OpenH2.Launcher.Export
 
             var binaryData = binStream.ToArray();
 
-            // Build JSON
             var gltf = new Dictionary<string, object>
             {
                 ["asset"] = new { version = "2.0", generator = "OpenH2 GlbExporter" },
@@ -937,29 +987,24 @@ namespace OpenH2.Launcher.Export
             var jsonString = JsonSerializer.Serialize(gltf, new JsonSerializerOptions { WriteIndented = false });
             var jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
-            // Pad JSON to 4-byte alignment
             var jsonPadding = (4 - (jsonBytes.Length % 4)) % 4;
             var paddedJsonBytes = new byte[jsonBytes.Length + jsonPadding];
             Array.Copy(jsonBytes, paddedJsonBytes, jsonBytes.Length);
             for (int i = jsonBytes.Length; i < paddedJsonBytes.Length; i++)
-                paddedJsonBytes[i] = 0x20; // Space character
+                paddedJsonBytes[i] = 0x20;
 
-            // Write GLB file
             using var fs = File.Create(outputPath);
             using var writer = new BinaryWriter(fs);
 
-            // Header
             var totalLength = 12 + 8 + paddedJsonBytes.Length + 8 + binaryData.Length;
             writer.Write(GLB_MAGIC);
             writer.Write(GLB_VERSION);
             writer.Write((uint)totalLength);
 
-            // JSON chunk
             writer.Write((uint)paddedJsonBytes.Length);
             writer.Write(JSON_CHUNK_TYPE);
             writer.Write(paddedJsonBytes);
 
-            // Binary chunk
             writer.Write((uint)binaryData.Length);
             writer.Write(BIN_CHUNK_TYPE);
             writer.Write(binaryData);
