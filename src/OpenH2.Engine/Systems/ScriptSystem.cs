@@ -34,7 +34,7 @@ namespace OpenH2.Engine.Systems
 
         public override void Initialize(Scene scene)
         {
-            this.inputStore = this.world.GetGlobalResource<InputStore>();
+            this.inputStore = this.world.GetGlobalResource<InputStore>()!;
             var scenario = scene.Map.Scenario;
 
 

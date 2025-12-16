@@ -21,6 +21,9 @@ namespace OpenH2.Engine.Systems
             var input = this.world.GetGlobalResource<InputStore>();
             var movers = this.world.Components<MoverComponent>();
 
+            if (input == null || movers == null)
+                return;
+
             var yaw = 0f;
             var pitch = 0f;
 
@@ -176,14 +179,14 @@ namespace OpenH2.Engine.Systems
         ///  - Crouching reduces friction (causes more sliding)
         /// </summary>
 
-        private void UpdateDynamicController(MoverComponent mover, 
-            DynamicMovementController dynamic, 
-            Vector3 inputVector, 
-            Vector3 forward, 
-            Vector3 strafe, 
+        private void UpdateDynamicController(MoverComponent mover,
+            DynamicMovementController? dynamic,
+            Vector3 inputVector,
+            Vector3 forward,
+            Vector3 strafe,
             double timestep)
         {
-            dynamic.Move(mover.PhysicsImplementation, inputVector, forward, strafe);
+            dynamic?.Move(mover.PhysicsImplementation, inputVector, forward, strafe);
         }
     }
 }

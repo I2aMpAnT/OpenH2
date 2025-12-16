@@ -17,6 +17,8 @@ namespace OpenH2.Engine.Systems
         public override void Update(double timestep)
         {
             var inputs = this.world.GetGlobalResource<InputStore>();
+            if (inputs == null)
+                return;
 
             var state = this.inputCtx.CaptureState();
             inputs.SetMouse(state.Mice[0]);

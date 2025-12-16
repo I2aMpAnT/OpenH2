@@ -38,7 +38,7 @@ namespace OpenH2.Engine.Systems
         {
             var listenerComponents = this.world.Components<SoundListenerComponent>();
 
-            if (listenerComponents.Count == 0)
+            if (listenerComponents == null || listenerComponents.Count == 0)
                 return;
 
             var listenerComponent = listenerComponents[0];
@@ -46,8 +46,9 @@ namespace OpenH2.Engine.Systems
             this.listener.SetPosition(listenerComponent.Transform.Position + listenerComponent.PositionOffset);
             this.listener.SetOrientation(listenerComponent.Transform.Orientation);
             this.globalEmitter.SetPosition(listenerComponent.Transform.Position);
-            
+
             var comps = this.world.Components<SoundEmitterComponent>();
+            if (comps == null) return;
 
             foreach(var comp in comps)
             {

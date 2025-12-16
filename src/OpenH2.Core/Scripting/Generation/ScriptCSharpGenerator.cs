@@ -35,7 +35,7 @@ namespace OpenH2.Core.Scripting.Generation
         private Stack<Scope> scopes = null!;
         private ContinuationStack<int> childIndices = null!;
 
-        public ScriptCSharpGenerator(ScenarioTag scnr, MemberNameRepository nameRepo, string[] refrences = null, AttributeSyntax[] classAttributes = null)
+        public ScriptCSharpGenerator(ScenarioTag scnr, MemberNameRepository nameRepo, string[]? refrences = null, AttributeSyntax[]? classAttributes = null)
         {
             this.scenario = scnr;
             this.nameRepo = nameRepo;

@@ -26,6 +26,8 @@ namespace OpenH2.Engine.Systems
         public override void Render(double timestep)
         {
             var renderList = world.GetGlobalResource<RenderListStore>();
+            if (renderList == null)
+                return;
 
             RenderingPipeline.SetModels(renderList.Models);
 
@@ -35,7 +37,7 @@ namespace OpenH2.Engine.Systems
             }
 
             var cameras = world.Components<CameraComponent>();
-            var cam = cameras.FirstOrDefault();
+            var cam = cameras?.FirstOrDefault();
 
             if (cam == null)
                 return;
@@ -62,7 +64,7 @@ namespace OpenH2.Engine.Systems
             };
 
             const float ShadowMapFar = 117;
-            var skylight = world.Components<SkyLightComponent>().FirstOrDefault();
+            var skylight = world.Components<SkyLightComponent>()?.FirstOrDefault();
             if (skylight != null)
             {
                 matrices.SunLightDirection = skylight.Direction;

@@ -145,6 +145,7 @@ namespace OpenH2.Engine.Systems.Physics
 
             // Cook terrain and static geom meshes
             var terrains = world.Components<StaticTerrainComponent>();
+            if (terrains == null) return;
 
             foreach (var terrain in terrains)
             {
@@ -152,24 +153,28 @@ namespace OpenH2.Engine.Systems.Physics
             }
 
             var sceneries = world.Components<StaticGeometryComponent>();
+            if (sceneries != null)
             foreach (var scenery in sceneries)
             {
                 AddStaticGeom(scenery);
             }
 
             var rigidBodies = world.Components<RigidBodyComponent>();
+            if (rigidBodies != null)
             foreach (var body in rigidBodies)
             {
                 AddRigidBodyComponent(body);
             }
 
             var movers = world.Components<MoverComponent>();
+            if (movers != null)
             foreach (var mover in movers)
             {
                 AddCharacterController(mover);
             }
 
             var triggers = world.Components<TriggerGeometryComponent>();
+            if (triggers != null)
             foreach (var trigger in triggers)
             {
                 AddTrigger(trigger);
@@ -444,6 +449,7 @@ namespace OpenH2.Engine.Systems.Physics
             Geometry volume = component.Shape switch
             {
                 TriggerGeometryShape.Cuboid => new BoxGeometry(halfSize),
+                _ => new BoxGeometry(halfSize)
             };
 
             var shape = RigidActorExt.CreateExclusiveShape(body, volume, defaultMat, ShapeFlag.TriggerShape);

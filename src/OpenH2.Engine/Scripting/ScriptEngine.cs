@@ -459,7 +459,7 @@
         }
 
         /// <summary>pauses execution of this script (or, optionally, another script) for the specified number of ticks.</summary>
-        public async Task sleep(short ticks, IScriptMethodReference script = null)
+        public async Task sleep(short ticks, IScriptMethodReference? script = null)
         {
             if (ticks <= 0) ticks = 1;
 
@@ -474,7 +474,7 @@
         }
 
         /// <summary>pauses execution of this script (or, optionally, another script) forever.</summary>
-        public void sleep_forever(IScriptMethodReference script = null)
+        public void sleep_forever(IScriptMethodReference? script = null)
         {
             if(script == null)
             {
@@ -530,7 +530,7 @@
         }
 
         /// <summary>returns the driver of a vehicle</summary>
-        public IGameObject vehicle_driver(IUnit unit)
+        public IGameObject? vehicle_driver(IUnit unit)
         {
             return unit.Driver;
         }
