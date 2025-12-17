@@ -188,7 +188,8 @@ namespace OpenH2.Engine.Systems
                 maxZ *= zMult;
             }
 
-            var lightProjection = Matrix4x4.CreateOrthographicOffCenter(minX, maxX, minY, maxY, minZ, maxZ);
+            // Use Vulkan-compatible orthographic projection with depth range [0, 1]
+            var lightProjection = CreateVulkanOrthographic(minX, maxX, minY, maxY, minZ, maxZ);
 
             return Matrix4x4.Multiply(lightView, lightProjection);
         }
@@ -221,7 +222,25 @@ namespace OpenH2.Engine.Systems
         }
 
         private void SetupShadowCascades(ref GlobalUniform matrices)
-        { 
+        {
+        }
+
+        /// <summary>
+        /// Creates an orthographic projection matrix compatible with Vulkan's depth range [0, 1].
+        /// .NET's Matrix4x4.CreateOrthographicOffCenter uses OpenGL convention with depth [-1, 1].
+        /// </summary>
+        private static Matrix4x4 CreateVulkanOrthographic(float left, float right, float bottom, float top, float near, float far)
+        {
+            var result = new Matrix4x4();
+            result.M11 = 2f / (right - left);
+            result.M22 = 2f / (top - bottom);
+            result.M33 = -1f / (far - near);              // Vulkan: -1/(far-near), OpenGL: -2/(far-near)
+            result.M41 = -(right + left) / (right - left);
+            result.M42 = -(top + bottom) / (top - bottom);
+            result.M43 = -near / (far - near);            // Vulkan: -near/(far-near), OpenGL: -(far+near)/(far-near)
+            result.M44 = 1f;
+
+            return result;
         }
     }
 }

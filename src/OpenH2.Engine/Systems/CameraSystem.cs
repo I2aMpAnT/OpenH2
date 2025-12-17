@@ -140,10 +140,32 @@ namespace OpenH2.Engine.Systems
         private void UpdateProjectionMatrix(CameraComponent camera)
         {
             // TODO move these to camera component
-            var near1 = 0.1f;
-            var far1 = 8000.0f;
+            var near = 0.1f;
+            var far = 8000.0f;
 
-            camera.ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, camera.AspectRatio, near1, far1);
+            // Use Vulkan-compatible projection matrix with depth range [0, 1]
+            // instead of OpenGL's [-1, 1]
+            camera.ProjectionMatrix = CreateVulkanPerspective(camera.FieldOfView, camera.AspectRatio, near, far);
+        }
+
+        /// <summary>
+        /// Creates a perspective projection matrix compatible with Vulkan's depth range [0, 1].
+        /// .NET's Matrix4x4.CreatePerspectiveFieldOfView uses OpenGL convention with depth [-1, 1],
+        /// which causes geometry to fail depth testing in Vulkan.
+        /// </summary>
+        private static Matrix4x4 CreateVulkanPerspective(float fov, float aspectRatio, float near, float far)
+        {
+            var tanHalfFov = MathF.Tan(fov / 2f);
+
+            var result = new Matrix4x4();
+            result.M11 = 1f / (aspectRatio * tanHalfFov);
+            result.M22 = 1f / tanHalfFov;
+            result.M33 = -far / (far - near);           // Vulkan: -far/(far-near), OpenGL: -(far+near)/(far-near)
+            result.M34 = -1f;
+            result.M43 = -(far * near) / (far - near);  // Vulkan: -far*near/(far-near), OpenGL: -2*far*near/(far-near)
+            // M44 stays 0 (perspective divide)
+
+            return result;
         }
     }
 }
