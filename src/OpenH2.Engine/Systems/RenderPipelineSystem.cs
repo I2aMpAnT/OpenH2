@@ -23,42 +23,9 @@ namespace OpenH2.Engine.Systems
             this.graphics = graphics;
         }
 
-        private bool debugLogged = false;
-        private bool modelsFoundLogged = false;
-
         public override void Render(double timestep)
         {
             var renderList = world.GetGlobalResource<RenderListStore>();
-            if (renderList == null)
-            {
-                if (!debugLogged) Console.WriteLine("[RenderPipeline] No render list!");
-                debugLogged = true;
-                return;
-            }
-
-            if (!debugLogged)
-            {
-                Console.WriteLine($"[RenderPipeline] Models: {renderList.Models.Count}, Lights: {renderList.Lights.Count}");
-            }
-
-            // Log once when models first appear
-            if (!modelsFoundLogged && renderList.Models.Count > 0)
-            {
-                Console.WriteLine($"[RenderPipeline] Models loaded! Count: {renderList.Models.Count}");
-
-                // Log camera info when we first have models
-                var camForLog = world.Components<CameraComponent>()?.FirstOrDefault();
-                if (camForLog != null)
-                {
-                    var camXform = camForLog.TryGetSibling<TransformComponent>(out var xf) ? xf : null;
-                    Console.WriteLine($"[RenderPipeline] Camera Position: {camXform?.Position ?? Vector3.Zero}");
-                    Console.WriteLine($"[RenderPipeline] Camera ViewMatrix M41-43: {camForLog.ViewMatrix.M41}, {camForLog.ViewMatrix.M42}, {camForLog.ViewMatrix.M43}");
-                    Console.WriteLine($"[RenderPipeline] Camera ProjectionMatrix M11: {camForLog.ProjectionMatrix.M11}, M22: {camForLog.ProjectionMatrix.M22}");
-                    Console.WriteLine($"[RenderPipeline] ViewMatrix is identity: {camForLog.ViewMatrix == Matrix4x4.Identity}");
-                }
-
-                modelsFoundLogged = true;
-            }
 
             RenderingPipeline.SetModels(renderList.Models);
 
@@ -68,20 +35,10 @@ namespace OpenH2.Engine.Systems
             }
 
             var cameras = world.Components<CameraComponent>();
-            var cam = cameras?.FirstOrDefault();
+            var cam = cameras.FirstOrDefault();
 
             if (cam == null)
-            {
-                if (!debugLogged) Console.WriteLine("[RenderPipeline] No camera!");
-                debugLogged = true;
                 return;
-            }
-
-            if (!debugLogged)
-            {
-                Console.WriteLine($"[RenderPipeline] Camera found, position offset: {cam.PositionOffset}");
-                debugLogged = true;
-            }
 
             var pos = cam.PositionOffset;
             var orient = Quaternion.Identity;
@@ -105,7 +62,7 @@ namespace OpenH2.Engine.Systems
             };
 
             const float ShadowMapFar = 117;
-            var skylight = world.Components<SkyLightComponent>()?.FirstOrDefault();
+            var skylight = world.Components<SkyLightComponent>().FirstOrDefault();
             if (skylight != null)
             {
                 matrices.SunLightDirection = skylight.Direction;
@@ -221,7 +178,7 @@ namespace OpenH2.Engine.Systems
         }
 
         private void SetupShadowCascades(ref GlobalUniform matrices)
-        {
+        { 
         }
     }
 }

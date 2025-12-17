@@ -28,8 +28,6 @@ namespace OpenH2.Engine.Systems
         public override void Update(double timestep)
         {
             var cameras = this.world.Components<CameraComponent>();
-            if (cameras == null)
-                return;
 
             foreach(var camera in cameras)
             {
@@ -140,23 +138,10 @@ namespace OpenH2.Engine.Systems
         private void UpdateProjectionMatrix(CameraComponent camera)
         {
             // TODO move these to camera component
-            var near = 0.1f;
-            var far = 8000.0f;
+            var near1 = 0.1f;
+            var far1 = 8000.0f;
 
-            // Vulkan uses depth range [0, 1] while .NET's CreatePerspectiveFieldOfView
-            // creates an OpenGL-style matrix with depth range [-1, 1].
-            // We apply a correction to remap depth from [-1, 1] to [0, 1].
-            var proj = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, camera.AspectRatio, near, far);
-
-            // The transformation from OpenGL to Vulkan depth is: z_vk = (z_gl + 1) / 2
-            // In matrix form, this modifies the 3rd and 4th rows:
-            // M33_vk = M33_gl * 0.5 + M34_gl * 0.5
-            // M43_vk = M43_gl * 0.5 + M44_gl * 0.5
-            // Note: M34_gl = -1, M44_gl = 0 for perspective projection
-            proj.M33 = proj.M33 * 0.5f - 0.5f;  // M33 * 0.5 + (-1) * 0.5
-            proj.M43 = proj.M43 * 0.5f;          // M43 * 0.5 + 0 * 0.5
-
-            camera.ProjectionMatrix = proj;
+            camera.ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, camera.AspectRatio, near1, far1);
         }
     }
 }
