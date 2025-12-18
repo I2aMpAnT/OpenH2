@@ -3,7 +3,7 @@
 layout(triangles, invocations = 4) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout(std140, binding = 0) uniform GlobalUniform
+layout(std140, row_major, binding = 0) uniform GlobalUniform
 {
 	mat4 ViewMatrix;
 	mat4 ProjectionMatrix;

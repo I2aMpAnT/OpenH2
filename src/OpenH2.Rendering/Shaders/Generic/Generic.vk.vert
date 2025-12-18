@@ -2,7 +2,7 @@
 
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(std140, binding = 0) uniform GlobalUniform
+layout(std140, row_major, binding = 0) uniform GlobalUniform
 {
     mat4 ViewMatrix;
     mat4 ProjectionMatrix;
@@ -12,7 +12,7 @@ layout(std140, binding = 0) uniform GlobalUniform
     vec4 ViewPosition;
 } Globals;
 
-layout(std140, binding = 1) uniform TransformUniform
+layout(std140, row_major, binding = 1) uniform TransformUniform
 {
     mat4 ModelMatrix;
     mat4 NormalMatrix;
