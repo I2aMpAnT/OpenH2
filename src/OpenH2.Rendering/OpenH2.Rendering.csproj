@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <!-- Set to true to compile shaders (requires Vulkan SDK with glslc in PATH) -->
     <CompileShaders Condition="'$(CompileShaders)' == ''">false</CompileShaders>
+    <!-- Enable Vulkan validation layers for debugging -->
+    <DefineConstants>$(DefineConstants);DEBUG_VK</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
