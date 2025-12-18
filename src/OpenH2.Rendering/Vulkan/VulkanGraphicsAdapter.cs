@@ -56,12 +56,11 @@ namespace OpenH2.Rendering.Vulkan
         private int nextTransformIndex = 0;
         private VkBuffer<TransformUniform> transformBuffer = null!;
         private CommandBuffer renderCommands;
-        // Sync objects per frame-in-flight (we use swapchain image count for simplicity)
+        // Single fence for the single command buffer
+        private Fence renderFence;
+        // Semaphores per swapchain image for acquire/present
         private Semaphore[] imageAvailableSemaphores = Array.Empty<Semaphore>();
         private Semaphore[] renderFinishedSemaphores = Array.Empty<Semaphore>();
-        private Fence[] inFlightFences = Array.Empty<Fence>();
-        // Track which fence is associated with each swapchain image
-        private Fence[] imagesInFlight = Array.Empty<Fence>();
         private int currentFrame = 0;
 
         public VulkanGraphicsAdapter(VulkanHost vulkanHost) : base(vulkanHost.vk, null)
@@ -129,26 +128,24 @@ namespace OpenH2.Rendering.Vulkan
             SUCCESS(vk.AllocateCommandBuffers(device, in commandBufAlloc, out renderCommands), "Command buffer alloc failed");
 
             // =======================
-            // sync setup - create per-frame sync objects
+            // sync setup
             // =======================
 
             var swapchainImageCount = swapchain.Images.Length;
+            // One semaphore per swapchain image for acquire/present synchronization
             imageAvailableSemaphores = new Semaphore[swapchainImageCount];
             renderFinishedSemaphores = new Semaphore[swapchainImageCount];
-            inFlightFences = new Fence[swapchainImageCount];
-            // Track which fence is using each swapchain image (initially none)
-            imagesInFlight = new Fence[swapchainImageCount];
 
             var semInfo = new SemaphoreCreateInfo(StructureType.SemaphoreCreateInfo);
-            var fenceInfo = new FenceCreateInfo(StructureType.FenceCreateInfo, flags: FenceCreateFlags.FenceCreateSignaledBit);
-
             for (int i = 0; i < swapchainImageCount; i++)
             {
                 SUCCESS(vk.CreateSemaphore(device, &semInfo, null, out imageAvailableSemaphores[i]));
                 SUCCESS(vk.CreateSemaphore(device, &semInfo, null, out renderFinishedSemaphores[i]));
-                SUCCESS(vk.CreateFence(device, &fenceInfo, null, out inFlightFences[i]));
-                imagesInFlight[i] = default; // No fence initially
             }
+
+            // Single fence for the single command buffer - start signaled so first frame doesn't block
+            var fenceInfo = new FenceCreateInfo(StructureType.FenceCreateInfo, flags: FenceCreateFlags.FenceCreateSignaledBit);
+            SUCCESS(vk.CreateFence(device, &fenceInfo, null, out renderFence));
         }
 
         
@@ -171,11 +168,11 @@ namespace OpenH2.Rendering.Vulkan
             this.lastXformOffset = ulong.MaxValue;
             this.currentPass = null;
 
-            // Wait on fence for current frame slot - ensures our sync objects are free
-            var fence = inFlightFences[currentFrame];
-            vk.WaitForFences(device, 1, in fence, true, ulong.MaxValue);
+            // Wait on the single fence - ensures command buffer from previous frame is complete
+            vk.WaitForFences(device, 1, in renderFence, true, ulong.MaxValue);
+            vk.ResetFences(device, 1, in renderFence);
 
-            // Now acquire the next image
+            // Acquire the next image using currentFrame semaphore
             var imgAvailSem = imageAvailableSemaphores[currentFrame];
             var acquired = swapchain.AcquireNextImage(imgAvailSem, default, ref imageIndex);
 
@@ -188,18 +185,6 @@ namespace OpenH2.Rendering.Vulkan
             {
                 throw new Exception("Failed to acquire swapchain image");
             }
-
-            // Check if another frame is using this swapchain image
-            // If so, wait for that frame to complete
-            if (imagesInFlight[imageIndex].Handle != default)
-            {
-                var imgFence = imagesInFlight[imageIndex];
-                vk.WaitForFences(device, 1, in imgFence, true, ulong.MaxValue);
-            }
-            // Mark this image as now being used by current frame's fence
-            imagesInFlight[imageIndex] = fence;
-
-            vk.ResetFences(device, 1, in fence);
 
             UpdateGlobals(imageIndex, matricies);
 
@@ -306,14 +291,14 @@ namespace OpenH2.Rendering.Vulkan
 
             SUCCESS(vk.EndCommandBuffer(renderCommands), "Failed to record command buffer");
 
-            // Use currentFrame for all sync objects - we have one command buffer so fence must match
+            // Use currentFrame semaphore for acquire wait, imageIndex semaphore for present signal
             var waitSems = stackalloc Semaphore[] { imageAvailableSemaphores[currentFrame] };
             var waitStages = stackalloc PipelineStageFlags[] { PipelineStageFlags.PipelineStageColorAttachmentOutputBit };
 
-            var signalSems = stackalloc Semaphore[] { renderFinishedSemaphores[currentFrame] };
+            // Signal semaphore indexed by imageIndex to avoid reuse while swapchain holds it
+            var signalSems = stackalloc Semaphore[] { renderFinishedSemaphores[imageIndex] };
 
             var buf = renderCommands;
-            var fence = inFlightFences[currentFrame];
             var submitInfo = new SubmitInfo
             {
                 SType = StructureType.SubmitInfo,
@@ -326,7 +311,7 @@ namespace OpenH2.Rendering.Vulkan
                 PSignalSemaphores = signalSems
             };
 
-            SUCCESS(vk.QueueSubmit(device.GraphicsQueue, 1, in submitInfo, fence));
+            SUCCESS(vk.QueueSubmit(device.GraphicsQueue, 1, in submitInfo, renderFence));
 
             var chains = stackalloc SwapchainKHR[] { swapchain };
             var imgIndex = imageIndex;
@@ -352,7 +337,7 @@ namespace OpenH2.Rendering.Vulkan
                 throw new Exception("Failed to acquire swapchain image");
             }
 
-            // Cycle to next frame
+            // Cycle to next frame for acquire semaphore
             currentFrame = (currentFrame + 1) % imageAvailableSemaphores.Length;
         }
 
@@ -604,8 +589,8 @@ namespace OpenH2.Rendering.Vulkan
             {
                 vk.DestroySemaphore(device, imageAvailableSemaphores[i], null);
                 vk.DestroySemaphore(device, renderFinishedSemaphores[i], null);
-                vk.DestroyFence(device, inFlightFences[i], null);
             }
+            vk.DestroyFence(device, renderFence, null);
 
             this.shadowpass.Dispose();
             this.renderpass.Dispose();
