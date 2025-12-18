@@ -305,7 +305,8 @@ namespace OpenH2.Rendering.Vulkan.Internals
                 PolygonMode = config.polyMode,
                 LineWidth = 1,
                 CullMode = config.cullMode,
-                FrontFace = FrontFace.CounterClockwise,
+                // When viewport Y is flipped (invertY), winding order is reversed, so use Clockwise
+                FrontFace = config.invertY ? FrontFace.Clockwise : FrontFace.CounterClockwise,
                 DepthBiasEnable = false,
                 DepthBiasConstantFactor = 0,
                 DepthBiasClamp = 0,
