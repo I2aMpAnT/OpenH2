@@ -99,7 +99,8 @@ namespace OpenH2.Rendering.Vulkan
 
             if (width == 0 || height == 0)
             {
-                return default;
+                // Return error texture instead of null to prevent binding issues
+                return this.device.UnboundTexture;
             }
 
             var topLod = bitm.TextureInfos[0].LevelsOfDetail[0];

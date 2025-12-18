@@ -28,6 +28,8 @@ namespace OpenH2.Engine.Systems
         public override void Update(double timestep)
         {
             var cameras = this.world.Components<CameraComponent>();
+            if (cameras == null)
+                return;
 
             foreach(var camera in cameras)
             {
@@ -138,10 +140,20 @@ namespace OpenH2.Engine.Systems
         private void UpdateProjectionMatrix(CameraComponent camera)
         {
             // TODO move these to camera component
-            var near1 = 0.1f;
-            var far1 = 8000.0f;
+            var near = 0.1f;
+            var far = 8000.0f;
 
-            camera.ProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, camera.AspectRatio, near1, far1);
+            // Create OpenGL-style projection matrix
+            var proj = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, camera.AspectRatio, near, far);
+
+            // Convert from OpenGL depth range [-1, 1] to Vulkan depth range [0, 1]
+            // The transformation is: z_vulkan = (z_opengl + 1) / 2
+            // This modifies: M33 = M33 * 0.5 + M34 * 0.5, M43 = M43 * 0.5 + M44 * 0.5
+            // Since M34 = -1 and M44 = 0 for perspective projection:
+            proj.M33 = proj.M33 * 0.5f - 0.5f;
+            proj.M43 = proj.M43 * 0.5f;
+
+            camera.ProjectionMatrix = proj;
         }
     }
 }
