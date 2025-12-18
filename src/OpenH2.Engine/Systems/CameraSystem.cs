@@ -143,15 +143,10 @@ namespace OpenH2.Engine.Systems
             var near = 0.1f;
             var far = 8000.0f;
 
-            // Create OpenGL-style projection matrix
+            // System.Numerics.Matrix4x4.CreatePerspectiveFieldOfView creates a right-handed
+            // perspective matrix that already maps depth to [0, 1], which is correct for Vulkan.
+            // No depth conversion needed.
             var proj = Matrix4x4.CreatePerspectiveFieldOfView(camera.FieldOfView, camera.AspectRatio, near, far);
-
-            // Convert from OpenGL depth range [-1, 1] to Vulkan depth range [0, 1]
-            // The transformation is: z_vulkan = (z_opengl + 1) / 2
-            // This modifies: M33 = M33 * 0.5 + M34 * 0.5, M43 = M43 * 0.5 + M44 * 0.5
-            // Since M34 = -1 and M44 = 0 for perspective projection:
-            proj.M33 = proj.M33 * 0.5f - 0.5f;
-            proj.M43 = proj.M43 * 0.5f;
 
             camera.ProjectionMatrix = proj;
         }
