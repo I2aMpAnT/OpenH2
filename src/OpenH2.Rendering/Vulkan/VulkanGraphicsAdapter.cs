@@ -283,11 +283,15 @@ namespace OpenH2.Rendering.Vulkan
         {
             this.textures.EnsureUpdated();
 
-            // Only end the pass if we're in one
-            if (this.currentPass != null)
+            // Ensure render pass was started - this transitions the swapchain image to PRESENT_SRC_KHR
+            if (this.currentPass == null)
             {
-                vk.CmdEndRenderPass(renderCommands);
+                this.renderpass.Begin(renderCommands, imageIndex);
+                this.currentPass = this.renderpass;
             }
+
+            // End the render pass
+            vk.CmdEndRenderPass(renderCommands);
 
             SUCCESS(vk.EndCommandBuffer(renderCommands), "Failed to record command buffer");
 
