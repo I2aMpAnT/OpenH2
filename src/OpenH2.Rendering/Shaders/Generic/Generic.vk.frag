@@ -155,23 +155,25 @@ void main() {
 
         if(Data.EmissiveType == EmissiveTypeEmissiveOnly)
         {
-            float a = emissiveSample.r + emissiveSample.b + emissiveSample.g;
-            finalColor = vec4(emissiveSample.rgb, a/3.0);
+            // Pure self-illumination (fusion coils, energy effects)
+            // Replace lit color entirely with emissive glow
+            float intensity = max(max(emissiveSample.r, emissiveSample.g), emissiveSample.b);
+            finalColor = vec4(emissiveSample.rgb, max(finalColor.a, intensity));
         }
-        // TODO: figure out how to do the 3 channel stuff better?
         else if(Data.EmissiveType == EmissiveTypeThreeChannel)
         {
+            // Multi-channel illumination (plasma coils on Ascension etc.)
             float r = emissiveSample.r * Data.EmissiveArguments.r;
             float g = emissiveSample.g * Data.EmissiveArguments.g;
             float b = emissiveSample.b * Data.EmissiveArguments.b;
 
-            float winner = max(max(r,g),b);
-
-            finalColor += vec4(winner,winner,winner,0);
+            finalColor.rgb += vec3(r, g, b);
         }
         else
         {
-            finalColor += vec4(emissiveSample.r);
+            // DiffuseBlended (most common: flag bases, teleporters, glowing surfaces)
+            // Additive blend using full RGB, not just red
+            finalColor.rgb += emissiveSample.rgb;
         }
     }
     
@@ -184,13 +186,17 @@ void main() {
     {
         vec4 alphaSample = texture(Textures[Data.AlphaHandle.x], texcoord);
         float alpha = min(alphaSample.a, finalColor.a);
-    
+
         if(Data.AlphaChannel.r == 1.0)
         {
             alpha = alphaSample.r;
         }
 
         finalColor.a = alpha;
+
+        // Alpha test: discard nearly invisible fragments
+        if(finalColor.a < 0.01)
+            discard;
     }
 
     // Gamma correction: textures are sRGB (sampled to linear), convert back for display
