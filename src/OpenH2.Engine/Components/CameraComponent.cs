@@ -23,7 +23,7 @@ namespace OpenH2.Engine.Components
         public CameraComponent(Entity parent) : base(parent)
         {
             PositionOffset = Vector3.Zero;
-            FieldOfView = MathF.PI / 2;
+            FieldOfView = 78f * MathF.PI / 180f;
             AspectRatio = 16f / 9f;
 
             // TODO: figure out where this fits:

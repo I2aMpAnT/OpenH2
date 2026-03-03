@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using OpenH2.Core.Architecture;
@@ -31,7 +31,14 @@ namespace OpenH2.Engine.Systems
 
                 yaw = mouseX_Sensitivity * input.MouseDiff.X;
                 pitch = mouseY_Sensitivity * input.MouseDiff.Y;
+            }
 
+            // Right stick for camera look
+            if (input.GamepadConnected)
+            {
+                const float stickLookSensitivity = 0.05f;
+                yaw += -input.RightStick.X * stickLookSensitivity;
+                pitch += input.RightStick.Y * stickLookSensitivity;
             }
 
             UpdateMovers(movers, input, yaw, pitch, timestep);
@@ -66,7 +73,29 @@ namespace OpenH2.Engine.Systems
                 }
             }
 
-            if(input.WasPressed(Key.M))
+            // Gamepad left stick for movement
+            if (input.GamepadConnected)
+            {
+                // Left bumper for speed boost (like Ctrl)
+                if (input.GamepadButtonDown(ButtonName.LeftBumper))
+                {
+                    speed = 10.0f;
+                }
+
+                // Left stick: Y = forward/back, X = strafe
+                delta += new Vector3(
+                    input.LeftStick.Y * speed,
+                    input.LeftStick.X * speed,
+                    0);
+
+                // Left trigger for descend
+                if (input.LeftTrigger > 0.1f)
+                {
+                    delta += new Vector3(0, 0, -input.LeftTrigger * speed);
+                }
+            }
+
+            if(input.WasPressed(Key.M) || input.GamepadButtonPressed(ButtonName.Back))
             {
                 if(mover.Mode != mover.Config.Mode)
                 {
@@ -96,7 +125,7 @@ namespace OpenH2.Engine.Systems
                 var p = mover.Transform.Position;
                 var q = mover.Transform.Orientation;
                 var roll = MathF.Atan2(2.0f * (q.Z * q.Y + q.W * q.X), 1.0f - 2.0f * (q.X * q.X + q.Y * q.Y));
-                var pitch = MathF.Asin(2.0f * (q.Y * q.W - q.Z * q.X));
+                var pitchVal = MathF.Asin(2.0f * (q.Y * q.W - q.Z * q.X));
                 var yaw = MathF.Atan2(2.0f * (q.Z * q.W + q.X * q.Y), -1.0f + 2.0f * (q.W * q.W + q.X * q.X));
 
                 Logger.Log($"Current Location: {p.X.ToString("0.00")},{p.Y.ToString("0.00")},{p.Z.ToString("0.00")}@{yaw.ToString("0.0000")}", Logger.Color.White);
@@ -104,14 +133,14 @@ namespace OpenH2.Engine.Systems
 
             if(mover.Mode == MoverComponent.MovementMode.Freecam)
             {
-                if(input.IsDown(Key.Space))
+                if(input.IsDown(Key.Space) || input.GamepadButtonDown(ButtonName.A))
                 {
                     delta += new Vector3(0, 0, speed);
                 }
             }
             else
             {
-                if (input.WasPressed(Key.Space))
+                if (input.WasPressed(Key.Space) || input.GamepadButtonPressed(ButtonName.A))
                 {
                     delta += new Vector3(0, 0, speed);
                 }
@@ -128,7 +157,7 @@ namespace OpenH2.Engine.Systems
             foreach (var mover in movers)
             {
                 var xform = mover.Transform;
-                
+
                 // Update camera orientation
                 xform.Orientation = Quaternion.Normalize(yawQuat * xform.Orientation * pitchQuat);
 
@@ -176,11 +205,11 @@ namespace OpenH2.Engine.Systems
         ///  - Crouching reduces friction (causes more sliding)
         /// </summary>
 
-        private void UpdateDynamicController(MoverComponent mover, 
-            DynamicMovementController dynamic, 
-            Vector3 inputVector, 
-            Vector3 forward, 
-            Vector3 strafe, 
+        private void UpdateDynamicController(MoverComponent mover,
+            DynamicMovementController dynamic,
+            Vector3 inputVector,
+            Vector3 forward,
+            Vector3 strafe,
             double timestep)
         {
             dynamic.Move(mover.PhysicsImplementation, inputVector, forward, strafe);
