@@ -118,25 +118,27 @@ void main() {
         viewDirection = TBN * viewDirection;
     }
 
-    vec4 detail1Tex = texture(Textures[Data.DetailMap1.x], texcoord * Data.DetailMap1Scale.xy);
-    vec4 detail2Tex = texture(Textures[Data.DetailMap2.x], texcoord * Data.DetailMap2Scale.xy);
-    vec4 diffuseTex = texture(Textures[Data.DiffuseMap.x], texcoord);
-
     vec4 diffuseColor = Data.DiffuseColor;
-    
+
     if(Data.UseDiffuseMap)
     {
+        vec4 diffuseTex = texture(Textures[Data.DiffuseMap.x], texcoord);
+
         if(Data.UseDetailMap1 && Data.UseDetailMap2)
         {
+            vec4 detail1Tex = texture(Textures[Data.DetailMap1.x], texcoord * Data.DetailMap1Scale.xy);
+            vec4 detail2Tex = texture(Textures[Data.DetailMap2.x], texcoord * Data.DetailMap2Scale.xy);
             vec4 detailColor = mix(detail1Tex, detail2Tex, diffuseTex.a);
             diffuseColor = vec4((diffuseTex.rgb * detailColor.rgb * 2.0), 1);
         }
         else if(Data.UseDetailMap1)
         {
+            vec4 detail1Tex = texture(Textures[Data.DetailMap1.x], texcoord * Data.DetailMap1Scale.xy);
             diffuseColor = vec4((diffuseTex.rgb * detail1Tex.rgb * 2.0), 1);
         }
         else if(Data.UseDetailMap2)
         {
+            vec4 detail2Tex = texture(Textures[Data.DetailMap2.x], texcoord * Data.DetailMap2Scale.xy);
             diffuseColor = vec4((diffuseTex.rgb * detail2Tex.rgb * 2.0), 1);
         }
         else

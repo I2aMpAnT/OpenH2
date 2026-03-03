@@ -1,5 +1,7 @@
 using OpenBlam.Core.MapLoading;
 using OpenBlam.Serialization.Layout;
+using OpenH2.Core.Maps;
+using OpenH2.Core.Tags.Layout;
 
 namespace OpenH2.Core.Tags
 {

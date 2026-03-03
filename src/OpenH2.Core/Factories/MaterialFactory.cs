@@ -190,6 +190,12 @@ namespace OpenH2.Core.Factories
                         inputOffset++;
                     }
 
+                    // If scale search failed, use a sensible default instead of zero
+                    if (detailScale.X < 1 || detailScale.Y < 1)
+                    {
+                        detailScale = new Vector4(1, 1, 0, 0);
+                    }
+
                     if (mat.DetailMap1 == null)
                     {
                         mat.DetailMap1 = bitm;

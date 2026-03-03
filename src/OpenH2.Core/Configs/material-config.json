@@ -43,7 +43,7 @@
         "shaders\\shader_templates\\opaque\\tex_bump_plasma_one_channel_illum": {
             "name": "TexBumpPlasmaOneChannelIllum",
             "diffuseMapIndex": 1,
-            "emissiveMap": 3,
+            "emissiveMapIndex": 3,
             "detail1MapIndex": 2,
             "detail1ScaleIndex": 3,
             "emissiveType": "EmissiveOnly"
