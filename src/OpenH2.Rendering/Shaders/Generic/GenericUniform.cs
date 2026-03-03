@@ -54,11 +54,14 @@ namespace OpenH2.Rendering.Shaders.Generic
             ColorChangeAmount = 1f;
             ColorChangeColor = colorChangeData;
 
-            // Currently unused
-            UseSpecular = false;
-            SpecularAmount = 0f;
-            SpecularColor = Vector4.Zero;
-            SpecularHandle = 0;
+            UseSpecular = material.SpecularMap != null;
+            SpecularAmount = 1f;
+            SpecularHandle = bindings.SpecularHandle;
+            // Use material specular color, default to subtle white if not set
+            var sc = material.SpecularColor;
+            SpecularColor = sc.LengthSquared() > 0
+                ? new Vector4(sc, 1f)
+                : new Vector4(0.5f, 0.5f, 0.5f, 1f);
         }
 
         public bool UseDiffuse;

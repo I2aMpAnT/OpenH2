@@ -33,12 +33,17 @@ namespace OpenH2.Engine.Systems
                 pitch = mouseY_Sensitivity * input.MouseDiff.Y;
             }
 
-            // Right stick for camera look
+            // Right stick for camera look - standard Xbox FPS (non-inverted)
             if (input.GamepadConnected)
             {
-                const float stickLookSensitivity = 0.05f;
-                yaw += -input.RightStick.X * stickLookSensitivity;
-                pitch += input.RightStick.Y * stickLookSensitivity;
+                const float lookSensitivityX = 4.0f;  // ~230 deg/sec at full deflection
+                const float lookSensitivityY = 3.0f;  // Y slightly lower like standard FPS
+                float dt = (float)timestep;
+
+                // Push right = look right (negative yaw = clockwise)
+                yaw += -input.RightStick.X * lookSensitivityX * dt;
+                // Push up = look up (negate because positive pitch = look down in this engine)
+                pitch += -input.RightStick.Y * lookSensitivityY * dt;
             }
 
             UpdateMovers(movers, input, yaw, pitch, timestep);
@@ -57,7 +62,7 @@ namespace OpenH2.Engine.Systems
         {
             var speed = 1f;
 
-            if (input.IsDown(Key.ControlLeft))
+            if (input.IsDown(Key.ControlLeft) || input.GamepadButtonDown(ButtonName.LeftStick))
             {
                 speed = 10.0f;
             }
@@ -73,13 +78,12 @@ namespace OpenH2.Engine.Systems
                 }
             }
 
-            // Gamepad left stick for movement
+            // Gamepad left stick for movement - standard Xbox: push up = forward, right = strafe right
             if (input.GamepadConnected)
             {
-                // Left stick: Y = forward/back, X = strafe
                 delta += new Vector3(
-                    input.LeftStick.Y * speed,
-                    input.LeftStick.X * speed,
+                    input.LeftStick.Y * speed,   // forward/back
+                    input.LeftStick.X * speed,   // strafe left/right
                     0);
             }
 

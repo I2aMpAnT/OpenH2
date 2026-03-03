@@ -1,3 +1,4 @@
+using System;
 using Silk.NET.Input;
 using Silk.NET.Input.Extensions;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace OpenH2.Engine.Stores
         private HashSet<ButtonName> currentButtons = new();
         private HashSet<ButtonName> previousButtons = new();
 
-        private const float DeadZone = 0.15f;
+        private const float DeadZone = 0.20f;
 
         public void SetMouse(MouseState mouse)
         {
@@ -77,11 +78,21 @@ namespace OpenH2.Engine.Stores
 
         private static Vector2 ApplyDeadZone(Vector2 stick)
         {
-            if (stick.Length() < DeadZone)
+            var magnitude = stick.Length();
+            if (magnitude < DeadZone)
                 return Vector2.Zero;
 
-            return stick;
+            // Rescale from [deadzone, 1.0] to [0.0, 1.0] so there's no jump at threshold
+            var normalized = stick / magnitude;
+            var rescaled = (magnitude - DeadZone) / (1.0f - DeadZone);
+            rescaled = MathF.Min(rescaled, 1.0f);
+
+            // Square the magnitude for finer control near center, snappier at edges
+            rescaled *= rescaled;
+
+            return normalized * rescaled;
         }
+
 
         public bool GamepadButtonDown(ButtonName button)
         {

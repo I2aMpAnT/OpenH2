@@ -121,25 +121,29 @@ void main() {
     
     if(Data.UseDiffuseMap)
     {
-        vec4 detailColor = vec4(0.4);
-
         if(Data.UseDetailMap1 && Data.UseDetailMap2)
         {
-            detailColor = mix(detail1Tex, detail2Tex, diffuseTex.a);
+            vec4 detailColor = mix(detail1Tex, detail2Tex, diffuseTex.a);
+            diffuseColor = vec4((diffuseTex.rgb * detailColor.rgb * 2.0), 1);
         }
-        else if(Data.UseDetailMap1 || Data.UseDetailMap2)
+        else if(Data.UseDetailMap1)
         {
-            // If one is empty (vec4(0)), detailColor will be set to the other
-            detailColor = detail1Tex + detail2Tex;
+            diffuseColor = vec4((diffuseTex.rgb * detail1Tex.rgb * 2.0), 1);
         }
-
-        diffuseColor = vec4((diffuseTex * detailColor * 2.5).rgb, 1);
+        else if(Data.UseDetailMap2)
+        {
+            diffuseColor = vec4((diffuseTex.rgb * detail2Tex.rgb * 2.0), 1);
+        }
+        else
+        {
+            diffuseColor = vec4(diffuseTex.rgb, 1);
+        }
     }
-    
+
     vec4 finalColor;
 
     // Ambient baseline
-    finalColor = vec4(diffuseColor.rgb * 0.15, diffuseColor.a);
+    finalColor = vec4(diffuseColor.rgb * 0.25, diffuseColor.a);
 
     // Directional sun lighting with shadows
     float shadow = shadowCalculation(frag_pos);
