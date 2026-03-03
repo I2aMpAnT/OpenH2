@@ -209,10 +209,6 @@ void main() {
         }
 
         finalColor.a = alpha;
-
-        // Alpha test: discard nearly invisible fragments
-        if(finalColor.a < 0.01)
-            discard;
     }
 
     // Gamma correction: textures are sRGB (sampled to linear), convert back for display
