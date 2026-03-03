@@ -11,7 +11,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
     internal record PipelineConfig(Shader shader,
             PipelineBinding[] bindings,
             uint descriptorSetCount,
-            SampleCountFlags msaaSamples = SampleCountFlags.SampleCount8Bit,
+            SampleCountFlags msaaSamples,
             bool invertY = true,
             PolygonMode polyMode = PolygonMode.Fill,
             CullModeFlags cullMode = CullModeFlags.CullModeBackBit,
