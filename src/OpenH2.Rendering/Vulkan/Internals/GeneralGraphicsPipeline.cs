@@ -254,14 +254,22 @@ namespace OpenH2.Rendering.Vulkan.Internals
                 Offset = (uint)VertexFormat.BitangentOffset
             };
 
-            var attrs = stackalloc[] { posAttr, texAttr, normalAttr, tanAttr, bitanAttr };
+            var lmTexAttr = new VertexInputAttributeDescription
+            {
+                Binding = 0,
+                Location = 5,
+                Format = Format.R32G32Sfloat,
+                Offset = (uint)VertexFormat.LightmapTexCoordsOffset
+            };
+
+            var attrs = stackalloc[] { posAttr, texAttr, normalAttr, tanAttr, bitanAttr, lmTexAttr };
 
             var vertInput = new PipelineVertexInputStateCreateInfo
             {
                 SType = StructureType.PipelineVertexInputStateCreateInfo,
                 VertexBindingDescriptionCount = 1,
                 PVertexBindingDescriptions = &binding,
-                VertexAttributeDescriptionCount = 5,
+                VertexAttributeDescriptionCount = 6,
                 PVertexAttributeDescriptions = attrs
             };
 

@@ -70,10 +70,11 @@ layout(location = 1) in vec2 in_texture;
 layout(location = 2) in vec3 local_normal;
 layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 bitangent;
+layout(location = 5) in vec2 in_lightmap_uv;
 
 layout(location = 0) out vec3 frag_pos;
 layout(location = 1) out vec2 texcoord;
-layout(location = 2) out vec3 color;
+layout(location = 2) out vec2 lightmap_uv;
 layout(location = 3) out vec3 world_pos;
 layout(location = 4) out vec3 world_normal;
 layout(location = 5) out mat3 TBN;
@@ -86,6 +87,7 @@ void main() {
     mat3 mat3nm = mat3(Transform.NormalMatrix);
 
     texcoord = in_texture;
+    lightmap_uv = in_lightmap_uv;
     world_normal = normalize(mat3nm * local_normal);
     world_pos = (modelView * vec4(local_position, 1)).xyz;
 

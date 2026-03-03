@@ -154,6 +154,24 @@ namespace OpenH2.Core.Tags.Common.Models
 
                     currentResource++;
                 }
+
+                // Process secondary UV (lightmap coordinates) if present
+                if (container.Header.VertexComponentCount >= 4)
+                {
+                    var lmData = container.Resources[currentResource].Data.Span;
+                    var itemStride = lmData.Length / container.VertexCount;
+
+                    for (var i = 0; i < container.VertexCount; i++)
+                    {
+                        var vert = verts[i];
+
+                        vert.LightmapTexCoords = lmData.ReadVec2At(i * itemStride);
+
+                        verts[i] = vert;
+                    }
+
+                    currentResource++;
+                }
             }
 
             var meshes = new List<ModelMesh>(parts.Count);

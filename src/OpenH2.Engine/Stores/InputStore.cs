@@ -1,5 +1,6 @@
 using Silk.NET.Input;
 using Silk.NET.Input.Extensions;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace OpenH2.Engine.Stores
@@ -20,8 +21,8 @@ namespace OpenH2.Engine.Stores
         public float LeftTrigger { get; private set; }
         public float RightTrigger { get; private set; }
 
-        private GamepadState GamepadState { get; set; }
-        private GamepadState PreviousGamepadState { get; set; }
+        private HashSet<ButtonName> currentButtons = new();
+        private HashSet<ButtonName> previousButtons = new();
 
         private const float DeadZone = 0.15f;
 
@@ -38,20 +39,23 @@ namespace OpenH2.Engine.Stores
             this.KeyState = currentDown;
         }
 
-        public void SetGamepad(GamepadState gamepad)
+        public void SetGamepad(IGamepad gamepad)
         {
-            this.PreviousGamepadState = this.GamepadState;
-            this.GamepadState = gamepad;
-            this.GamepadConnected = gamepad != null;
+            // Swap button sets
+            (previousButtons, currentButtons) = (currentButtons, previousButtons);
+            currentButtons.Clear();
 
             if (gamepad == null)
             {
+                GamepadConnected = false;
                 LeftStick = Vector2.Zero;
                 RightStick = Vector2.Zero;
                 LeftTrigger = 0f;
                 RightTrigger = 0f;
                 return;
             }
+
+            GamepadConnected = true;
 
             LeftStick = ApplyDeadZone(gamepad.Thumbsticks.Count > 0
                 ? new Vector2(gamepad.Thumbsticks[0].X, gamepad.Thumbsticks[0].Y)
@@ -63,6 +67,12 @@ namespace OpenH2.Engine.Stores
 
             LeftTrigger = gamepad.Triggers.Count > 0 ? gamepad.Triggers[0].Position : 0f;
             RightTrigger = gamepad.Triggers.Count > 1 ? gamepad.Triggers[1].Position : 0f;
+
+            foreach (var button in gamepad.Buttons)
+            {
+                if (button.Pressed)
+                    currentButtons.Add(button.Name);
+            }
         }
 
         private static Vector2 ApplyDeadZone(Vector2 stick)
@@ -75,13 +85,12 @@ namespace OpenH2.Engine.Stores
 
         public bool GamepadButtonDown(ButtonName button)
         {
-            return GamepadState?.IsButtonPressed(button) ?? false;
+            return currentButtons.Contains(button);
         }
 
         public bool GamepadButtonPressed(ButtonName button)
         {
-            return (GamepadState?.IsButtonPressed(button) ?? false)
-                && !(PreviousGamepadState?.IsButtonPressed(button) ?? false);
+            return currentButtons.Contains(button) && !previousButtons.Contains(button);
         }
 
         /// <summary>

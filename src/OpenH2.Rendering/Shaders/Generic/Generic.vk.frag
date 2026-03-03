@@ -71,7 +71,7 @@ layout(binding = 16) uniform sampler2DArray shadowMap;
 
 layout(location = 0) in vec3 frag_pos;
 layout(location = 1) in vec2 texcoord;
-layout(location = 2) in vec3 color;
+layout(location = 2) in vec2 lightmap_uv;
 layout(location = 3) in vec3 world_pos;
 layout(location = 4) in vec3 world_normal;
 layout(location = 5) in mat3 TBN;
@@ -98,9 +98,14 @@ float shadowCalculation(in vec3 fragPosWorldSpace);
 void main() {
 
     calculated_normal = world_normal;
-    specular_color = vec3(1);
+    specular_color = Data.SpecularColor.rgb;
 
-    if (Data.UseNormalMap) 
+    if (Data.UseSpecularMap)
+    {
+        specular_color *= texture(Textures[Data.SpecularMap.x], texcoord).rgb;
+    }
+
+    if (Data.UseNormalMap)
     {
         calculated_normal = normalize(texture(Textures[Data.NormalMap.x], texcoord * Data.NormalMapScale.xy).rgb * 2 - 1);
 
@@ -133,12 +138,12 @@ void main() {
     
     vec4 finalColor;
 
-    // Sets ambient baseline
-    finalColor = vec4(diffuseColor.rgb * 0.3, diffuseColor.a);
+    // Ambient baseline
+    finalColor = vec4(diffuseColor.rgb * 0.15, diffuseColor.a);
 
-    // Adds global lighting
+    // Directional sun lighting with shadows
     float shadow = shadowCalculation(frag_pos);
-    finalColor += (1.0 - shadow) * globalLighting(diffuseColor) * 0.5;
+    finalColor += (1.0 - shadow) * globalLighting(diffuseColor);
 
     if(Data.UseEmissiveMap)
     {
@@ -197,12 +202,10 @@ vec4 globalLighting(in vec4 textureColor)
     vec3 halfwayDirection = normalize(-lightDirection + viewDirection);
     float specularAngle = max(dot(calculated_normal, halfwayDirection), 0.0);
 
-    // TODO: replace 100 with specular amount/intensity
-    float specularModifier = pow(specularAngle, 100);
+    float specularModifier = pow(specularAngle, 32);
 
-    // TODO: specular term is not working correctly
-    vec4 light_specular = vec4(light_color,1) * vec4(light_color,1) * 0; //specularModifier;
-    
+    vec4 light_specular = vec4(specular_color, 1) * vec4(light_color, 1) * specularModifier * 0.3;
+
     return light_diffuse + light_specular;
 }
 

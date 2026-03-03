@@ -22,9 +22,9 @@ namespace OpenH2.Engine.Systems
             inputs.SetMouse(state.Mice[0]);
             inputs.SetKeys(state.Keyboards[0]);
 
-            if (state.Gamepads.Count > 0)
+            if (this.inputCtx.Gamepads.Count > 0)
             {
-                inputs.SetGamepad(state.Gamepads[0]);
+                inputs.SetGamepad(this.inputCtx.Gamepads[0]);
             }
             else
             {
