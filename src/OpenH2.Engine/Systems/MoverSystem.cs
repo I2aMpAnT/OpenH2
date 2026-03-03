@@ -76,23 +76,11 @@ namespace OpenH2.Engine.Systems
             // Gamepad left stick for movement
             if (input.GamepadConnected)
             {
-                // Left bumper for speed boost (like Ctrl)
-                if (input.GamepadButtonDown(ButtonName.LeftBumper))
-                {
-                    speed = 10.0f;
-                }
-
                 // Left stick: Y = forward/back, X = strafe
                 delta += new Vector3(
                     input.LeftStick.Y * speed,
                     input.LeftStick.X * speed,
                     0);
-
-                // Left trigger for descend
-                if (input.LeftTrigger > 0.1f)
-                {
-                    delta += new Vector3(0, 0, -input.LeftTrigger * speed);
-                }
             }
 
             if(input.WasPressed(Key.M) || input.GamepadButtonPressed(ButtonName.Back))
@@ -133,7 +121,7 @@ namespace OpenH2.Engine.Systems
 
             if(mover.Mode == MoverComponent.MovementMode.Freecam)
             {
-                if(input.IsDown(Key.Space) || input.GamepadButtonDown(ButtonName.A))
+                if(input.IsDown(Key.Space))
                 {
                     delta += new Vector3(0, 0, speed);
                 }
