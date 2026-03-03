@@ -59,6 +59,11 @@ layout(std140, binding = 2) uniform GenericUniform
     float ColorChangeAmount;
     ivec2 ColorChangeMaskMap;
     vec4 ColorChangeColor;
+
+    bool UseLightmap;
+    float LightmapAmount;
+    ivec2 LightmapMap;
+    vec4 LightmapPad;
 } Data;
 
 layout(set = 1, binding = 3) uniform sampler2D Textures[];

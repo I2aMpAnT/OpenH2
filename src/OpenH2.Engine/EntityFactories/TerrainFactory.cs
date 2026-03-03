@@ -13,7 +13,7 @@ namespace OpenH2.Engine.EntityFactories
 {
     public static class TerrainFactory
     {
-        public static Terrain FromBspData(H2vMap map, BspTag tag)
+        public static Terrain FromBspData(H2vMap map, BspTag tag, BitmapTag lightmapBitmap = null)
         {
             var terrain = new Terrain();
             terrain.FriendlyName = tag.Name;
@@ -31,6 +31,12 @@ namespace OpenH2.Engine.EntityFactories
             foreach (var mesh in meshes)
             {
                 var mat = map.CreateMaterial(mesh);
+
+                // Set lightmap bitmap on terrain materials
+                if (lightmapBitmap != null)
+                {
+                    mat = mat with { LightmapBitmap = lightmapBitmap };
+                }
 
                 var renderMesh = new Mesh<BitmapTag>()
                 {

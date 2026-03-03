@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using OpenH2.Core.Architecture;
+using OpenH2.Core.Tags;
 using OpenH2.Engine.Stores;
 using OpenH2.Foundation.Logging;
 using Silk.NET.Input;
@@ -77,7 +79,34 @@ namespace OpenH2.Engine.Systems
 
                 var bsp = scene.Map.GetTag(terrain.Bsp);
 
-                entities.Add(scene.EntityCreator.FromBsp(bsp));
+                // Try to load lightmap bitmap from the ltmp tag
+                BitmapTag lightmapBitmap = null;
+                if (terrain.LightmapId.IsInvalid == false)
+                {
+                    try
+                    {
+                        if (scene.Map.TryGetTag<LightmapTag>(terrain.LightmapId.Id, out var ltmpTag)
+                            && ltmpTag.Groups != null && ltmpTag.Groups.Length > 0)
+                        {
+                            var group = ltmpTag.Groups[0];
+                            if (group.LightmapBitmap.IsInvalid == false)
+                            {
+                                scene.Map.TryGetTag(group.LightmapBitmap, out lightmapBitmap);
+                            }
+                        }
+
+                        if (lightmapBitmap != null)
+                        {
+                            Logger.Log($"Loaded lightmap bitmap for BSP[{i}]", Logger.Color.Green);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"Failed to load lightmap for BSP[{i}]: {ex.Message}", Logger.Color.Yellow);
+                    }
+                }
+
+                entities.Add(scene.EntityCreator.FromBsp(bsp, lightmapBitmap));
 
                 foreach (var instance in bsp.InstancedGeometryInstances)
                 {

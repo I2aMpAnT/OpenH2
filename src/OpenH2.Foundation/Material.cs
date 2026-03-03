@@ -34,6 +34,8 @@ namespace OpenH2.Foundation
         Vector4 Detail2Scale { get; set; }
 
         TTexture ColorChangeMask { get; set; }
+
+        TTexture LightmapBitmap { get; set; }
     }
 
     public record Material<TTexture> : IMaterial<TTexture>
@@ -66,5 +68,7 @@ namespace OpenH2.Foundation
         public Vector4 ColorChangeColor { get; set; }
 
         public TTexture SpecularMap { get; set; }
+
+        public TTexture LightmapBitmap { get; set; }
     }
 }

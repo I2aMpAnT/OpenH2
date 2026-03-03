@@ -5,7 +5,7 @@ namespace OpenH2.Core.Architecture
 {
     public interface IEntityCreator
     {
-        Entity FromBsp(BspTag bsp);
+        Entity FromBsp(BspTag bsp, BitmapTag lightmapBitmap = null);
         Entity FromInstancedGeometry(BspTag bsp, BspTag.InstancedGeometryInstance instance);
         Entity FromSkyboxInstance(ScenarioTag.SkyboxInstance sky);
         Entity FromSceneryInstance(ScenarioTag.SceneryInstance scen);

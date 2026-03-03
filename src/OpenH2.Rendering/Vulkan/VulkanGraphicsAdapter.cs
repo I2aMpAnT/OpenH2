@@ -489,7 +489,8 @@ namespace OpenH2.Rendering.Vulkan
                 AlphaHandle = textureBinder.GetOrBind(material.AlphaMap),
                 EmissiveHandle = textureBinder.GetOrBind(material.EmissiveMap),
                 NormalHandle = textureBinder.GetOrBind(material.NormalMap),
-                SpecularHandle = textureBinder.GetOrBind(material.SpecularMap)
+                SpecularHandle = textureBinder.GetOrBind(material.SpecularMap),
+                LightmapHandle = textureBinder.GetOrBind(material.LightmapBitmap)
             };
 
             boundMaterials.Add(material, bindings);

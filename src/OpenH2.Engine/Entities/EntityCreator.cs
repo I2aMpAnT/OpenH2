@@ -17,9 +17,9 @@ namespace OpenH2.Engine.Entities
             this.Map = map;
         }
 
-        public Entity FromBsp(BspTag bsp)
+        public Entity FromBsp(BspTag bsp, BitmapTag lightmapBitmap = null)
         {
-            return TerrainFactory.FromBspData(this.Map, bsp);
+            return TerrainFactory.FromBspData(this.Map, bsp, lightmapBitmap);
         }
 
         public Entity FromInstancedGeometry(BspTag bsp, BspTag.InstancedGeometryInstance instance)

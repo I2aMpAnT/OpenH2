@@ -63,6 +63,11 @@ layout(std140, binding = 2) uniform GenericUniform
     float ColorChangeAmount;
     ivec2 ColorChangeMaskMap;
     vec4 ColorChangeColor;
+
+    bool UseLightmap;
+    float LightmapAmount;
+    ivec2 LightmapMap;
+    vec4 LightmapPad;
 } Data;
 
 layout(set = 1, binding = 3) uniform sampler2D Textures[];
@@ -142,12 +147,21 @@ void main() {
 
     vec4 finalColor;
 
-    // Ambient baseline
-    finalColor = vec4(diffuseColor.rgb * 0.25, diffuseColor.a);
+    if(Data.UseLightmap)
+    {
+        // Use baked lightmap: sample the lightmap texture with lightmap UVs
+        vec4 lightmapSample = texture(Textures[Data.LightmapMap.x], lightmap_uv);
+        // Lightmap provides pre-baked irradiance - multiply with diffuse
+        finalColor = vec4(diffuseColor.rgb * lightmapSample.rgb * 2.0, diffuseColor.a);
+    }
+    else
+    {
+        // Fallback: ambient + directional sun lighting with shadows
+        finalColor = vec4(diffuseColor.rgb * 0.25, diffuseColor.a);
 
-    // Directional sun lighting with shadows
-    float shadow = shadowCalculation(frag_pos);
-    finalColor += (1.0 - shadow) * globalLighting(diffuseColor);
+        float shadow = shadowCalculation(frag_pos);
+        finalColor += (1.0 - shadow) * globalLighting(diffuseColor);
+    }
 
     if(Data.UseEmissiveMap)
     {
@@ -198,6 +212,14 @@ void main() {
         if(finalColor.a < 0.01)
             discard;
     }
+
+    // Distance fog: blend toward a blue-gray sky color at distance
+    // Halo 2 uses per-BSP fog definitions, but a general atmospheric fog helps a lot
+    float fogStart = 50.0;
+    float fogEnd = 500.0;
+    float fogFactor = clamp((viewDistance - fogStart) / (fogEnd - fogStart), 0.0, 0.7);
+    vec3 fogColor = vec3(0.6, 0.65, 0.75);
+    finalColor.rgb = mix(finalColor.rgb, fogColor, fogFactor);
 
     // Gamma correction: textures are sRGB (sampled to linear), convert back for display
     finalColor.rgb = pow(finalColor.rgb, vec3(1.0 / 2.2));
