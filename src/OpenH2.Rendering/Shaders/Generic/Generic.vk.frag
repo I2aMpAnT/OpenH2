@@ -159,7 +159,7 @@ void main() {
     else
     {
         // Fallback: ambient + directional sun lighting with shadows
-        finalColor = vec4(diffuseColor.rgb * 0.4, diffuseColor.a);
+        finalColor = vec4(diffuseColor.rgb * 0.25, diffuseColor.a);
 
         float shadow = shadowCalculation(frag_pos);
         finalColor += (1.0 - shadow) * globalLighting(diffuseColor);
