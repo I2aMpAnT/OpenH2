@@ -33,16 +33,15 @@ namespace OpenH2.Engine.Systems
                 pitch = mouseY_Sensitivity * input.MouseDiff.Y;
             }
 
-            // Right stick for camera look - standard Xbox FPS (non-inverted)
+            // Right stick for camera look
             if (input.GamepadConnected)
             {
-                const float lookSensitivityX = 4.0f;  // ~230 deg/sec at full deflection
-                const float lookSensitivityY = 3.0f;  // Y slightly lower like standard FPS
+                const float lookSensitivityX = 4.0f;
+                const float lookSensitivityY = 3.0f;
                 float dt = (float)timestep;
 
-                // Push right = look right, push up = look up
-                yaw += -input.RightStick.X * lookSensitivityX * dt;
-                pitch += -input.RightStick.Y * lookSensitivityY * dt;
+                yaw += input.RightStick.X * lookSensitivityX * dt;
+                pitch += input.RightStick.Y * lookSensitivityY * dt;
             }
 
             UpdateMovers(movers, input, yaw, pitch, timestep);

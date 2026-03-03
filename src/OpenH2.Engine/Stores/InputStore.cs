@@ -58,13 +58,22 @@ namespace OpenH2.Engine.Stores
 
             GamepadConnected = true;
 
-            LeftStick = ApplyDeadZone(gamepad.Thumbsticks.Count > 0
+            var rawLeft = gamepad.Thumbsticks.Count > 0
                 ? new Vector2(gamepad.Thumbsticks[0].X, gamepad.Thumbsticks[0].Y)
-                : Vector2.Zero);
+                : Vector2.Zero;
 
-            RightStick = ApplyDeadZone(gamepad.Thumbsticks.Count > 1
+            var rawRight = gamepad.Thumbsticks.Count > 1
                 ? new Vector2(gamepad.Thumbsticks[1].X, gamepad.Thumbsticks[1].Y)
-                : Vector2.Zero);
+                : Vector2.Zero;
+
+            // Debug: log raw stick values when significant input detected
+            if (rawLeft.Length() > 0.5f || rawRight.Length() > 0.5f)
+            {
+                Console.WriteLine($"[STICK] L: ({rawLeft.X:F2}, {rawLeft.Y:F2})  R: ({rawRight.X:F2}, {rawRight.Y:F2})");
+            }
+
+            LeftStick = ApplyDeadZone(rawLeft);
+            RightStick = ApplyDeadZone(rawRight);
 
             LeftTrigger = gamepad.Triggers.Count > 0 ? gamepad.Triggers[0].Position : 0f;
             RightTrigger = gamepad.Triggers.Count > 1 ? gamepad.Triggers[1].Position : 0f;
