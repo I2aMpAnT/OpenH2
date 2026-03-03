@@ -15,7 +15,24 @@
    </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenH2.Core\OpenH2.Core.csproj" />
+    <!-- Build the Engine when building the Launcher, but don't reference its assembly -->
+    <ProjectReference Include="..\OpenH2.Engine\OpenH2.Engine.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
 
-  
+  <!-- Copy Engine output to engine/ subfolder so the Launcher can find it at runtime -->
+  <Target Name="CopyEngineOutput" AfterTargets="Build">
+    <PropertyGroup>
+      <EngineOutputDir>..\OpenH2.Engine\bin\$(Configuration)\$(TargetFramework)\</EngineOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <EngineFiles Include="$(EngineOutputDir)**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(EngineFiles)"
+          DestinationFiles="@(EngineFiles->'$(OutputPath)engine\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
