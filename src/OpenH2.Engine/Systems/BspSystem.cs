@@ -97,12 +97,12 @@ namespace OpenH2.Engine.Systems
 
                         if (lightmapBitmap != null)
                         {
-                            Logger.Log($"Loaded lightmap bitmap for BSP[{i}]", Logger.Color.Green);
+                            Logger.Log($"Loaded lightmap bitmap for BSP[{i}]", Logger.Color.Cyan);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Logger.Log($"Failed to load lightmap for BSP[{i}]: {ex.Message}", Logger.Color.Yellow);
+                        Logger.Log($"Failed to load lightmap for BSP[{i}]: {ex.Message}", Logger.Color.Red);
                     }
                 }
 
