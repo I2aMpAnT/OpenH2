@@ -104,6 +104,64 @@ namespace OpenH2.Engine.EntityFactories
             return entities;
         }
 
+        public static Item CreateFromEquipmentPlacement(H2vMap map, ScenarioTag scenario, ScenarioTag.EquipmentPlacement instance)
+        {
+            var item = new Item();
+            item.FriendlyName = "Equipment_" + instance.Index;
+
+            var def = scenario.EquipmentDefinitions[instance.Index];
+
+            if (map.TryGetTag(def.Equipment, out var eqip) == false)
+                return item;
+
+            item.FriendlyName = eqip.Name;
+
+            var meshes = MeshFactory.GetRenderModel(map, eqip.Hlmt);
+
+            var transparentMeshes = new List<Mesh<BitmapTag>>();
+            var renderModelMeshes = new List<Mesh<BitmapTag>>();
+
+            foreach (var mesh in meshes)
+            {
+                if (mesh.Material.AlphaMap == null)
+                    renderModelMeshes.Add(mesh);
+                else
+                    transparentMeshes.Add(mesh);
+            }
+
+            var components = new List<Component>();
+
+            if (renderModelMeshes.Count > 0)
+            {
+                components.Add(new RenderModelComponent(item, new Model<BitmapTag>
+                {
+                    Note = $"[{eqip.Id}] {eqip.Name}",
+                    Flags = ModelFlags.Diffuse | ModelFlags.CastsShadows | ModelFlags.ReceivesShadows,
+                    Meshes = renderModelMeshes.ToArray()
+                }));
+            }
+
+            foreach (var transparentMesh in transparentMeshes)
+            {
+                components.Add(new RenderModelComponent(item, new Model<BitmapTag>
+                {
+                    Note = $"[{eqip.Id}] {eqip.Name}",
+                    Meshes = new[] { transparentMesh },
+                    Flags = ModelFlags.IsTransparent
+                }));
+            }
+
+            var xform = new TransformComponent(item, instance.Position, QuaternionExtensions.FromH2vOrientation(instance.Orientation));
+            components.Add(xform);
+
+            var body = PhysicsComponentFactory.CreateDynamicRigidBody(item, xform, map, eqip.Hlmt);
+            if (body != null)
+                components.Add(body);
+
+            item.SetComponents(xform, components.ToArray());
+            return item;
+        }
+
         public static Vehicle CreateFromVehicleInstance(H2vMap map, ScenarioTag scenario, ScenarioTag.VehicleInstance instance)
         {
             var item = new Vehicle();

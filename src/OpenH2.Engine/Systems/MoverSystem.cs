@@ -40,8 +40,8 @@ namespace OpenH2.Engine.Systems
                 const float lookSensitivityY = 3.0f;
                 float dt = (float)timestep;
 
-                yaw += input.RightStick.X * lookSensitivityX * dt;
-                pitch += input.RightStick.Y * lookSensitivityY * dt;
+                yaw += -input.RightStick.X * lookSensitivityX * dt;
+                pitch += -input.RightStick.Y * lookSensitivityY * dt;
             }
 
             UpdateMovers(movers, input, yaw, pitch, timestep);

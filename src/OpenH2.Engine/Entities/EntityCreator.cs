@@ -58,6 +58,13 @@ namespace OpenH2.Engine.Entities
             return ItemFactory.FromTag(this.Map, this.Map.Scenario, item);
         }
 
+        public Entity FromEquipmentPlacement(ScenarioTag.EquipmentPlacement item)
+        {
+            var entity = ItemFactory.CreateFromEquipmentPlacement(this.Map, this.Map.Scenario, item);
+            item.GameObject = entity;
+            return entity;
+        }
+
         public Entity FromVehicleInstance(ScenarioTag.VehicleInstance item)
         {
             var entity = ItemFactory.CreateFromVehicleInstance(this.Map, this.Map.Scenario, item);

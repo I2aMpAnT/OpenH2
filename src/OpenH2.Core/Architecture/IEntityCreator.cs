@@ -12,6 +12,7 @@ namespace OpenH2.Core.Architecture
         Entity FromBlocInstance(ScenarioTag.BlocInstance bloc);
         Entity FromMachineryInstance(ScenarioTag.MachineryInstance mach);
         Entity FromItemCollectionPlacement(ScenarioTag.ItemCollectionPlacement item);
+        Entity FromEquipmentPlacement(ScenarioTag.EquipmentPlacement item);
         Entity FromVehicleInstance(ScenarioTag.VehicleInstance item);
         Entity FromTriggerVolume(ScenarioTag.TriggerVolume tv);
         Entity FromSquadStartingLocation(ScenarioTag.AiSquadDefinition.StartingLocation loc);

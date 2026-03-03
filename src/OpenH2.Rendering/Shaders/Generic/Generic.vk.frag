@@ -159,7 +159,7 @@ void main() {
     else
     {
         // Fallback: ambient + directional sun lighting with shadows
-        finalColor = vec4(diffuseColor.rgb * 0.25, diffuseColor.a);
+        finalColor = vec4(diffuseColor.rgb * 0.4, diffuseColor.a);
 
         float shadow = shadowCalculation(frag_pos);
         finalColor += (1.0 - shadow) * globalLighting(diffuseColor);
@@ -214,14 +214,6 @@ void main() {
         if(finalColor.a < 0.01)
             discard;
     }
-
-    // Distance fog: blend toward a blue-gray sky color at distance
-    // Halo 2 uses per-BSP fog definitions, but a general atmospheric fog helps a lot
-    float fogStart = 50.0;
-    float fogEnd = 500.0;
-    float fogFactor = clamp((viewDistance - fogStart) / (fogEnd - fogStart), 0.0, 0.7);
-    vec3 fogColor = vec3(0.6, 0.65, 0.75);
-    finalColor.rgb = mix(finalColor.rgb, fogColor, fogFactor);
 
     // Gamma correction: textures are sRGB (sampled to linear), convert back for display
     finalColor.rgb = pow(finalColor.rgb, vec3(1.0 / 2.2));
