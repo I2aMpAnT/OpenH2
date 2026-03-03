@@ -41,9 +41,9 @@ namespace OpenH2.Engine.Systems
                 float dt = (float)timestep;
 
                 // Push right = look right (negative yaw = clockwise)
-                yaw += -input.RightStick.X * lookSensitivityX * dt;
-                // Push up = look up (negate because positive pitch = look down in this engine)
-                pitch += -input.RightStick.Y * lookSensitivityY * dt;
+                yaw += input.RightStick.X * lookSensitivityX * dt;
+                // Push up = look up (Y is inverted in Silk.NET: up = negative)
+                pitch += input.RightStick.Y * lookSensitivityY * dt;
             }
 
             UpdateMovers(movers, input, yaw, pitch, timestep);
@@ -82,8 +82,8 @@ namespace OpenH2.Engine.Systems
             if (input.GamepadConnected)
             {
                 delta += new Vector3(
-                    input.LeftStick.Y * speed,   // forward/back
-                    input.LeftStick.X * speed,   // strafe left/right
+                    -input.LeftStick.Y * speed,  // forward/back (negate: stick up = negative Y in Silk.NET)
+                    -input.LeftStick.X * speed,  // strafe left/right
                     0);
             }
 

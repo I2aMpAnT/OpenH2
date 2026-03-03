@@ -193,6 +193,9 @@ void main() {
         finalColor.a = alpha;
     }
 
+    // Gamma correction: textures are sRGB (sampled to linear), convert back for display
+    finalColor.rgb = pow(finalColor.rgb, vec3(1.0 / 2.2));
+
     out_color = finalColor;
 }
 
