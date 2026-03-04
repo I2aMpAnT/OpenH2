@@ -95,9 +95,13 @@ namespace OpenH2.Engine.Systems
                             }
                         }
 
-                        if (lightmapBitmap != null)
+                                if (lightmapBitmap != null)
                         {
-                            Logger.Log($"Loaded lightmap bitmap for BSP[{i}]", Logger.Color.Cyan);
+                            Logger.Log($"Loaded lightmap bitmap for BSP[{i}]: {lightmapBitmap.Name}", Logger.Color.Cyan);
+                        }
+                        else
+                        {
+                            Logger.Log($"Lightmap tag found for BSP[{i}] but bitmap is null", Logger.Color.Yellow);
                         }
                     }
                     catch (Exception ex)
@@ -105,6 +109,8 @@ namespace OpenH2.Engine.Systems
                         Logger.Log($"Failed to load lightmap for BSP[{i}]: {ex.Message}", Logger.Color.Red);
                     }
                 }
+
+                Logger.Log($"BSP[{i}]: {bsp.Name}, {bsp.Clusters.Length} clusters, {bsp.InstancedGeometryInstances.Length} instances, lightmap={lightmapBitmap != null}", Logger.Color.White);
 
                 entities.Add(scene.EntityCreator.FromBsp(bsp, lightmapBitmap));
 
