@@ -41,10 +41,24 @@ namespace OpenH2.Engine.EntityFactories
             {
                 var mat = map.CreateMaterial(mesh);
 
+                // DIAGNOSTIC: Force flat white to isolate geometry vs material issues
+                mat = mat with
+                {
+                    DiffuseColor = new Vector4(1f, 1f, 1f, 1f),
+                    DiffuseMap = null,
+                    DetailMap1 = null,
+                    DetailMap2 = null,
+                    AlphaMap = null,
+                    EmissiveMap = null,
+                    NormalMap = null,
+                    SpecularMap = null,
+                    ColorChangeMask = null
+                };
+
                 // Set lightmap bitmap on terrain materials
                 if (lightmapBitmap != null)
                 {
-                    mat = mat with { LightmapBitmap = lightmapBitmap };
+                    // mat = mat with { LightmapBitmap = lightmapBitmap };
                 }
 
                 var renderMesh = new Mesh<BitmapTag>()
