@@ -677,8 +677,385 @@ export class H2MapParser {
         return new Int32Array(filtered);
     }
 
+    // ===== Shader Tag (shad) Parsing =====
+    // Returns the diffuse bitmap tag ID for a shader
+    parseShaderTag(tagOffset, secondaryMagic) {
+        // ShaderTag structure:
+        //   Offset 0: StemTag (4 chars)
+        //   Offset 4: ShaderTemplate TagRef
+        //   Offset 12: BitmapInfos reflexive (legacy path)
+        //   Offset 32: Arguments reflexive (template path)
+
+        // Try Arguments path first (ShaderTemplateArguments[0].BitmapArguments[0].Bitmap)
+        const argsRef = this.readRefArray(tagOffset, 32, secondaryMagic);
+        if (argsRef.count > 0) {
+            // ShaderTemplateArguments is 124 bytes
+            // Offset 4: BitmapArguments reflexive
+            const bitmapArgsRef = this.readRefArray(argsRef.offset, 4, secondaryMagic);
+            if (bitmapArgsRef.count > 0) {
+                // ShaderMap is 12 bytes, Bitmap TagRef at offset 0
+                const bitmapId = this.readUint32(bitmapArgsRef.offset);
+                if (bitmapId !== 0 && bitmapId !== 0xFFFFFFFF) {
+                    return bitmapId;
+                }
+            }
+        }
+
+        // Fallback: LegacyBitmapInfo[0].DiffuseBitmap (offset 4 within 80-byte struct)
+        const legacyRef = this.readRefArray(tagOffset, 12, secondaryMagic);
+        if (legacyRef.count > 0) {
+            const diffuseBitmapId = this.readUint32(legacyRef.offset + 4);
+            if (diffuseBitmapId !== 0 && diffuseBitmapId !== 0xFFFFFFFF) {
+                return diffuseBitmapId;
+            }
+        }
+
+        return null;
+    }
+
+    // ===== Bitmap Tag (bitm) Parsing =====
+    parseBitmapTag(tagOffset, secondaryMagic) {
+        // BitmapTag structure:
+        //   Offset 0: TextureType (ushort)
+        //   Offset 2: TextureCompressionFormat (ushort) — 0=DXT1, 1=DXT23, 2=DXT45, 3=16bit, 4=32bit, 5=mono
+        //   Offset 4: TextureUsage (ushort)
+        //   Offset 68: TextureInfos reflexive
+
+        const compressionFormat = this.readUint16(tagOffset + 2);
+
+        const texInfoRef = this.readRefArray(tagOffset, 68, secondaryMagic);
+        if (texInfoRef.count === 0) return null;
+
+        // TextureInfo is 116 bytes
+        const tiOff = texInfoRef.offset;
+        const width = this.view.getInt16(tiOff + 4, true);
+        const height = this.view.getInt16(tiOff + 6, true);
+        const depth = this.view.getInt16(tiOff + 8, true);
+        const format = this.readUint16(tiOff + 12);
+        const properties = this.view.getInt16(tiOff + 14, true);
+
+        // LOD offsets and sizes (6 each, uint32)
+        const lodOffsets = [];
+        const lodSizes = [];
+        for (let i = 0; i < 6; i++) {
+            lodOffsets.push(this.readUint32(tiOff + 28 + i * 4));
+            lodSizes.push(this.readUint32(tiOff + 52 + i * 4));
+        }
+
+        return {
+            compressionFormat,
+            width, height, depth,
+            format, properties,
+            lodOffsets, lodSizes
+        };
+    }
+
+    // ===== Decompress bitmap LOD data (deflate) =====
+    async decompressLodData(lodOffsetRaw, lodSize) {
+        const noff = this.decodeNormalOffset(lodOffsetRaw);
+        if (noff.location !== 0) {
+            // Data in external map file (shared.map etc.) — can't load
+            return null;
+        }
+        if (noff.value === 0 || noff.value >= this.buffer.byteLength || lodSize === 0) {
+            return null;
+        }
+
+        // Bitmap data is zlib compressed: 2-byte header + deflate stream
+        const compressedData = new Uint8Array(this.buffer, noff.value, lodSize);
+
+        try {
+            const blob = new Blob([compressedData]);
+            const ds = new DecompressionStream('deflate');
+            const stream = blob.stream().pipeThrough(ds);
+            const result = await new Response(stream).arrayBuffer();
+            return new Uint8Array(result);
+        } catch (e) {
+            console.warn(`[SpartanLoungeMap] Deflate decompress failed at 0x${noff.value.toString(16)}: ${e.message}`);
+            return null;
+        }
+    }
+
+    // ===== DXT1 Software Decoder =====
+    static decodeDXT1(data, width, height) {
+        const rgba = new Uint8Array(width * height * 4);
+        const blocksX = (width + 3) >> 2;
+        const blocksY = (height + 3) >> 2;
+
+        for (let by = 0; by < blocksY; by++) {
+            for (let bx = 0; bx < blocksX; bx++) {
+                const blockIdx = (by * blocksX + bx) * 8;
+                const c0raw = data[blockIdx] | (data[blockIdx + 1] << 8);
+                const c1raw = data[blockIdx + 2] | (data[blockIdx + 3] << 8);
+
+                const colors = new Uint8Array(16); // 4 colors x RGBA
+                // Decode RGB565
+                colors[0] = ((c0raw >> 11) & 0x1F) * 255 / 31;
+                colors[1] = ((c0raw >> 5) & 0x3F) * 255 / 63;
+                colors[2] = (c0raw & 0x1F) * 255 / 31;
+                colors[3] = 255;
+                colors[4] = ((c1raw >> 11) & 0x1F) * 255 / 31;
+                colors[5] = ((c1raw >> 5) & 0x3F) * 255 / 63;
+                colors[6] = (c1raw & 0x1F) * 255 / 31;
+                colors[7] = 255;
+
+                if (c0raw > c1raw) {
+                    colors[8]  = (2 * colors[0] + colors[4]) / 3;
+                    colors[9]  = (2 * colors[1] + colors[5]) / 3;
+                    colors[10] = (2 * colors[2] + colors[6]) / 3;
+                    colors[11] = 255;
+                    colors[12] = (colors[0] + 2 * colors[4]) / 3;
+                    colors[13] = (colors[1] + 2 * colors[5]) / 3;
+                    colors[14] = (colors[2] + 2 * colors[6]) / 3;
+                    colors[15] = 255;
+                } else {
+                    colors[8]  = (colors[0] + colors[4]) / 2;
+                    colors[9]  = (colors[1] + colors[5]) / 2;
+                    colors[10] = (colors[2] + colors[6]) / 2;
+                    colors[11] = 255;
+                    colors[12] = 0; colors[13] = 0; colors[14] = 0; colors[15] = 0;
+                }
+
+                // 4 bytes of 2-bit indices
+                for (let py = 0; py < 4; py++) {
+                    const row = data[blockIdx + 4 + py];
+                    for (let px = 0; px < 4; px++) {
+                        const ci = (row >> (px * 2)) & 0x3;
+                        const dx = bx * 4 + px;
+                        const dy = by * 4 + py;
+                        if (dx < width && dy < height) {
+                            const dst = (dy * width + dx) * 4;
+                            rgba[dst] = colors[ci * 4];
+                            rgba[dst + 1] = colors[ci * 4 + 1];
+                            rgba[dst + 2] = colors[ci * 4 + 2];
+                            rgba[dst + 3] = colors[ci * 4 + 3];
+                        }
+                    }
+                }
+            }
+        }
+        return rgba;
+    }
+
+    // ===== DXT3 Software Decoder =====
+    static decodeDXT3(data, width, height) {
+        const rgba = new Uint8Array(width * height * 4);
+        const blocksX = (width + 3) >> 2;
+        const blocksY = (height + 3) >> 2;
+
+        for (let by = 0; by < blocksY; by++) {
+            for (let bx = 0; bx < blocksX; bx++) {
+                const blockIdx = (by * blocksX + bx) * 16;
+
+                // First 8 bytes: explicit alpha (4 bits per pixel)
+                const alphaBlock = data.subarray(blockIdx, blockIdx + 8);
+
+                // Next 8 bytes: DXT1 color block
+                const c0raw = data[blockIdx + 8] | (data[blockIdx + 9] << 8);
+                const c1raw = data[blockIdx + 10] | (data[blockIdx + 11] << 8);
+
+                const colors = new Uint8Array(12); // 4 colors x RGB
+                colors[0] = ((c0raw >> 11) & 0x1F) * 255 / 31;
+                colors[1] = ((c0raw >> 5) & 0x3F) * 255 / 63;
+                colors[2] = (c0raw & 0x1F) * 255 / 31;
+                colors[3] = ((c1raw >> 11) & 0x1F) * 255 / 31;
+                colors[4] = ((c1raw >> 5) & 0x3F) * 255 / 63;
+                colors[5] = (c1raw & 0x1F) * 255 / 31;
+                colors[6] = (2 * colors[0] + colors[3]) / 3;
+                colors[7] = (2 * colors[1] + colors[4]) / 3;
+                colors[8] = (2 * colors[2] + colors[5]) / 3;
+                colors[9]  = (colors[0] + 2 * colors[3]) / 3;
+                colors[10] = (colors[1] + 2 * colors[4]) / 3;
+                colors[11] = (colors[2] + 2 * colors[5]) / 3;
+
+                for (let py = 0; py < 4; py++) {
+                    const row = data[blockIdx + 12 + py];
+                    for (let px = 0; px < 4; px++) {
+                        const ci = (row >> (px * 2)) & 0x3;
+                        const dx = bx * 4 + px;
+                        const dy = by * 4 + py;
+                        if (dx < width && dy < height) {
+                            const dst = (dy * width + dx) * 4;
+                            rgba[dst] = colors[ci * 3];
+                            rgba[dst + 1] = colors[ci * 3 + 1];
+                            rgba[dst + 2] = colors[ci * 3 + 2];
+                            // Alpha from explicit block
+                            const alphaByteIdx = py * 2 + (px >> 1);
+                            const alphaNibble = (px & 1) === 0
+                                ? alphaBlock[alphaByteIdx] & 0x0F
+                                : (alphaBlock[alphaByteIdx] >> 4) & 0x0F;
+                            rgba[dst + 3] = alphaNibble * 17; // 0-15 → 0-255
+                        }
+                    }
+                }
+            }
+        }
+        return rgba;
+    }
+
+    // ===== DXT5 Software Decoder =====
+    static decodeDXT5(data, width, height) {
+        const rgba = new Uint8Array(width * height * 4);
+        const blocksX = (width + 3) >> 2;
+        const blocksY = (height + 3) >> 2;
+
+        for (let by = 0; by < blocksY; by++) {
+            for (let bx = 0; bx < blocksX; bx++) {
+                const blockIdx = (by * blocksX + bx) * 16;
+
+                // Alpha block: 2 reference alphas + 6 bytes of 3-bit indices
+                const a0 = data[blockIdx];
+                const a1 = data[blockIdx + 1];
+                const alphas = new Uint8Array(8);
+                alphas[0] = a0;
+                alphas[1] = a1;
+                if (a0 > a1) {
+                    for (let i = 1; i <= 6; i++) alphas[i + 1] = ((7 - i) * a0 + i * a1) / 7;
+                } else {
+                    for (let i = 1; i <= 4; i++) alphas[i + 1] = ((5 - i) * a0 + i * a1) / 5;
+                    alphas[6] = 0;
+                    alphas[7] = 255;
+                }
+
+                // Read 48 bits (6 bytes) of 3-bit alpha indices
+                const alphaBits = [];
+                for (let i = 0; i < 6; i++) alphaBits.push(data[blockIdx + 2 + i]);
+                const alphaIndices = new Uint8Array(16);
+                let bitPos = 0;
+                for (let i = 0; i < 16; i++) {
+                    const byteIdx = bitPos >> 3;
+                    const bitOff = bitPos & 7;
+                    let val = (alphaBits[byteIdx] >> bitOff);
+                    if (bitOff > 5 && byteIdx + 1 < 6) val |= (alphaBits[byteIdx + 1] << (8 - bitOff));
+                    alphaIndices[i] = val & 0x7;
+                    bitPos += 3;
+                }
+
+                // Color block (same as DXT1, always 4-color mode)
+                const c0raw = data[blockIdx + 8] | (data[blockIdx + 9] << 8);
+                const c1raw = data[blockIdx + 10] | (data[blockIdx + 11] << 8);
+
+                const colors = new Uint8Array(12);
+                colors[0] = ((c0raw >> 11) & 0x1F) * 255 / 31;
+                colors[1] = ((c0raw >> 5) & 0x3F) * 255 / 63;
+                colors[2] = (c0raw & 0x1F) * 255 / 31;
+                colors[3] = ((c1raw >> 11) & 0x1F) * 255 / 31;
+                colors[4] = ((c1raw >> 5) & 0x3F) * 255 / 63;
+                colors[5] = (c1raw & 0x1F) * 255 / 31;
+                colors[6] = (2 * colors[0] + colors[3]) / 3;
+                colors[7] = (2 * colors[1] + colors[4]) / 3;
+                colors[8] = (2 * colors[2] + colors[5]) / 3;
+                colors[9]  = (colors[0] + 2 * colors[3]) / 3;
+                colors[10] = (colors[1] + 2 * colors[4]) / 3;
+                colors[11] = (colors[2] + 2 * colors[5]) / 3;
+
+                for (let py = 0; py < 4; py++) {
+                    const row = data[blockIdx + 12 + py];
+                    for (let px = 0; px < 4; px++) {
+                        const ci = (row >> (px * 2)) & 0x3;
+                        const dx = bx * 4 + px;
+                        const dy = by * 4 + py;
+                        if (dx < width && dy < height) {
+                            const dst = (dy * width + dx) * 4;
+                            rgba[dst] = colors[ci * 3];
+                            rgba[dst + 1] = colors[ci * 3 + 1];
+                            rgba[dst + 2] = colors[ci * 3 + 2];
+                            rgba[dst + 3] = alphas[alphaIndices[py * 4 + px]];
+                        }
+                    }
+                }
+            }
+        }
+        return rgba;
+    }
+
+    // ===== Decode A8R8G8B8 to RGBA =====
+    static decodeA8R8G8B8(data, width, height) {
+        const rgba = new Uint8Array(width * height * 4);
+        for (let i = 0; i < width * height; i++) {
+            // A8R8G8B8 → RGBA
+            rgba[i * 4]     = data[i * 4 + 2]; // R (from B8G8R8A8 little-endian = A, R, G, B)
+            rgba[i * 4 + 1] = data[i * 4 + 1]; // G
+            rgba[i * 4 + 2] = data[i * 4];     // B
+            rgba[i * 4 + 3] = data[i * 4 + 3]; // A
+        }
+        return rgba;
+    }
+
+    // ===== Load textures for BSP shaders =====
+    async loadTextures(bsp, tagIdMap, header, secondaryMagic) {
+        const textures = new Map(); // shaderId → { rgba, width, height }
+        let loaded = 0, skipped = 0, failed = 0, external = 0;
+
+        for (const shaderRef of bsp.shaders) {
+            const shaderId = shaderRef.shaderId;
+            if (textures.has(shaderId)) continue;
+
+            const shaderEntry = tagIdMap.get(shaderId);
+            if (!shaderEntry || shaderEntry.tag !== 'shad') {
+                skipped++;
+                continue;
+            }
+
+            try {
+                const shaderOffset = secondaryMagic + shaderEntry.offsetRaw;
+                const bitmapId = this.parseShaderTag(shaderOffset, secondaryMagic);
+                if (!bitmapId) { skipped++; continue; }
+
+                const bitmapEntry = tagIdMap.get(bitmapId);
+                if (!bitmapEntry || bitmapEntry.tag !== 'bitm') { skipped++; continue; }
+
+                const bitmapOffset = secondaryMagic + bitmapEntry.offsetRaw;
+                const texInfo = this.parseBitmapTag(bitmapOffset, secondaryMagic);
+                if (!texInfo || texInfo.width <= 0 || texInfo.height <= 0) { skipped++; continue; }
+
+                // Find best LOD (first non-empty)
+                let pixelData = null;
+                for (let lod = 0; lod < 6; lod++) {
+                    if (texInfo.lodOffsets[lod] === 0 || texInfo.lodSizes[lod] === 0) continue;
+                    const noff = this.decodeNormalOffset(texInfo.lodOffsets[lod]);
+                    if (noff.location !== 0) { external++; continue; }
+                    pixelData = await this.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
+                    if (pixelData) break;
+                }
+
+                if (!pixelData) { skipped++; continue; }
+
+                // Decode based on compression format
+                let rgba;
+                const w = texInfo.width, h = texInfo.height;
+                switch (texInfo.compressionFormat) {
+                    case 0: // DXT1
+                        rgba = H2MapParser.decodeDXT1(pixelData, w, h);
+                        break;
+                    case 1: // DXT3
+                        rgba = H2MapParser.decodeDXT3(pixelData, w, h);
+                        break;
+                    case 2: // DXT5
+                        rgba = H2MapParser.decodeDXT5(pixelData, w, h);
+                        break;
+                    case 4: // 32-bit (A8R8G8B8)
+                        rgba = H2MapParser.decodeA8R8G8B8(pixelData, w, h);
+                        break;
+                    default:
+                        skipped++;
+                        continue;
+                }
+
+                textures.set(shaderId, { rgba, width: w, height: h });
+                loaded++;
+            } catch (e) {
+                failed++;
+                console.warn(`[SpartanLoungeMap] Texture load failed for shader 0x${shaderId.toString(16)}: ${e.message}`);
+            }
+        }
+
+        console.log(`[SpartanLoungeMap] Textures: ${loaded} loaded, ${skipped} skipped, ${failed} failed, ${external} external-only`);
+        return textures;
+    }
+
     // ===== Full parse pipeline =====
-    parse() {
+    async parse() {
         console.log('[SpartanLoungeMap] Parsing map file...');
         const header = this.parseHeader();
         console.log(`[SpartanLoungeMap] Map: "${header.name}", scenario: ${header.scenarioPath}`);
@@ -688,6 +1065,12 @@ export class H2MapParser {
 
         const tagIndex = this.parseTagIndex(indexHeader);
         const secondaryMagic = this.calculateSecondaryMagic(header, indexHeader, tagIndex);
+
+        // Build tag ID lookup map
+        const tagIdMap = new Map();
+        for (const entry of tagIndex) {
+            tagIdMap.set(entry.id, entry);
+        }
 
         // Find BSP tags
         const bspEntries = tagIndex.filter(e => e.tag === 'sbsp');
@@ -736,6 +1119,11 @@ export class H2MapParser {
             }
             console.timeEnd('[SpartanLoungeMap] Instanced geometry processing');
             console.log(`[SpartanLoungeMap] IG results: ${bsp.instanceMeshes.length} defs (${igErrors} errors)`);
+
+            // Load textures for BSP shaders
+            console.time('[SpartanLoungeMap] Texture loading');
+            bsp.textures = await this.loadTextures(bsp, tagIdMap, header, secondaryMagic);
+            console.timeEnd('[SpartanLoungeMap] Texture loading');
 
             bspData.push(bsp);
         }

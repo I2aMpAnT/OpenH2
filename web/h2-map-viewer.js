@@ -138,7 +138,7 @@ export async function loadH2Map(scene, mapName, onProgress) {
 
     // Parse the map file
     const parser = new H2MapParser(mapBuffer.buffer);
-    const parsedMap = parser.parse();
+    const parsedMap = await parser.parse();
     onProgress?.(85);
 
     // Build Three.js scene

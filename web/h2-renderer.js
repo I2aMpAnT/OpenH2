@@ -1,56 +1,60 @@
 // SpartanLoungeViewer - Three.js/WebGL renderer for Halo 2 maps
 // Custom shaders matching Vulkan Generic.vk.frag/vert pipeline (commit c5ca16c)
-// Blinn-Phong lighting: ambient 0.25, specular pow(32)*0.3, gamma 1/2.2
+// Blinn-Phong lighting with diffuse texture support
 // Performance: geometry merged by material, instanced geometry via InstancedMesh
 
 import * as THREE from 'three';
 
-// ===== Custom vertex shader - mirrors Generic.vk.vert =====
+// ===== Vertex shader with UV passthrough =====
 const SPARTAN_VERTEX = `
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
+varying vec2 vUV;
 
 void main() {
     vec4 worldPos = modelMatrix * vec4(position, 1.0);
     vWorldPos = worldPos.xyz;
     vWorldNormal = normalize(normalMatrix * normal);
+    vUV = uv;
     gl_Position = projectionMatrix * viewMatrix * worldPos;
 }
 `;
 
-// ===== Custom fragment shader - mirrors Generic.vk.frag (no-texture path) =====
+// ===== Fragment shader with texture sampling =====
 const SPARTAN_FRAGMENT = `
 uniform vec3 diffuseColor;
 uniform vec3 specularColor;
 uniform vec3 sunDirection;
+uniform sampler2D diffuseMap;
+uniform float hasTexture;
 
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
+varying vec2 vUV;
 
 void main() {
     vec3 normal = normalize(vWorldNormal);
-    vec3 viewDiff = cameraPosition - vWorldPos;
-    vec3 viewDir = normalize(viewDiff);
+    vec3 viewDir = normalize(cameraPosition - vWorldPos);
     vec3 lightDir = normalize(sunDirection);
 
-    // Ambient: diffuseColor * 0.25 (Generic.vk.frag line 162)
-    vec3 ambient = diffuseColor * 0.25;
+    // Sample texture or use solid color
+    vec3 baseColor = hasTexture > 0.5
+        ? texture2D(diffuseMap, vUV).rgb
+        : diffuseColor;
 
-    // Diffuse: Lambertian (Generic.vk.frag globalLighting())
+    // Ambient
+    vec3 ambient = baseColor * 0.25;
+
+    // Diffuse: Lambertian
     float cosTheta = clamp(dot(-lightDir, normal), 0.0, 1.0);
-    vec3 diffuse = diffuseColor * cosTheta;
+    vec3 diffuse = baseColor * cosTheta;
 
-    // Specular: Blinn-Phong (Generic.vk.frag globalLighting())
+    // Specular: Blinn-Phong
     vec3 halfDir = normalize(-lightDir + viewDir);
-    float specAngle = max(dot(normal, halfDir), 0.0);
-    float specMod = pow(specAngle, 32.0);
+    float specMod = pow(max(dot(normal, halfDir), 0.0), 32.0);
     vec3 specular = specularColor * specMod * 0.3;
 
-    vec3 finalColor = ambient + diffuse + specular;
-
-    // Gamma correction (Generic.vk.frag line 222)
-    finalColor = pow(finalColor, vec3(1.0 / 2.2));
-
+    vec3 finalColor = pow(ambient + diffuse + specular, vec3(1.0 / 2.2));
     gl_FragColor = vec4(finalColor, 1.0);
 }
 `;
@@ -66,14 +70,15 @@ export class H2Renderer {
         this.mapGroup.rotation.x = -Math.PI / 2;
 
         this.materials = new Map();
+        this.textures = new Map(); // shaderId → THREE.Texture
         this.meshCount = 0;
         this.triCount = 0;
         this.drawCalls = 0;
 
-        // Sun direction uniform - shared across all materials
         this.sunDirection = new THREE.Vector3(0.5, -0.8, 0.3).normalize();
-
-        console.log('[SpartanLoungeRender] Renderer initialized, coordinate transform: Z-up → Y-up');
+        // Placeholder 1x1 white texture for untextured materials
+        this.placeholderTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1, THREE.RGBAFormat);
+        this.placeholderTexture.needsUpdate = true;
     }
 
     buildFromParsedData(parsedMap) {
@@ -82,10 +87,32 @@ export class H2Renderer {
         for (const bsp of bspData) {
             console.log(`[SpartanLoungeRender] Building BSP: ${bsp.name}`);
 
-            // ===== Phase 1: Collect all meshes grouped by material key =====
-            const buckets = new Map(); // materialKey → { meshes: [], material: THREE.Material }
+            // Upload textures to GPU
+            let texturedCount = 0;
+            if (bsp.textures) {
+                for (const [shaderId, texData] of bsp.textures) {
+                    const tex = new THREE.DataTexture(
+                        texData.rgba,
+                        texData.width,
+                        texData.height,
+                        THREE.RGBAFormat,
+                        THREE.UnsignedByteType
+                    );
+                    tex.wrapS = THREE.RepeatWrapping;
+                    tex.wrapT = THREE.RepeatWrapping;
+                    tex.magFilter = THREE.LinearFilter;
+                    tex.minFilter = THREE.LinearMipmapLinearFilter;
+                    tex.generateMipmaps = true;
+                    tex.needsUpdate = true;
+                    this.textures.set(shaderId, tex);
+                    texturedCount++;
+                }
+                console.log(`[SpartanLoungeRender] Uploaded ${texturedCount} textures to GPU`);
+            }
 
-            // Cluster meshes (BSP terrain)
+            // ===== Phase 1: Collect all meshes grouped by material key =====
+            const buckets = new Map();
+
             for (const mesh of bsp.clusterMeshes) {
                 if (!mesh.vertices.positions || mesh.indices.length === 0) continue;
                 const key = mesh.shaderId || mesh.matId;
@@ -115,7 +142,6 @@ export class H2Renderer {
             let instanceTriCount = 0;
             let instanceDrawCalls = 0;
 
-            // Group instances by definition index
             const instancesByDef = new Map();
             for (const instance of bsp.instancedGeometryInstances) {
                 if (instance.index >= bsp.instanceMeshes.length) continue;
@@ -130,7 +156,6 @@ export class H2Renderer {
             for (const [defIdx, instances] of instancesByDef) {
                 const def = bsp.instanceMeshes[defIdx];
 
-                // Group definition meshes by material
                 const defBuckets = new Map();
                 for (const mesh of def.meshes) {
                     if (!mesh.vertices.positions || mesh.indices.length === 0) continue;
@@ -196,19 +221,16 @@ export class H2Renderer {
         });
 
         console.log(`[SpartanLoungeRender] === BUILD COMPLETE ===`);
-        console.log(`[SpartanLoungeRender]   Draw calls: ${this.drawCalls} (was ${bspData.reduce((s, b) => s + b.clusterMeshes.length + b.instancedGeometryInstances.length, 0)} unbatched)`);
+        console.log(`[SpartanLoungeRender]   Draw calls: ${this.drawCalls}`);
         console.log(`[SpartanLoungeRender]   Total triangles: ${this.triCount.toLocaleString()}`);
-        console.log(`[SpartanLoungeRender]   Unique materials: ${this.materials.size}`);
+        console.log(`[SpartanLoungeRender]   Unique materials: ${this.materials.size} (${this.textures.size} textured)`);
 
         return this.mapGroup;
     }
 
-    // Merge multiple meshes into a single BufferGeometry
-    // Each mesh has shared vertex arrays from its cluster but different index ranges
     mergeGeometries(meshes) {
         if (meshes.length === 0) return null;
 
-        // Calculate totals
         let totalVerts = 0;
         let totalIndices = 0;
         for (const mesh of meshes) {
@@ -233,14 +255,11 @@ export class H2Renderer {
 
         for (const mesh of meshes) {
             const vc = mesh.vertexCount;
-
-            // Copy vertex data
             positions.set(mesh.vertices.positions, vertOffset * 3);
             if (normals && mesh.vertices.normals) normals.set(mesh.vertices.normals, vertOffset * 3);
             if (uvs && mesh.vertices.texCoords) uvs.set(mesh.vertices.texCoords, vertOffset * 2);
             if (lightmapUVs && mesh.vertices.lightmapUVs) lightmapUVs.set(mesh.vertices.lightmapUVs, vertOffset * 2);
 
-            // Copy indices with vertex offset
             for (let i = 0; i < mesh.indices.length; i++) {
                 indices[idxOffset + i] = mesh.indices[i] + vertOffset;
             }
@@ -261,27 +280,29 @@ export class H2Renderer {
         return geometry;
     }
 
-    // Material system - custom ShaderMaterial matching Generic.vk.frag
-    // Generates distinct diffuse colors per shader ID (placeholder until textures)
     getMaterial(shaderId, matId) {
         const key = shaderId || matId;
         if (this.materials.has(key)) {
             return this.materials.get(key);
         }
 
+        const texture = this.textures.get(key);
+        const hasTexture = !!texture;
+
+        // Fallback color for untextured materials
         const hue = ((key * 137) % 360) / 360;
         const color = new THREE.Color();
         color.setHSL(hue, 0.3, 0.5);
-
-        const specColor = new THREE.Color(1.0, 1.0, 1.0);
 
         const mat = new THREE.ShaderMaterial({
             vertexShader: SPARTAN_VERTEX,
             fragmentShader: SPARTAN_FRAGMENT,
             uniforms: {
                 diffuseColor: { value: color },
-                specularColor: { value: specColor },
-                sunDirection: { value: this.sunDirection }
+                specularColor: { value: new THREE.Color(1, 1, 1) },
+                sunDirection: { value: this.sunDirection },
+                diffuseMap: { value: texture || this.placeholderTexture },
+                hasTexture: { value: hasTexture ? 1.0 : 0.0 }
             },
             side: THREE.DoubleSide
         });
@@ -294,9 +315,7 @@ export class H2Renderer {
         this.sunDirection.set(x, y, z).normalize();
     }
 
-    setupLighting() {
-        // Custom shader pipeline - no Three.js lights needed
-    }
+    setupLighting() {}
 
     getMapBounds() {
         const box = new THREE.Box3().setFromObject(this.mapGroup);
@@ -316,7 +335,10 @@ export class H2Renderer {
                 }
             }
         });
+        for (const tex of this.textures.values()) tex.dispose();
+        this.placeholderTexture.dispose();
         this.scene.remove(this.mapGroup);
         this.materials.clear();
+        this.textures.clear();
     }
 }

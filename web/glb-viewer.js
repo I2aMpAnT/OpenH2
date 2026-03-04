@@ -1945,7 +1945,7 @@ async function loadH2Map(mapFilename, onProgress) {
     console.time('[SpartanLounge] Parse time');
     onProgress?.(0.75);
     const parser = new H2MapParser(mapBuffer.buffer);
-    const parsedMap = parser.parse();
+    const parsedMap = await parser.parse();
     console.timeEnd('[SpartanLounge] Parse time');
 
     // Build scene
