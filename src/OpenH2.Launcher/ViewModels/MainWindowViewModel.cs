@@ -124,7 +124,7 @@ namespace OpenH2.Launcher.ViewModels
                         return;
                     }
 
-                    var writer = new GlbWriter();
+                    var writer = new GlbWriter(scene);
                     var bsps = scene.GetLocalTagsOfType<BspTag>().ToArray();
 
                     // BSP clusters
@@ -136,7 +136,7 @@ namespace OpenH2.Launcher.ViewModels
                         {
                             var cluster = bsp.Clusters[ci];
                             if (cluster.Model == null) continue;
-                            writer.AddBspCluster(cluster.Model, bsp.ModelShaderReferences, $"cluster_{ci}");
+                            writer.AddMeshCollection(cluster.Model, Matrix4x4.Identity, $"cluster_{ci}");
                             clusterCount++;
                         }
                     }
@@ -163,7 +163,7 @@ namespace OpenH2.Launcher.ViewModels
                                 * Matrix4x4.CreateFromQuaternion(QuaternionExtensions.From3x3Mat(instance.RotationMatrix))
                                 * Matrix4x4.CreateTranslation(instance.Position);
 
-                            writer.AddInstancedGeometry(def.Model, xform, $"ig_{igCount}");
+                            writer.AddMeshCollection(def.Model, xform, $"ig_{igCount}");
                             igCount++;
                         }
                     }
@@ -278,7 +278,7 @@ namespace OpenH2.Launcher.ViewModels
                 if (section.Model == null)
                     continue;
 
-                writer.AddInstancedGeometry(section.Model, transform, name);
+                writer.AddMeshCollection(section.Model, transform, name);
             }
         }
 
