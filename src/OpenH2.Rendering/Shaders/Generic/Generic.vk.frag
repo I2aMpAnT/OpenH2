@@ -63,11 +63,6 @@ layout(std140, binding = 2) uniform GenericUniform
     float ColorChangeAmount;
     ivec2 ColorChangeMaskMap;
     vec4 ColorChangeColor;
-
-    bool UseLightmap;
-    float LightmapAmount;
-    ivec2 LightmapMap;
-    vec4 LightmapPad;
 } Data;
 
 layout(set = 1, binding = 3) uniform sampler2D Textures[];
@@ -76,7 +71,7 @@ layout(binding = 16) uniform sampler2DArray shadowMap;
 
 layout(location = 0) in vec3 frag_pos;
 layout(location = 1) in vec2 texcoord;
-layout(location = 2) in vec2 lightmap_uv;
+layout(location = 2) in vec3 color;
 layout(location = 3) in vec3 world_pos;
 layout(location = 4) in vec3 world_normal;
 layout(location = 5) in mat3 TBN;
@@ -103,14 +98,9 @@ float shadowCalculation(in vec3 fragPosWorldSpace);
 void main() {
 
     calculated_normal = world_normal;
-    specular_color = Data.SpecularColor.rgb;
+    specular_color = vec3(1);
 
-    if (Data.UseSpecularMap)
-    {
-        specular_color *= texture(Textures[Data.SpecularMap.x], texcoord).rgb;
-    }
-
-    if (Data.UseNormalMap)
+    if (Data.UseNormalMap) 
     {
         calculated_normal = normalize(texture(Textures[Data.NormalMap.x], texcoord * Data.NormalMapScale.xy).rgb * 2 - 1);
 
@@ -118,52 +108,37 @@ void main() {
         viewDirection = TBN * viewDirection;
     }
 
-    vec4 diffuseColor = Data.DiffuseColor;
+    vec4 detail1Tex = texture(Textures[Data.DetailMap1.x], texcoord * Data.DetailMap1Scale.xy);
+    vec4 detail2Tex = texture(Textures[Data.DetailMap2.x], texcoord * Data.DetailMap2Scale.xy);
+    vec4 diffuseTex = texture(Textures[Data.DiffuseMap.x], texcoord);
 
+    vec4 diffuseColor = Data.DiffuseColor;
+    
     if(Data.UseDiffuseMap)
     {
-        vec4 diffuseTex = texture(Textures[Data.DiffuseMap.x], texcoord);
+        vec4 detailColor = vec4(0.4);
 
         if(Data.UseDetailMap1 && Data.UseDetailMap2)
         {
-            vec4 detail1Tex = texture(Textures[Data.DetailMap1.x], texcoord * Data.DetailMap1Scale.xy);
-            vec4 detail2Tex = texture(Textures[Data.DetailMap2.x], texcoord * Data.DetailMap2Scale.xy);
-            vec4 detailColor = mix(detail1Tex, detail2Tex, diffuseTex.a);
-            diffuseColor = vec4((diffuseTex.rgb * detailColor.rgb * 2.0), 1);
+            detailColor = mix(detail1Tex, detail2Tex, diffuseTex.a);
         }
-        else if(Data.UseDetailMap1)
+        else if(Data.UseDetailMap1 || Data.UseDetailMap2)
         {
-            vec4 detail1Tex = texture(Textures[Data.DetailMap1.x], texcoord * Data.DetailMap1Scale.xy);
-            diffuseColor = vec4((diffuseTex.rgb * detail1Tex.rgb * 2.0), 1);
+            // If one is empty (vec4(0)), detailColor will be set to the other
+            detailColor = detail1Tex + detail2Tex;
         }
-        else if(Data.UseDetailMap2)
-        {
-            vec4 detail2Tex = texture(Textures[Data.DetailMap2.x], texcoord * Data.DetailMap2Scale.xy);
-            diffuseColor = vec4((diffuseTex.rgb * detail2Tex.rgb * 2.0), 1);
-        }
-        else
-        {
-            diffuseColor = vec4(diffuseTex.rgb, 1);
-        }
-    }
 
+        diffuseColor = vec4((diffuseTex * detailColor * 2.5).rgb, 1);
+    }
+    
     vec4 finalColor;
 
-    if(Data.UseLightmap)
-    {
-        // Use baked lightmap: sample the lightmap texture with lightmap UVs
-        vec4 lightmapSample = texture(Textures[Data.LightmapMap.x], lightmap_uv);
-        // Lightmap provides pre-baked irradiance - multiply with diffuse
-        finalColor = vec4(diffuseColor.rgb * lightmapSample.rgb * 2.0, diffuseColor.a);
-    }
-    else
-    {
-        // Fallback: ambient + directional sun lighting with shadows
-        finalColor = vec4(diffuseColor.rgb * 0.25, diffuseColor.a);
+    // Sets ambient baseline
+    finalColor = vec4(diffuseColor.rgb * 0.3, diffuseColor.a);
 
-        float shadow = shadowCalculation(frag_pos);
-        finalColor += (1.0 - shadow) * globalLighting(diffuseColor);
-    }
+    // Adds global lighting
+    float shadow = shadowCalculation(frag_pos);
+    finalColor += (1.0 - shadow) * globalLighting(diffuseColor) * 0.5;
 
     if(Data.UseEmissiveMap)
     {
@@ -171,25 +146,23 @@ void main() {
 
         if(Data.EmissiveType == EmissiveTypeEmissiveOnly)
         {
-            // Pure self-illumination (fusion coils, energy effects)
-            // Replace lit color entirely with emissive glow
-            float intensity = max(max(emissiveSample.r, emissiveSample.g), emissiveSample.b);
-            finalColor = vec4(emissiveSample.rgb, max(finalColor.a, intensity));
+            float a = emissiveSample.r + emissiveSample.b + emissiveSample.g;
+            finalColor = vec4(emissiveSample.rgb, a/3.0);
         }
+        // TODO: figure out how to do the 3 channel stuff better?
         else if(Data.EmissiveType == EmissiveTypeThreeChannel)
         {
-            // Multi-channel illumination (plasma coils on Ascension etc.)
             float r = emissiveSample.r * Data.EmissiveArguments.r;
             float g = emissiveSample.g * Data.EmissiveArguments.g;
             float b = emissiveSample.b * Data.EmissiveArguments.b;
 
-            finalColor.rgb += vec3(r, g, b);
+            float winner = max(max(r,g),b);
+
+            finalColor += vec4(winner,winner,winner,0);
         }
         else
         {
-            // DiffuseBlended (most common: flag bases, teleporters, glowing surfaces)
-            // Additive blend using full RGB, not just red
-            finalColor.rgb += emissiveSample.rgb;
+            finalColor += vec4(emissiveSample.r);
         }
     }
     
@@ -202,7 +175,7 @@ void main() {
     {
         vec4 alphaSample = texture(Textures[Data.AlphaHandle.x], texcoord);
         float alpha = min(alphaSample.a, finalColor.a);
-
+    
         if(Data.AlphaChannel.r == 1.0)
         {
             alpha = alphaSample.r;
@@ -210,16 +183,6 @@ void main() {
 
         finalColor.a = alpha;
     }
-
-    // Discard nearly-transparent fragments so they don't write to the depth
-    // buffer and block visible geometry behind them. This handles:
-    // - Emissive-only surfaces (teleporter glow, energy effects) with alpha ~0
-    // - Alpha-test surfaces where the alpha map clips to 0
-    if(finalColor.a < 0.1)
-        discard;
-
-    // Gamma correction: textures are sRGB (sampled to linear), convert back for display
-    finalColor.rgb = pow(finalColor.rgb, vec3(1.0 / 2.2));
 
     out_color = finalColor;
 }
@@ -234,10 +197,12 @@ vec4 globalLighting(in vec4 textureColor)
     vec3 halfwayDirection = normalize(-lightDirection + viewDirection);
     float specularAngle = max(dot(calculated_normal, halfwayDirection), 0.0);
 
-    float specularModifier = pow(specularAngle, 32);
+    // TODO: replace 100 with specular amount/intensity
+    float specularModifier = pow(specularAngle, 100);
 
-    vec4 light_specular = vec4(specular_color, 1) * vec4(light_color, 1) * specularModifier * 0.3;
-
+    // TODO: specular term is not working correctly
+    vec4 light_specular = vec4(light_color,1) * vec4(light_color,1) * 0; //specularModifier;
+    
     return light_diffuse + light_specular;
 }
 

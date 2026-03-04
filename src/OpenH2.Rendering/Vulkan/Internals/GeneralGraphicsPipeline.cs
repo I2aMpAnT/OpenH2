@@ -15,8 +15,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             bool invertY = true,
             PolygonMode polyMode = PolygonMode.Fill,
             CullModeFlags cullMode = CullModeFlags.CullModeBackBit,
-            bool depthTest = true,
-            bool depthWrite = true);
+            bool depthTest = true);
 
     internal record PipelineBinding(uint location, DescriptorType type, uint count = 1, DescriptorBindingFlags flags = 0);
 
@@ -255,29 +254,20 @@ namespace OpenH2.Rendering.Vulkan.Internals
                 Offset = (uint)VertexFormat.BitangentOffset
             };
 
-            var lmTexAttr = new VertexInputAttributeDescription
-            {
-                Binding = 0,
-                Location = 5,
-                Format = Format.R32G32Sfloat,
-                Offset = (uint)VertexFormat.LightmapTexCoordsOffset
-            };
-
-            var attrs = stackalloc[] { posAttr, texAttr, normalAttr, tanAttr, bitanAttr, lmTexAttr };
+            var attrs = stackalloc[] { posAttr, texAttr, normalAttr, tanAttr, bitanAttr };
 
             var vertInput = new PipelineVertexInputStateCreateInfo
             {
                 SType = StructureType.PipelineVertexInputStateCreateInfo,
                 VertexBindingDescriptionCount = 1,
                 PVertexBindingDescriptions = &binding,
-                VertexAttributeDescriptionCount = 6,
+                VertexAttributeDescriptionCount = 5,
                 PVertexAttributeDescriptions = attrs
             };
 
             var (topology, restart) = primitiveType switch
             {
                 MeshElementType.TriangleList => (PrimitiveTopology.TriangleList, false),
-                MeshElementType.TriangleListEnvironment => (PrimitiveTopology.TriangleList, false),
                 MeshElementType.TriangleStrip => (PrimitiveTopology.TriangleStrip, true),
                 MeshElementType.TriangleStripDecal => (PrimitiveTopology.TriangleStrip, true),
                 MeshElementType.Point => (PrimitiveTopology.PointList, false),
@@ -366,7 +356,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             {
                 SType = StructureType.PipelineDepthStencilStateCreateInfo,
                 DepthTestEnable = config.depthTest,
-                DepthWriteEnable = config.depthWrite,
+                DepthWriteEnable = true,
                 DepthCompareOp = CompareOp.Less,
                 DepthBoundsTestEnable = false,
                 StencilTestEnable = false,

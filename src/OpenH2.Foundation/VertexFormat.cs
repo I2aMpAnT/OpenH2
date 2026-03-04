@@ -1,4 +1,4 @@
-using OpenH2.Foundation.Extensions;
+﻿using OpenH2.Foundation.Extensions;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -12,7 +12,6 @@ namespace OpenH2.Foundation
         public static readonly int NormalOffset;
         public static readonly int TangentOffset;
         public static readonly int BitangentOffset;
-        public static readonly int LightmapTexCoordsOffset;
 
 
         public Vector3 Position;
@@ -20,18 +19,16 @@ namespace OpenH2.Foundation
         public Vector3 Normal;
         public Vector3 Tangent;
         public Vector3 Bitangent;
-        public Vector2 LightmapTexCoords;
 
         static VertexFormat()
         {
             var o = default(VertexFormat);
-
+            
             PositionOffset = UnsafeExtensions.Offset(ref o, ref o.Position);
             TexCoordsOffset = UnsafeExtensions.Offset(ref o, ref o.TexCoords);
             NormalOffset = UnsafeExtensions.Offset(ref o, ref o.Normal);
             TangentOffset = UnsafeExtensions.Offset(ref o, ref o.Tangent);
             BitangentOffset = UnsafeExtensions.Offset(ref o, ref o.Bitangent);
-            LightmapTexCoordsOffset = UnsafeExtensions.Offset(ref o, ref o.LightmapTexCoords);
         }
 
         public VertexFormat(Vector3 pos, Vector2 tex, Vector3 norm)
@@ -41,7 +38,6 @@ namespace OpenH2.Foundation
             Normal = norm;
             Tangent = Vector3.One;
             Bitangent = Vector3.One;
-            LightmapTexCoords = Vector2.Zero;
         }
 
         public VertexFormat(Vector3 pos, Vector2 tex, Vector3 norm, Vector3 tan, Vector3 bitan)
@@ -51,7 +47,6 @@ namespace OpenH2.Foundation
             Normal = norm;
             Tangent = tan;
             Bitangent = bitan;
-            LightmapTexCoords = Vector2.Zero;
         }
 
         public static readonly int Size = Marshal.SizeOf<VertexFormat>();
