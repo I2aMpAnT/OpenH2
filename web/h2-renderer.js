@@ -183,10 +183,11 @@ export class H2Renderer {
                         const inst = instances[i];
                         const rm = inst.rotationMatrix;
 
+                        // Transpose 3x3: C# uses row-vectors (v*M), Three.js uses column-vectors (M*v)
                         rotMat.set(
-                            rm[0], rm[1], rm[2], 0,
-                            rm[3], rm[4], rm[5], 0,
-                            rm[6], rm[7], rm[8], 0,
+                            rm[0], rm[3], rm[6], 0,
+                            rm[1], rm[4], rm[7], 0,
+                            rm[2], rm[5], rm[8], 0,
                             0, 0, 0, 1
                         );
 
