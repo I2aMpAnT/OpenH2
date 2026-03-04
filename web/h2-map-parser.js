@@ -174,28 +174,31 @@ export class H2MapParser {
         return entries;
     }
 
-    // Calculate secondary magic from first tag entry
+    // Calculate secondary magic from first valid tag entry
     // C# reference: SecondaryMagic = firstObjOffset - (PrimaryMagic + RawSecondaryOffset)
     // JS convention is inverted: physical = virtual + magic, so magic = secondaryPhysical - firstVirtual
     calculateSecondaryMagic(header, indexHeader, tagIndex) {
-        if (tagIndex.length === 0) {
-            console.error('[SpartanLoungeMap] No tags found - cannot calculate secondary magic');
+        // Find first valid (non-NULL, non-zero-size) tag entry — matches C# MapFactory behavior
+        let firstOffsetRaw = null;
+        for (const entry of tagIndex) {
+            if (entry.tag !== 'ÿÿÿÿ' && entry.dataSize > 0) {
+                firstOffsetRaw = entry.offsetRaw;
+                break;
+            }
+        }
+
+        if (firstOffsetRaw === null) {
+            console.error('[SpartanLoungeMap] No valid tags found - cannot calculate secondary magic');
             return 0;
         }
 
         // The physical start of the tag data section comes from the header's secondary offset
         // converted via primary magic (matching C# PrimaryOffset behavior)
         const secondaryPhysical = indexHeader.primaryMagic + header.rawSecondaryOffset;
-        const magic = secondaryPhysical - tagIndex[0].offsetRaw;
+        const magic = secondaryPhysical - firstOffsetRaw;
 
-        // Also compute the old (potentially wrong) value for comparison
-        const tagIndexEnd = indexHeader.tagIndexOffset + indexHeader.tagIndexCount * 16;
-        const oldMagic = tagIndexEnd - tagIndex[0].offsetRaw;
+        console.log(`[SpartanLoungeMap] Secondary magic: 0x${(magic >>> 0).toString(16)} (secondaryPhys=0x${secondaryPhysical.toString(16)}, firstTagRaw=0x${(firstOffsetRaw >>> 0).toString(16)})`);
 
-        console.log(`[SpartanLoungeMap] Secondary magic: 0x${(magic >>> 0).toString(16)} (secondaryPhys=0x${secondaryPhysical.toString(16)}, firstTagRaw=0x${(tagIndex[0].offsetRaw >>> 0).toString(16)})`);
-        if (magic !== oldMagic) {
-            console.warn(`[SpartanLoungeMap] Secondary magic DIFFERS from tag-index-end method: 0x${(oldMagic >>> 0).toString(16)} (tagIndexEnd=0x${tagIndexEnd.toString(16)}) — delta=${magic - oldMagic} bytes`);
-        }
 
         // Log tag type distribution
         const tagTypes = {};
