@@ -5,6 +5,7 @@ using OpenH2.Foundation;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OpenH2.Core.Tags.Common.Models
 {
@@ -125,6 +126,26 @@ namespace OpenH2.Core.Tags.Common.Models
                 }
 
                 currentResource++;
+            }
+
+            // Log index data stats: count -1 values (primitive restart markers)
+            {
+                var restartCount = 0;
+                for (var i = 0; i < indices.Length; i++)
+                    if (indices[i] == -1) restartCount++;
+                if (restartCount > 0 || note != null)
+                {
+                    var elTypes = new Dictionary<MeshElementType, int>();
+                    foreach (var p in parts)
+                    {
+                        elTypes.TryGetValue(p.ElementType, out var cnt);
+                        elTypes[p.ElementType] = cnt + 1;
+                    }
+                    var elTypeStr = string.Join(", ", elTypes.Select(kv => $"{kv.Key}={kv.Value}"));
+                    Console.WriteLine($"[MeshDiag] {note ?? "container"}: indices={indices.Length}, restartMarkers={restartCount}, " +
+                        $"parts={parts.Count}, elementTypes=[{elTypeStr}], " +
+                        $"triCount={container.TriangleCount}, triCount*3={container.TriangleCount * 3}");
+                }
             }
 
             // process unknown resource
