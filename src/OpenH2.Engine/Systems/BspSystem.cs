@@ -85,23 +85,38 @@ namespace OpenH2.Engine.Systems
                 {
                     try
                     {
-                        if (scene.Map.TryGetTag<LightmapTag>(terrain.LightmapId.Id, out var ltmpTag)
-                            && ltmpTag.Groups != null && ltmpTag.Groups.Length > 0)
+                        if (scene.Map.TryGetTag<LightmapTag>(terrain.LightmapId.Id, out var ltmpTag))
                         {
-                            var group = ltmpTag.Groups[0];
-                            if (group.LightmapBitmap.IsInvalid == false)
-                            {
-                                scene.Map.TryGetTag(group.LightmapBitmap, out lightmapBitmap);
-                            }
-                        }
+                            var groupCount = ltmpTag.Groups?.Length ?? 0;
+                            Logger.Log($"BSP[{i}] ltmp tag found, {groupCount} groups", Logger.Color.White);
 
-                                if (lightmapBitmap != null)
-                        {
-                            Logger.Log($"Loaded lightmap bitmap for BSP[{i}]: {lightmapBitmap.Name}", Logger.Color.Cyan);
+                            if (ltmpTag.Groups != null && ltmpTag.Groups.Length > 0)
+                            {
+                                var group = ltmpTag.Groups[0];
+                                var clusterInfoCount = group.ClusterRenderInfo?.Length ?? 0;
+                                Logger.Log($"BSP[{i}] group[0]: {clusterInfoCount} cluster entries, bitmap ref={group.LightmapBitmap.Id}, invalid={group.LightmapBitmap.IsInvalid}", Logger.Color.White);
+
+                                if (group.LightmapBitmap.IsInvalid == false)
+                                {
+                                    if (scene.Map.TryGetTag(group.LightmapBitmap, out lightmapBitmap))
+                                    {
+                                        Logger.Log($"Loaded lightmap bitmap for BSP[{i}]: {lightmapBitmap.Name}", Logger.Color.Cyan);
+                                    }
+                                    else
+                                    {
+                                        Logger.Log($"BSP[{i}] lightmap bitmap ref valid but tag not found: {group.LightmapBitmap.Id}", Logger.Color.Red);
+                                    }
+                                }
+                            }
                         }
                         else
                         {
-                            Logger.Log($"Lightmap tag found for BSP[{i}] but bitmap is null", Logger.Color.Magenta);
+                            Logger.Log($"BSP[{i}] ltmp tag not found for id={terrain.LightmapId.Id}", Logger.Color.Magenta);
+                        }
+
+                        if (lightmapBitmap == null)
+                        {
+                            Logger.Log($"BSP[{i}] no lightmap - using fallback lighting", Logger.Color.Magenta);
                         }
                     }
                     catch (Exception ex)
