@@ -26,7 +26,7 @@
     <TabControl Grid.Row="1">
       <TabItem Header="Maps" FontSize="14">
         <StackPanel Orientation="Horizontal">
-          <ListBox Items="{Binding AvailableMaps}" SelectedItem="{Binding SelectedMap}" Width="300">
+          <ListBox Items="{Binding AvailableMaps}" SelectedItem="{Binding SelectedMap}" Width="300" DoubleTapped="ListBox_DoubleTapped">
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <TextBlock Text="{Binding FriendlyName}" />
