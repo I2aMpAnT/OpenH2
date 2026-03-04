@@ -1878,16 +1878,22 @@ async function loadH2Map(mapFilename, onProgress) {
     console.log(`[SpartanLounge] Downloaded ${(receivedBytes / 1024 / 1024).toFixed(1)} MB`);
 
     // Parse
+    console.log('[SpartanLounge] Parsing .map file...');
+    console.time('[SpartanLounge] Parse time');
     onProgress?.(0.75);
     const parser = new H2MapParser(mapBuffer.buffer);
     const parsedMap = parser.parse();
+    console.timeEnd('[SpartanLounge] Parse time');
 
     // Build scene
+    console.log('[SpartanLounge] Building Three.js scene...');
+    console.time('[SpartanLounge] Build time');
     onProgress?.(0.85);
     const h2r = new H2Renderer(scene);
     h2r.setupLighting();
     h2r.buildFromParsedData(parsedMap);
     h2RendererInstance = h2r;
+    console.timeEnd('[SpartanLounge] Build time');
 
     // Set mapModel to the group so existing code (camera, etc.) works
     mapModel = h2r.mapGroup;

@@ -16,12 +16,18 @@ export class H2Renderer {
         this.mapGroup.rotation.x = -Math.PI / 2;
 
         this.materials = new Map(); // cache by shaderId
+        this.meshCount = 0;
+        this.triCount = 0;
+        this.vertCount = 0;
+        this.failedMeshes = 0;
         this.defaultMaterial = new THREE.MeshStandardMaterial({
             color: 0x808080,
             roughness: 0.8,
             metalness: 0.1,
             side: THREE.DoubleSide
         });
+
+        console.log('[H2Render] Renderer initialized, coordinate transform: Z-up → Y-up');
     }
 
     // Build Three.js geometry from parsed BSP data
@@ -85,6 +91,13 @@ export class H2Renderer {
             console.log(`[H2Render] Instanced geometry: ${bsp.instancedGeometryInstances.length} instances, ${instanceTriCount} triangles`);
         }
 
+        // Final stats
+        console.log(`[H2Render] === BUILD COMPLETE ===`);
+        console.log(`[H2Render]   Total meshes: ${this.meshCount} (${this.failedMeshes} failed)`);
+        console.log(`[H2Render]   Total triangles: ${this.triCount.toLocaleString()}`);
+        console.log(`[H2Render]   Unique materials: ${this.materials.size}`);
+        console.log(`[H2Render]   Scene children: ${this.mapGroup.children.length}`);
+
         return this.mapGroup;
     }
 
@@ -92,7 +105,10 @@ export class H2Renderer {
     createThreeMesh(meshData) {
         const { indices, vertices, vertexCount } = meshData;
 
-        if (!vertices.positions || indices.length === 0) return null;
+        if (!vertices.positions || indices.length === 0) {
+            this.failedMeshes++;
+            return null;
+        }
 
         const geometry = new THREE.BufferGeometry();
 
@@ -134,6 +150,10 @@ export class H2Renderer {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
+        this.meshCount++;
+        this.triCount += indices.length / 3;
+        this.vertCount += vertexCount;
+
         return mesh;
     }
 
@@ -163,6 +183,8 @@ export class H2Renderer {
 
     // Set up scene lighting appropriate for Halo 2 maps
     setupLighting() {
+        console.log('[H2Render] Setting up lighting...');
+
         // Ambient light for base visibility
         const ambient = new THREE.AmbientLight(0x404050, 0.6);
         this.scene.add(ambient);
@@ -194,15 +216,16 @@ export class H2Renderer {
     // Get map center and size for camera positioning
     getMapBounds() {
         const box = new THREE.Box3().setFromObject(this.mapGroup);
-        return {
-            center: box.getCenter(new THREE.Vector3()),
-            size: box.getSize(new THREE.Vector3()),
-            box
-        };
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        console.log(`[H2Render] Map bounds: center=(${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}), size=(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})`);
+        console.log(`[H2Render] Map box: min=(${box.min.x.toFixed(1)}, ${box.min.y.toFixed(1)}, ${box.min.z.toFixed(1)}) max=(${box.max.x.toFixed(1)}, ${box.max.y.toFixed(1)}, ${box.max.z.toFixed(1)})`);
+        return { center, size, box };
     }
 
     // Dispose all resources
     dispose() {
+        console.log(`[H2Render] Disposing: ${this.meshCount} meshes, ${this.materials.size} materials`);
         this.mapGroup.traverse(child => {
             if (child.geometry) child.geometry.dispose();
             if (child.material) {

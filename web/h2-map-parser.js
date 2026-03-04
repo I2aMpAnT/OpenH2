@@ -47,6 +47,8 @@ export class H2MapParser {
 
     // ===== Map Header (2048 bytes) =====
     parseHeader() {
+        console.log(`[H2Map] File size: ${(this.buffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
+
         const header = {
             fileHead: this.readString(0, 4),         // "head"
             version: this.readInt32(4),
@@ -71,8 +73,19 @@ export class H2MapParser {
         header.indexOffset = this.decodeNormalOffset(header.indexOffsetRaw);
 
         if (header.fileHead !== 'head') {
+            console.error(`[H2Map] Invalid magic: got "${header.fileHead}" (0x${this.readUint32(0).toString(16)})`);
             throw new Error(`Invalid map file: expected "head", got "${header.fileHead}"`);
         }
+        if (header.footer !== 'foot') {
+            console.warn(`[H2Map] Footer mismatch: expected "foot", got "${header.footer}"`);
+        }
+
+        console.log(`[H2Map] Header OK: magic=${header.fileHead}/${header.footer}, version=${header.version}`);
+        console.log(`[H2Map]   name="${header.name}", origin="${header.mapOrigin}", build="${header.build}"`);
+        console.log(`[H2Map]   scenario="${header.scenarioPath}"`);
+        console.log(`[H2Map]   indexOffset=0x${header.indexOffset.value.toString(16)} (raw=0x${(header.indexOffsetRaw >>> 0).toString(16)}, location=${header.indexOffset.location})`);
+        console.log(`[H2Map]   secondaryOffset=0x${(header.rawSecondaryOffset >>> 0).toString(16)}, fileCount=${header.fileCount}`);
+        console.log(`[H2Map]   fileTable: offset=0x${header.fileTableOffset.toString(16)}, size=${header.fileTableSize}, index=0x${header.filesIndex.toString(16)}`);
 
         return header;
     }
@@ -80,6 +93,8 @@ export class H2MapParser {
     // ===== Index Header (32 bytes at header.indexOffset) =====
     parseIndexHeader(header) {
         const off = header.indexOffset.value;
+        console.log(`[H2Map] Reading IndexHeader at 0x${off.toString(16)}...`);
+
         const indexHeader = {
             primaryMagicConstant: this.readInt32(off),
             tagListCount: this.readInt32(off + 4),
@@ -95,6 +110,15 @@ export class H2MapParser {
 
         // Calculate tag index physical offset
         indexHeader.tagIndexOffset = indexHeader.primaryMagic + indexHeader.rawTagIndexOffset;
+
+        console.log(`[H2Map] IndexHeader: label="${indexHeader.tagsLabel}", tagCount=${indexHeader.tagIndexCount}`);
+        console.log(`[H2Map]   primaryMagicConst=0x${(indexHeader.primaryMagicConstant >>> 0).toString(16)}, primaryMagic=0x${(indexHeader.primaryMagic >>> 0).toString(16)}`);
+        console.log(`[H2Map]   rawTagIndexOff=0x${(indexHeader.rawTagIndexOffset >>> 0).toString(16)}, tagIndexPhysical=0x${(indexHeader.tagIndexOffset >>> 0).toString(16)}`);
+        console.log(`[H2Map]   scenarioTag=0x${indexHeader.scenarioTagId.toString(16)}, globalsTag=0x${indexHeader.globalsTagId.toString(16)}`);
+
+        if (indexHeader.tagsLabel !== 'tags') {
+            console.warn(`[H2Map] WARNING: Expected "tags" label, got "${indexHeader.tagsLabel}"`);
+        }
 
         return indexHeader;
     }
@@ -128,11 +152,25 @@ export class H2MapParser {
 
     // Calculate secondary magic from first tag entry
     calculateSecondaryMagic(header, indexHeader, tagIndex) {
-        if (tagIndex.length === 0) return 0;
+        if (tagIndex.length === 0) {
+            console.error('[H2Map] No tags found - cannot calculate secondary magic');
+            return 0;
+        }
         // Secondary magic: first tag's physical offset in file minus its raw offset
         // The first tag data starts right after the tag index
         const firstTagPhysical = indexHeader.tagIndexOffset + indexHeader.tagIndexCount * 16;
-        return firstTagPhysical - tagIndex[0].offsetRaw;
+        const magic = firstTagPhysical - tagIndex[0].offsetRaw;
+        console.log(`[H2Map] Secondary magic: 0x${(magic >>> 0).toString(16)} (firstTagPhys=0x${firstTagPhysical.toString(16)}, firstTagRaw=0x${(tagIndex[0].offsetRaw >>> 0).toString(16)})`);
+
+        // Log tag type distribution
+        const tagTypes = {};
+        for (const entry of tagIndex) {
+            tagTypes[entry.tag] = (tagTypes[entry.tag] || 0) + 1;
+        }
+        const sorted = Object.entries(tagTypes).sort((a, b) => b[1] - a[1]).slice(0, 15);
+        console.log(`[H2Map] Tag types (top 15): ${sorted.map(([t, c]) => `${t}=${c}`).join(', ')}`);
+
+        return magic;
     }
 
     // Get tag name from file table
@@ -156,6 +194,8 @@ export class H2MapParser {
 
     // ===== BSP Tag Parsing =====
     parseBspTag(tagDataOffset, secondaryMagic) {
+        console.log(`[H2Map] BSP tag at 0x${tagDataOffset.toString(16)}`);
+
         const bsp = {
             checksum: this.readInt32(tagDataOffset + 8),
             bounds: {
@@ -168,6 +208,9 @@ export class H2MapParser {
             }
         };
 
+        console.log(`[H2Map]   checksum=0x${(bsp.checksum >>> 0).toString(16)}`);
+        console.log(`[H2Map]   bounds: X[${bsp.bounds.minX.toFixed(2)}, ${bsp.bounds.maxX.toFixed(2)}] Y[${bsp.bounds.minY.toFixed(2)}, ${bsp.bounds.maxY.toFixed(2)}] Z[${bsp.bounds.minZ.toFixed(2)}, ${bsp.bounds.maxZ.toFixed(2)}]`);
+
         // Parse shader references array (offset 164 in BspTag)
         const shaderRef = this.readRefArray(tagDataOffset, 164, secondaryMagic);
         bsp.shaders = [];
@@ -178,6 +221,7 @@ export class H2MapParser {
                 offset: this.readUint32(sOff + 20)
             });
         }
+        console.log(`[H2Map]   shaders: ${bsp.shaders.length} (IDs: ${bsp.shaders.slice(0, 5).map(s => '0x' + s.shaderId.toString(16)).join(', ')}${bsp.shaders.length > 5 ? '...' : ''})`);
 
         // Parse clusters array (offset 156 in BspTag)
         const clusterRef = this.readRefArray(tagDataOffset, 156, secondaryMagic);
@@ -186,6 +230,20 @@ export class H2MapParser {
             const cOff = clusterRef.offset + i * 176;
             bsp.clusters.push(this.parseCluster(cOff, secondaryMagic));
         }
+        console.log(`[H2Map]   clusters: ${bsp.clusters.length}`);
+
+        // Log per-cluster stats
+        let totalVerts = 0, totalTris = 0, totalResources = 0;
+        for (let i = 0; i < bsp.clusters.length; i++) {
+            const c = bsp.clusters[i];
+            totalVerts += c.vertexCount;
+            totalTris += c.triangleCount;
+            totalResources += c.resources.length;
+            if (i < 3 || c.vertexCount === 0) {
+                console.log(`[H2Map]     cluster[${i}]: verts=${c.vertexCount}, tris=${c.triangleCount}, resources=${c.resources.length}, compression=0x${c.compressionFlags.toString(16)}, dataOffset=0x${(c.dataBlockRawOffset >>> 0).toString(16)}`);
+            }
+        }
+        console.log(`[H2Map]   cluster totals: ${totalVerts} verts, ${totalTris} tris, ${totalResources} resources`);
 
         // Parse instanced geometry definitions (offset 312)
         const igDefRef = this.readRefArray(tagDataOffset, 312, secondaryMagic);
@@ -194,6 +252,7 @@ export class H2MapParser {
             const dOff = igDefRef.offset + i * 200;
             bsp.instancedGeometryDefs.push(this.parseInstancedGeometryDef(dOff, secondaryMagic));
         }
+        console.log(`[H2Map]   instanced geometry defs: ${bsp.instancedGeometryDefs.length}`);
 
         // Parse instanced geometry instances (offset 320)
         const igInstRef = this.readRefArray(tagDataOffset, 320, secondaryMagic);
@@ -201,6 +260,13 @@ export class H2MapParser {
         for (let i = 0; i < igInstRef.count; i++) {
             const iOff = igInstRef.offset + i * 88;
             bsp.instancedGeometryInstances.push(this.parseInstancedGeometryInstance(iOff));
+        }
+        console.log(`[H2Map]   instanced geometry instances: ${bsp.instancedGeometryInstances.length}`);
+
+        // Log first few instances
+        for (let i = 0; i < Math.min(3, bsp.instancedGeometryInstances.length); i++) {
+            const inst = bsp.instancedGeometryInstances[i];
+            console.log(`[H2Map]     instance[${i}]: defIdx=${inst.index}, pos=(${inst.position.x.toFixed(2)}, ${inst.position.y.toFixed(2)}, ${inst.position.z.toFixed(2)}), scale=${inst.scale.toFixed(3)}`);
         }
 
         return bsp;
@@ -302,12 +368,17 @@ export class H2MapParser {
     }
 
     // ===== Process cluster/definition geometry into meshes =====
-    processGeometry(container, shaders) {
+    processGeometry(container, shaders, label = 'geometry') {
         const headerRaw = container.dataBlockRawOffset;
-        if (headerRaw === 0xFFFFFFFF || headerRaw === 0) return [];
+        if (headerRaw === 0xFFFFFFFF || headerRaw === 0) {
+            console.warn(`[H2Map] ${label}: skipped (dataBlockRawOffset=0x${(headerRaw >>> 0).toString(16)})`);
+            return [];
+        }
 
         const headerOffset = this.decodeNormalOffset(headerRaw);
         const header = this.parseModelResourceBlockHeader(headerOffset.value);
+
+        console.debug(`[H2Map] ${label}: headerAt=0x${headerOffset.value.toString(16)}, parts=${header.partInfoCount}, indices=${header.indexCount}, vertComponents=${header.vertexComponentCount}, verts=${container.vertexCount}, resources=${container.resources.length}`);
 
         // Read resource data
         const resources = [];
@@ -337,6 +408,8 @@ export class H2MapParser {
 
                 if (matId < shaders.length) {
                     parts.push({ elementType, matId, indexStart, indexCount, shaderId: shaders[matId].shaderId });
+                } else {
+                    console.warn(`[H2Map] ${label} part[${i}]: matId=${matId} >= shaders.length=${shaders.length}, skipped`);
                 }
             }
             currentResource++;
@@ -357,6 +430,23 @@ export class H2MapParser {
             }
             currentResource++;
         }
+
+        // Count restart markers in indices
+        let restartCount = 0;
+        for (let i = 0; i < indices.length; i++) {
+            if (indices[i] === -1) restartCount++;
+        }
+        if (restartCount > 0) {
+            console.debug(`[H2Map] ${label}: ${restartCount} restart markers in ${indices.length} indices`);
+        }
+
+        // Log element type distribution
+        const elTypes = {};
+        for (const p of parts) {
+            const name = { 2: 'StripDecal', 3: 'Strip', 10: 'ListEnv', 11: 'List', 20: 'Point' }[p.elementType] || `Unknown(${p.elementType})`;
+            elTypes[name] = (elTypes[name] || 0) + 1;
+        }
+        console.debug(`[H2Map] ${label}: ${parts.length} parts, elementTypes: ${Object.entries(elTypes).map(([k, v]) => `${k}=${v}`).join(', ')}`);
 
         // Skip unknown data
         if (header.unknownDataLength > 0) currentResource++;
@@ -432,6 +522,20 @@ export class H2MapParser {
             }
             verts.lightmapUVs = lmUVs;
             currentResource++;
+        }
+
+        // Log vertex data summary
+        if (verts.positions) {
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            for (let i = 0; i < Math.min(container.vertexCount, 1000); i++) {
+                const x = verts.positions[i * 3], y = verts.positions[i * 3 + 1], z = verts.positions[i * 3 + 2];
+                if (x < minX) minX = x; if (x > maxX) maxX = x;
+                if (y < minY) minY = y; if (y > maxY) maxY = y;
+                if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+            }
+            console.debug(`[H2Map] ${label}: vertexRange X[${minX.toFixed(2)}, ${maxX.toFixed(2)}] Y[${minY.toFixed(2)}, ${maxY.toFixed(2)}] Z[${minZ.toFixed(2)}, ${maxZ.toFixed(2)}]`);
+            console.debug(`[H2Map] ${label}: hasUVs=${!!verts.texCoords}, hasNormals=${!!verts.normals}, hasTangents=${!!verts.tangents}, hasLightmapUVs=${!!verts.lightmapUVs}`);
         }
 
         // Build meshes from parts
@@ -539,20 +643,37 @@ export class H2MapParser {
 
             // Process cluster geometry
             console.log(`[H2Map] Processing ${bsp.clusters.length} clusters...`);
+            console.time('[H2Map] Cluster processing');
             bsp.clusterMeshes = [];
+            let clusterErrors = 0;
             for (let i = 0; i < bsp.clusters.length; i++) {
-                const meshes = this.processGeometry(bsp.clusters[i], bsp.shaders);
-                bsp.clusterMeshes.push(...meshes);
+                try {
+                    const meshes = this.processGeometry(bsp.clusters[i], bsp.shaders, `cluster[${i}]`);
+                    bsp.clusterMeshes.push(...meshes);
+                } catch (e) {
+                    clusterErrors++;
+                    console.error(`[H2Map] cluster[${i}] FAILED:`, e.message);
+                }
             }
-            console.log(`[H2Map] Got ${bsp.clusterMeshes.length} cluster meshes`);
+            console.timeEnd('[H2Map] Cluster processing');
+            console.log(`[H2Map] Cluster results: ${bsp.clusterMeshes.length} meshes (${clusterErrors} errors)`);
 
             // Process instanced geometry
+            console.time('[H2Map] Instanced geometry processing');
             bsp.instanceMeshes = [];
+            let igErrors = 0;
             for (let i = 0; i < bsp.instancedGeometryDefs.length; i++) {
-                const meshes = this.processGeometry(bsp.instancedGeometryDefs[i], bsp.shaders);
-                bsp.instanceMeshes.push({ defIndex: i, meshes });
+                try {
+                    const meshes = this.processGeometry(bsp.instancedGeometryDefs[i], bsp.shaders, `igDef[${i}]`);
+                    bsp.instanceMeshes.push({ defIndex: i, meshes });
+                } catch (e) {
+                    igErrors++;
+                    console.error(`[H2Map] igDef[${i}] FAILED:`, e.message);
+                    bsp.instanceMeshes.push({ defIndex: i, meshes: [] });
+                }
             }
-            console.log(`[H2Map] Got ${bsp.instanceMeshes.length} instanced geometry defs`);
+            console.timeEnd('[H2Map] Instanced geometry processing');
+            console.log(`[H2Map] IG results: ${bsp.instanceMeshes.length} defs (${igErrors} errors)`);
 
             bspData.push(bsp);
         }
