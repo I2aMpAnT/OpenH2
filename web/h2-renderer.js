@@ -1,7 +1,63 @@
 // SpartanLoungeViewer - Three.js/WebGL renderer for Halo 2 maps
-// Renders parsed BSP geometry with proper materials and lighting
+// Custom shaders matching Vulkan Generic.vk.frag/vert pipeline (commit c5ca16c)
+// Blinn-Phong lighting: ambient 0.25, specular pow(32)*0.3, gamma 1/2.2
 
 import * as THREE from 'three';
+
+// ===== Custom vertex shader - mirrors Generic.vk.vert =====
+const SPARTAN_VERTEX = `
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+
+void main() {
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPos = worldPos.xyz;
+    vWorldNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+}
+`;
+
+// ===== Custom fragment shader - mirrors Generic.vk.frag (no-texture path) =====
+// Matches the lighting model from commit c5ca16c exactly:
+//   ambient = diffuseColor * 0.25
+//   diffuse = diffuseColor * cosTheta
+//   specular = specularColor * pow(halfAngle, 32) * 0.3
+//   gamma = pow(finalColor, 1/2.2)
+const SPARTAN_FRAGMENT = `
+uniform vec3 diffuseColor;
+uniform vec3 specularColor;
+uniform vec3 sunDirection;
+
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+
+void main() {
+    vec3 normal = normalize(vWorldNormal);
+    vec3 viewDiff = cameraPosition - vWorldPos;
+    vec3 viewDir = normalize(viewDiff);
+    vec3 lightDir = normalize(sunDirection);
+
+    // Ambient: diffuseColor * 0.25 (Generic.vk.frag line 162)
+    vec3 ambient = diffuseColor * 0.25;
+
+    // Diffuse: Lambertian (Generic.vk.frag globalLighting())
+    float cosTheta = clamp(dot(-lightDir, normal), 0.0, 1.0);
+    vec3 diffuse = diffuseColor * cosTheta;
+
+    // Specular: Blinn-Phong (Generic.vk.frag globalLighting())
+    vec3 halfDir = normalize(-lightDir + viewDir);
+    float specAngle = max(dot(normal, halfDir), 0.0);
+    float specMod = pow(specAngle, 32.0);
+    vec3 specular = specularColor * specMod * 0.3;
+
+    vec3 finalColor = ambient + diffuse + specular;
+
+    // Gamma correction (Generic.vk.frag line 222)
+    finalColor = pow(finalColor, vec3(1.0 / 2.2));
+
+    gl_FragColor = vec4(finalColor, 1.0);
+}
+`;
 
 export class H2Renderer {
     constructor(scene) {
@@ -20,14 +76,13 @@ export class H2Renderer {
         this.triCount = 0;
         this.vertCount = 0;
         this.failedMeshes = 0;
-        this.defaultMaterial = new THREE.MeshStandardMaterial({
-            color: 0x808080,
-            roughness: 0.8,
-            metalness: 0.1,
-            side: THREE.DoubleSide
-        });
+
+        // Sun direction uniform - shared across all materials
+        // Default matches typical Halo 2 outdoor lighting
+        this.sunDirection = new THREE.Vector3(0.5, -0.8, 0.3).normalize();
 
         console.log('[SpartanLoungeRender] Renderer initialized, coordinate transform: Z-up → Y-up');
+        console.log('[SpartanLoungeRender] Shader: Blinn-Phong (ambient=0.25, specPow=32, specScale=0.3, gamma=2.2)');
     }
 
     // Build Three.js geometry from parsed BSP data
@@ -120,18 +175,21 @@ export class H2Renderer {
             geometry.setAttribute('normal', new THREE.BufferAttribute(vertices.normals, 3));
         }
 
-        // UVs
+        // UVs (for future texture support)
         if (vertices.texCoords) {
             geometry.setAttribute('uv', new THREE.BufferAttribute(vertices.texCoords, 2));
         }
 
-        // Lightmap UVs as uv2
+        // Lightmap UVs (for future lightmap support)
         if (vertices.lightmapUVs) {
             geometry.setAttribute('uv2', new THREE.BufferAttribute(vertices.lightmapUVs, 2));
         }
 
-        // Set index buffer
-        const maxIndex = Math.max(...indices);
+        // Set index buffer - find max safely without stack overflow
+        let maxIndex = 0;
+        for (let i = 0; i < indices.length; i++) {
+            if (indices[i] > maxIndex) maxIndex = indices[i];
+        }
         if (maxIndex > 65535) {
             geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
         } else {
@@ -143,12 +201,10 @@ export class H2Renderer {
             geometry.computeVertexNormals();
         }
 
-        // Get or create material
+        // Get or create material (custom ShaderMaterial matching Vulkan pipeline)
         const material = this.getMaterial(meshData.shaderId, meshData.matId);
 
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
 
         this.meshCount++;
         this.triCount += indices.length / 3;
@@ -157,8 +213,8 @@ export class H2Renderer {
         return mesh;
     }
 
-    // Material system - generates distinct colors per shader for now
-    // Will be extended with proper texture loading later
+    // Material system - custom ShaderMaterial matching Generic.vk.frag
+    // Generates distinct diffuse colors per shader ID (placeholder until textures)
     getMaterial(shaderId, matId) {
         const key = shaderId || matId;
         if (this.materials.has(key)) {
@@ -170,10 +226,17 @@ export class H2Renderer {
         const color = new THREE.Color();
         color.setHSL(hue, 0.3, 0.5);
 
-        const mat = new THREE.MeshStandardMaterial({
-            color: color,
-            roughness: 0.7,
-            metalness: 0.1,
+        // Specular color defaults to white (matches Vulkan SpecularColor default)
+        const specColor = new THREE.Color(1.0, 1.0, 1.0);
+
+        const mat = new THREE.ShaderMaterial({
+            vertexShader: SPARTAN_VERTEX,
+            fragmentShader: SPARTAN_FRAGMENT,
+            uniforms: {
+                diffuseColor: { value: color },
+                specularColor: { value: specColor },
+                sunDirection: { value: this.sunDirection }
+            },
             side: THREE.DoubleSide
         });
 
@@ -181,36 +244,16 @@ export class H2Renderer {
         return mat;
     }
 
-    // Set up scene lighting appropriate for Halo 2 maps
+    // Set sun direction (normalized) - updates all materials
+    setSunDirection(x, y, z) {
+        this.sunDirection.set(x, y, z).normalize();
+        console.log(`[SpartanLoungeRender] Sun direction: (${this.sunDirection.x.toFixed(3)}, ${this.sunDirection.y.toFixed(3)}, ${this.sunDirection.z.toFixed(3)})`);
+    }
+
+    // Scene setup - no Three.js lights needed since we use custom shaders
     setupLighting() {
-        console.log('[SpartanLoungeRender] Setting up lighting...');
-
-        // Ambient light for base visibility
-        const ambient = new THREE.AmbientLight(0x404050, 0.6);
-        this.scene.add(ambient);
-
-        // Main directional light (sun)
-        const sun = new THREE.DirectionalLight(0xffeedd, 1.2);
-        sun.position.set(50, 100, 50);
-        sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048;
-        sun.shadow.mapSize.height = 2048;
-        sun.shadow.camera.near = 0.5;
-        sun.shadow.camera.far = 500;
-        sun.shadow.camera.left = -100;
-        sun.shadow.camera.right = 100;
-        sun.shadow.camera.top = 100;
-        sun.shadow.camera.bottom = -100;
-        this.scene.add(sun);
-
-        // Fill light from opposite direction
-        const fill = new THREE.DirectionalLight(0x8899bb, 0.4);
-        fill.position.set(-30, 60, -30);
-        this.scene.add(fill);
-
-        // Hemisphere light for sky/ground ambient
-        const hemi = new THREE.HemisphereLight(0x88aacc, 0x443322, 0.3);
-        this.scene.add(hemi);
+        console.log('[SpartanLoungeRender] Custom shader pipeline active - no Three.js lights needed');
+        console.log('[SpartanLoungeRender] Lighting handled in fragment shader (Blinn-Phong)');
     }
 
     // Get map center and size for camera positioning
