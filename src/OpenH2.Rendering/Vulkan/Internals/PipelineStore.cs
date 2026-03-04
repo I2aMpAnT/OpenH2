@@ -38,7 +38,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             this.shadowPass = shadowPass;
 
             var msaa = device.MsaaSamples;
-            shaderConfigs[(int)Shader.Skybox] = new(Shader.Skybox, defaultBindings, 64, msaa, depthTest: false);
+            shaderConfigs[(int)Shader.Skybox] = new(Shader.Skybox, defaultBindings, 64, msaa, depthTest: false, depthWrite: false);
             shaderConfigs[(int)Shader.Generic] = new(Shader.Generic, defaultBindings, 4096 * 4, msaa);
             shaderConfigs[(int)Shader.Wireframe] = new(Shader.Wireframe, defaultBindings, 1024 * 4, msaa, polyMode: PolygonMode.Line);
             shaderConfigs[(int)Shader.ShadowMapping] = new(Shader.ShadowMapping, shadowMapBindings, 4096 * 4, SampleCountFlags.SampleCount1Bit, invertY: false);

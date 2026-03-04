@@ -75,7 +75,11 @@ namespace OpenH2.Core.Tags.Common.Models
                 var data = container.Resources[currentResource].Data.Span;
 
                 for (var i = 0; i < container.Header.IndexCount; i++)
-                    indices[i] = data.ReadUInt16At(i * 2);
+                {
+                    var idx = data.ReadUInt16At(i * 2);
+                    // Convert uint16 primitive restart marker (0xFFFF) to uint32 restart marker (0xFFFFFFFF)
+                    indices[i] = idx == 0xFFFF ? -1 : idx;
+                }
 
                 currentResource++;
             }
