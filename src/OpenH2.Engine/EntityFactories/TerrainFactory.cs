@@ -36,6 +36,7 @@ namespace OpenH2.Engine.EntityFactories
 
             var renderModelMeshes = new List<Mesh<BitmapTag>>(meshes.Count);
             var alphaCount = 0;
+            var noDiffuseCount = 0;
 
             foreach (var mesh in meshes)
             {
@@ -44,9 +45,23 @@ namespace OpenH2.Engine.EntityFactories
                 // BSP terrain is always opaque world geometry. Force alpha=1 on
                 // DiffuseColor and remove alpha maps so the fragment shader's
                 // alpha discard (< 0.1) never kills terrain fragments.
+                // Also ensure DiffuseColor has visible brightness when no diffuse map.
+                var dc = mat.DiffuseColor;
+                if (mat.DiffuseMap == null && dc.X == 0 && dc.Y == 0 && dc.Z == 0)
+                {
+                    noDiffuseCount++;
+                    // No diffuse map and black DiffuseColor → would render invisible.
+                    // Use a visible fallback color.
+                    dc = new Vector4(0.5f, 0.5f, 0.5f, 1f);
+                }
+                else
+                {
+                    dc = new Vector4(dc.X, dc.Y, dc.Z, 1f);
+                }
+
                 mat = mat with
                 {
-                    DiffuseColor = new Vector4(mat.DiffuseColor.X, mat.DiffuseColor.Y, mat.DiffuseColor.Z, 1f),
+                    DiffuseColor = dc,
                     AlphaMap = null
                 };
 
@@ -77,7 +92,7 @@ namespace OpenH2.Engine.EntityFactories
             }
 
             Console.WriteLine($"[TerrainDiag] {tag.Name}: {meshes.Count} total meshes -> " +
-                $"{renderModelMeshes.Count} opaque ({alphaCount} with alpha maps, kept in opaque pass)");
+                $"{renderModelMeshes.Count} opaque ({alphaCount} alpha, {noDiffuseCount} no-diffuse-map+black-color fixed)");
 
             var components = new List<Component>();
 
