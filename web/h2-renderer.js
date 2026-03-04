@@ -27,7 +27,7 @@ export class H2Renderer {
             side: THREE.DoubleSide
         });
 
-        console.log('[H2Render] Renderer initialized, coordinate transform: Z-up → Y-up');
+        console.log('[SpartanLoungeRender] Renderer initialized, coordinate transform: Z-up → Y-up');
     }
 
     // Build Three.js geometry from parsed BSP data
@@ -35,8 +35,8 @@ export class H2Renderer {
         const { bspData } = parsedMap;
 
         for (const bsp of bspData) {
-            console.log(`[H2Render] Building BSP: ${bsp.name}`);
-            console.log(`[H2Render] Bounds: X[${bsp.bounds.minX.toFixed(1)}, ${bsp.bounds.maxX.toFixed(1)}] ` +
+            console.log(`[SpartanLoungeRender] Building BSP: ${bsp.name}`);
+            console.log(`[SpartanLoungeRender] Bounds: X[${bsp.bounds.minX.toFixed(1)}, ${bsp.bounds.maxX.toFixed(1)}] ` +
                 `Y[${bsp.bounds.minY.toFixed(1)}, ${bsp.bounds.maxY.toFixed(1)}] ` +
                 `Z[${bsp.bounds.minZ.toFixed(1)}, ${bsp.bounds.maxZ.toFixed(1)}]`);
 
@@ -49,7 +49,7 @@ export class H2Renderer {
                     clusterTriCount += mesh.indices.length / 3;
                 }
             }
-            console.log(`[H2Render] Cluster terrain: ${bsp.clusterMeshes.length} meshes, ${clusterTriCount} triangles`);
+            console.log(`[SpartanLoungeRender] Cluster terrain: ${bsp.clusterMeshes.length} meshes, ${clusterTriCount} triangles`);
 
             // Build instanced geometry
             let instanceTriCount = 0;
@@ -88,15 +88,15 @@ export class H2Renderer {
 
                 this.mapGroup.add(instanceGroup);
             }
-            console.log(`[H2Render] Instanced geometry: ${bsp.instancedGeometryInstances.length} instances, ${instanceTriCount} triangles`);
+            console.log(`[SpartanLoungeRender] Instanced geometry: ${bsp.instancedGeometryInstances.length} instances, ${instanceTriCount} triangles`);
         }
 
         // Final stats
-        console.log(`[H2Render] === BUILD COMPLETE ===`);
-        console.log(`[H2Render]   Total meshes: ${this.meshCount} (${this.failedMeshes} failed)`);
-        console.log(`[H2Render]   Total triangles: ${this.triCount.toLocaleString()}`);
-        console.log(`[H2Render]   Unique materials: ${this.materials.size}`);
-        console.log(`[H2Render]   Scene children: ${this.mapGroup.children.length}`);
+        console.log(`[SpartanLoungeRender] === BUILD COMPLETE ===`);
+        console.log(`[SpartanLoungeRender]   Total meshes: ${this.meshCount} (${this.failedMeshes} failed)`);
+        console.log(`[SpartanLoungeRender]   Total triangles: ${this.triCount.toLocaleString()}`);
+        console.log(`[SpartanLoungeRender]   Unique materials: ${this.materials.size}`);
+        console.log(`[SpartanLoungeRender]   Scene children: ${this.mapGroup.children.length}`);
 
         return this.mapGroup;
     }
@@ -183,7 +183,7 @@ export class H2Renderer {
 
     // Set up scene lighting appropriate for Halo 2 maps
     setupLighting() {
-        console.log('[H2Render] Setting up lighting...');
+        console.log('[SpartanLoungeRender] Setting up lighting...');
 
         // Ambient light for base visibility
         const ambient = new THREE.AmbientLight(0x404050, 0.6);
@@ -218,14 +218,14 @@ export class H2Renderer {
         const box = new THREE.Box3().setFromObject(this.mapGroup);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        console.log(`[H2Render] Map bounds: center=(${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}), size=(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})`);
-        console.log(`[H2Render] Map box: min=(${box.min.x.toFixed(1)}, ${box.min.y.toFixed(1)}, ${box.min.z.toFixed(1)}) max=(${box.max.x.toFixed(1)}, ${box.max.y.toFixed(1)}, ${box.max.z.toFixed(1)})`);
+        console.log(`[SpartanLoungeRender] Map bounds: center=(${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}), size=(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})`);
+        console.log(`[SpartanLoungeRender] Map box: min=(${box.min.x.toFixed(1)}, ${box.min.y.toFixed(1)}, ${box.min.z.toFixed(1)}) max=(${box.max.x.toFixed(1)}, ${box.max.y.toFixed(1)}, ${box.max.z.toFixed(1)})`);
         return { center, size, box };
     }
 
     // Dispose all resources
     dispose() {
-        console.log(`[H2Render] Disposing: ${this.meshCount} meshes, ${this.materials.size} materials`);
+        console.log(`[SpartanLoungeRender] Disposing: ${this.meshCount} meshes, ${this.materials.size} materials`);
         this.mapGroup.traverse(child => {
             if (child.geometry) child.geometry.dispose();
             if (child.material) {
