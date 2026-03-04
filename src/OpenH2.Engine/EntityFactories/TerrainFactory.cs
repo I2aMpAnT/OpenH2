@@ -42,10 +42,9 @@ namespace OpenH2.Engine.EntityFactories
             {
                 var mat = map.CreateMaterial(mesh);
 
-                // BSP terrain is always opaque world geometry. Force alpha=1 on
-                // DiffuseColor and remove alpha maps so the fragment shader's
-                // alpha discard (< 0.1) never kills terrain fragments.
-                // Also ensure DiffuseColor has visible brightness when no diffuse map.
+                // BSP terrain: force alpha=1 on DiffuseColor and remove alpha maps
+                // so the fragment shader's alpha discard (< 0.1) never kills
+                // terrain fragments. Fix black DiffuseColor when no diffuse map.
                 var dc = mat.DiffuseColor;
                 if (mat.DiffuseMap == null && dc.X == 0 && dc.Y == 0 && dc.Z == 0)
                 {
@@ -59,19 +58,12 @@ namespace OpenH2.Engine.EntityFactories
                     dc = new Vector4(dc.X, dc.Y, dc.Z, 1f);
                 }
 
-                // DIAGNOSTIC: Strip all maps except DiffuseMap to find which
-                // map causes invisible surfaces. Flat white (no maps) had no
-                // holes, so one of these maps must be causing the issue.
+                // BSP terrain: only strip AlphaMap (causes false alpha discard)
+                // and fix DiffuseColor alpha. Keep all other maps intact.
                 mat = mat with
                 {
                     DiffuseColor = dc,
-                    AlphaMap = null,
-                    DetailMap1 = null,
-                    DetailMap2 = null,
-                    EmissiveMap = null,
-                    NormalMap = null,
-                    SpecularMap = null,
-                    ColorChangeMask = null
+                    AlphaMap = null
                 };
 
                 // Set lightmap bitmap on terrain materials
