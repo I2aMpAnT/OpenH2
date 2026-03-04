@@ -101,7 +101,7 @@ namespace OpenH2.Engine.Systems
                         }
                         else
                         {
-                            Logger.Log($"Lightmap tag found for BSP[{i}] but bitmap is null", Logger.Color.Yellow);
+                            Logger.Log($"Lightmap tag found for BSP[{i}] but bitmap is null", Logger.Color.Magenta);
                         }
                     }
                     catch (Exception ex)
