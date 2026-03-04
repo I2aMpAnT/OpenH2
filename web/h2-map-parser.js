@@ -1021,61 +1021,74 @@ export class H2MapParser {
             }
 
             try {
-                // Skip shader tags with no local data (struct is external)
-                if (shaderEntry.dataSize === 0) {
-                    // Try shared.map parser if available
-                    if (this.sharedParser) {
-                        const result = await this.loadTextureFromShared(shaderId);
-                        if (result) {
-                            textures.set(shaderId, result);
-                            loaded++; fromShared++;
-                            continue;
-                        }
-                    }
-                    skipped++;
-                    continue;
-                }
-
                 const shaderOffset = secondaryMagic + shaderEntry.offsetRaw;
                 const bitmapId = this.parseShaderTag(shaderOffset, secondaryMagic);
-                if (!bitmapId) { skipped++; continue; }
-
-                const bitmapEntry = tagIdMap.get(bitmapId);
-                if (!bitmapEntry || bitmapEntry.tag !== 'bitm') { skipped++; continue; }
-
-                // If bitmap tag data is external (dataSize == 0), try shared.map
-                if (bitmapEntry.dataSize === 0) {
-                    if (this.sharedParser) {
-                        const result = await this.loadBitmapFromShared(bitmapId);
-                        if (result) {
-                            textures.set(shaderId, result);
-                            loaded++; fromShared++;
-                            continue;
-                        }
-                    }
-                    skipped++;
-                    continue;
+                if (!bitmapId) {
+                    console.warn(`[SpartanLoungeMap] Shader 0x${shaderId.toString(16)}: no bitmap ref found (dataSize=${shaderEntry.dataSize})`);
+                    skipped++; continue;
                 }
 
-                const bitmapOffset = secondaryMagic + bitmapEntry.offsetRaw;
-                const texInfo = this.parseBitmapTag(bitmapOffset, secondaryMagic);
-                if (!texInfo || texInfo.width <= 0 || texInfo.height <= 0) { skipped++; continue; }
+                const bitmapEntry = tagIdMap.get(bitmapId);
+                if (!bitmapEntry || bitmapEntry.tag !== 'bitm') {
+                    console.warn(`[SpartanLoungeMap] Shader 0x${shaderId.toString(16)}: bitmap 0x${bitmapId.toString(16)} not found or not bitm`);
+                    skipped++; continue;
+                }
 
-                // Find best LOD (first non-empty) — now supports external LODs via ancillary buffers
+                // Try local bitmap data first
+                let texInfo = null;
+                let useShared = false;
+
+                if (bitmapEntry.dataSize > 0) {
+                    const bitmapOffset = secondaryMagic + bitmapEntry.offsetRaw;
+                    texInfo = this.parseBitmapTag(bitmapOffset, secondaryMagic);
+                }
+
+                // If local parse failed or no local data, try shared.map
+                if ((!texInfo || texInfo.width <= 0 || texInfo.height <= 0) && this.sharedParser) {
+                    const sharedEntry = this.sharedParser._tagIdMap.get(bitmapId);
+                    if (sharedEntry && sharedEntry.tag === 'bitm' && sharedEntry.dataSize > 0) {
+                        const sharedOffset = this.sharedParser._secondaryMagic + sharedEntry.offsetRaw;
+                        texInfo = this.sharedParser.parseBitmapTag(sharedOffset, this.sharedParser._secondaryMagic);
+                        useShared = true;
+                    }
+                }
+
+                if (!texInfo || texInfo.width <= 0 || texInfo.height <= 0) {
+                    console.warn(`[SpartanLoungeMap] Shader 0x${shaderId.toString(16)}: bitmap 0x${bitmapId.toString(16)} parse failed (local dataSize=${bitmapEntry.dataSize})`);
+                    skipped++; continue;
+                }
+
+                // Find best LOD (first non-empty)
                 let pixelData = null;
                 for (let lod = 0; lod < 6; lod++) {
                     if (texInfo.lodOffsets[lod] === 0 || texInfo.lodSizes[lod] === 0) continue;
-                    pixelData = await this.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
+                    const noff = this.decodeNormalOffset(texInfo.lodOffsets[lod]);
+
+                    if (useShared || noff.location !== 0) {
+                        // LOD data is in shared.map (or we parsed struct from shared)
+                        if (useShared) {
+                            pixelData = await this.sharedParser.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
+                        } else {
+                            pixelData = await this.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
+                        }
+                    } else {
+                        pixelData = await this.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
+                    }
                     if (pixelData) break;
                 }
 
-                if (!pixelData) { skipped++; continue; }
+                if (!pixelData) {
+                    const locs = texInfo.lodOffsets.map((o, i) => texInfo.lodSizes[i] > 0 ? `lod${i}:loc=${this.decodeNormalOffset(o).location}` : null).filter(Boolean);
+                    console.warn(`[SpartanLoungeMap] Shader 0x${shaderId.toString(16)}: bitmap 0x${bitmapId.toString(16)} no pixel data (${texInfo.width}x${texInfo.height}, fmt=${texInfo.compressionFormat}, ${locs.join(',')})`);
+                    skipped++; continue;
+                }
 
                 const rgba = this.decodePixelData(pixelData, texInfo.compressionFormat, texInfo.width, texInfo.height);
                 if (!rgba) { skipped++; continue; }
 
                 textures.set(shaderId, { rgba, width: texInfo.width, height: texInfo.height });
                 loaded++;
+                if (useShared) fromShared++;
             } catch (e) {
                 failed++;
                 console.warn(`[SpartanLoungeMap] Texture load failed for shader 0x${shaderId.toString(16)}: ${e.message}`);
@@ -1097,41 +1110,6 @@ export class H2MapParser {
         }
     }
 
-    // Load a bitmap texture by ID from shared.map
-    async loadBitmapFromShared(bitmapId) {
-        if (!this.sharedParser) return null;
-        const entry = this.sharedParser._tagIdMap.get(bitmapId);
-        if (!entry || entry.tag !== 'bitm' || entry.dataSize === 0) return null;
-
-        const offset = this.sharedParser._secondaryMagic + entry.offsetRaw;
-        const texInfo = this.sharedParser.parseBitmapTag(offset, this.sharedParser._secondaryMagic);
-        if (!texInfo || texInfo.width <= 0 || texInfo.height <= 0) return null;
-
-        let pixelData = null;
-        for (let lod = 0; lod < 6; lod++) {
-            if (texInfo.lodOffsets[lod] === 0 || texInfo.lodSizes[lod] === 0) continue;
-            pixelData = await this.sharedParser.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
-            if (pixelData) break;
-        }
-        if (!pixelData) return null;
-
-        const rgba = this.decodePixelData(pixelData, texInfo.compressionFormat, texInfo.width, texInfo.height);
-        if (!rgba) return null;
-        return { rgba, width: texInfo.width, height: texInfo.height };
-    }
-
-    // Load a texture by shader ID from shared.map (full shader→bitmap chain)
-    async loadTextureFromShared(shaderId) {
-        if (!this.sharedParser) return null;
-        const shaderEntry = this.sharedParser._tagIdMap.get(shaderId);
-        if (!shaderEntry || shaderEntry.tag !== 'shad' || shaderEntry.dataSize === 0) return null;
-
-        const shaderOffset = this.sharedParser._secondaryMagic + shaderEntry.offsetRaw;
-        const bitmapId = this.sharedParser.parseShaderTag(shaderOffset, this.sharedParser._secondaryMagic);
-        if (!bitmapId) return null;
-
-        return this.loadBitmapFromShared(bitmapId);
-    }
 
     // Initialize shared.map parser for external texture lookups
     initSharedParser(sharedBuffer) {
