@@ -1940,11 +1940,40 @@ async function loadH2Map(mapFilename, onProgress) {
         console.log(`[SpartanLounge] Caching ${mapFilename} to IndexedDB`);
     }
 
+    // Load shared.map for external textures
+    let sharedBuffer = null;
+    try {
+        const sharedCached = await getCachedMap('shared');
+        if (sharedCached) {
+            console.log(`[SpartanLounge] shared.map cache hit (${(sharedCached.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+            sharedBuffer = sharedCached;
+        } else {
+            console.log('[SpartanLounge] Fetching shared.map for external textures...');
+            const sharedResp = await fetch('/maps3D/Cartographer/shared.map');
+            if (sharedResp.ok) {
+                sharedBuffer = await sharedResp.arrayBuffer();
+                console.log(`[SpartanLounge] shared.map downloaded (${(sharedBuffer.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+                cacheMap('shared', sharedBuffer.slice(0));
+            } else {
+                console.warn(`[SpartanLounge] shared.map not available (${sharedResp.status}) — external textures will be missing`);
+            }
+        }
+    } catch (e) {
+        console.warn(`[SpartanLounge] Failed to load shared.map: ${e.message}`);
+    }
+
     // Parse
     console.log('[SpartanLounge] Parsing .map file...');
     console.time('[SpartanLounge] Parse time');
     onProgress?.(0.75);
     const parser = new H2MapParser(mapBuffer.buffer);
+
+    // Initialize shared.map for external texture lookups
+    if (sharedBuffer) {
+        parser.setAncillaryMaps({ shared: sharedBuffer });
+        parser.initSharedParser(sharedBuffer);
+    }
+
     const parsedMap = await parser.parse();
     console.timeEnd('[SpartanLounge] Parse time');
 

@@ -7,6 +7,19 @@ export class H2MapParser {
         this.buffer = arrayBuffer;
         this.view = new DataView(arrayBuffer);
         this.u8 = new Uint8Array(arrayBuffer);
+        // Ancillary map buffers keyed by DataFile location value
+        // Location mapping (NormalOffset upper 2 bits >>> 30):
+        //   0 = Local, 1 = MainMenu, 2 = Shared (shared.map), 3 = SinglePlayerShared
+        this.ancillaryBuffers = new Map(); // location → ArrayBuffer
+    }
+
+    // Set ancillary map buffers for external texture data
+    setAncillaryMaps(maps) {
+        // maps: { shared?: ArrayBuffer, mainmenu?: ArrayBuffer, singlePlayerShared?: ArrayBuffer }
+        if (maps.shared) this.ancillaryBuffers.set(2, maps.shared);
+        if (maps.mainmenu) this.ancillaryBuffers.set(1, maps.mainmenu);
+        if (maps.singlePlayerShared) this.ancillaryBuffers.set(3, maps.singlePlayerShared);
+        console.log(`[SpartanLoungeMap] Ancillary maps loaded: ${[...this.ancillaryBuffers.keys()].map(k => ['local','mainmenu','shared','sp_shared'][k]).join(', ')}`);
     }
 
     // ===== Low-level binary readers =====
@@ -751,18 +764,24 @@ export class H2MapParser {
     }
 
     // ===== Decompress bitmap LOD data (deflate) =====
+    // Reads from local buffer or ancillary map buffer based on NormalOffset location
     async decompressLodData(lodOffsetRaw, lodSize) {
         const noff = this.decodeNormalOffset(lodOffsetRaw);
-        if (noff.location !== 0) {
-            // Data in external map file (shared.map etc.) — can't load
-            return null;
-        }
-        if (noff.value === 0 || noff.value >= this.buffer.byteLength || lodSize === 0) {
-            return null;
+        if (noff.value === 0 || lodSize === 0) return null;
+
+        // Select the right buffer based on location
+        let sourceBuffer;
+        if (noff.location === 0) {
+            sourceBuffer = this.buffer;
+        } else {
+            sourceBuffer = this.ancillaryBuffers.get(noff.location);
+            if (!sourceBuffer) return null; // ancillary map not loaded
         }
 
+        if (noff.value >= sourceBuffer.byteLength) return null;
+
         // Bitmap data is zlib compressed: 2-byte header + deflate stream
-        const compressedData = new Uint8Array(this.buffer, noff.value, lodSize);
+        const compressedData = new Uint8Array(sourceBuffer, noff.value, lodSize);
 
         try {
             const blob = new Blob([compressedData]);
@@ -771,7 +790,7 @@ export class H2MapParser {
             const result = await new Response(stream).arrayBuffer();
             return new Uint8Array(result);
         } catch (e) {
-            console.warn(`[SpartanLoungeMap] Deflate decompress failed at 0x${noff.value.toString(16)}: ${e.message}`);
+            console.warn(`[SpartanLoungeMap] Deflate decompress failed at 0x${noff.value.toString(16)} (loc=${noff.location}): ${e.message}`);
             return null;
         }
     }
@@ -983,9 +1002,10 @@ export class H2MapParser {
     }
 
     // ===== Load textures for BSP shaders =====
+    // Uses local map data + ancillary maps (shared.map etc.) for external bitmap tags
     async loadTextures(bsp, tagIdMap, header, secondaryMagic) {
         const textures = new Map(); // shaderId → { rgba, width, height }
-        let loaded = 0, skipped = 0, failed = 0, external = 0;
+        let loaded = 0, skipped = 0, failed = 0, fromShared = 0;
 
         for (const shaderRef of bsp.shaders) {
             const shaderId = shaderRef.shaderId;
@@ -998,6 +1018,21 @@ export class H2MapParser {
             }
 
             try {
+                // Skip shader tags with no local data (struct is external)
+                if (shaderEntry.dataSize === 0) {
+                    // Try shared.map parser if available
+                    if (this.sharedParser) {
+                        const result = await this.loadTextureFromShared(shaderId);
+                        if (result) {
+                            textures.set(shaderId, result);
+                            loaded++; fromShared++;
+                            continue;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
+
                 const shaderOffset = secondaryMagic + shaderEntry.offsetRaw;
                 const bitmapId = this.parseShaderTag(shaderOffset, secondaryMagic);
                 if (!bitmapId) { skipped++; continue; }
@@ -1005,44 +1040,38 @@ export class H2MapParser {
                 const bitmapEntry = tagIdMap.get(bitmapId);
                 if (!bitmapEntry || bitmapEntry.tag !== 'bitm') { skipped++; continue; }
 
+                // If bitmap tag data is external (dataSize == 0), try shared.map
+                if (bitmapEntry.dataSize === 0) {
+                    if (this.sharedParser) {
+                        const result = await this.loadBitmapFromShared(bitmapId);
+                        if (result) {
+                            textures.set(shaderId, result);
+                            loaded++; fromShared++;
+                            continue;
+                        }
+                    }
+                    skipped++;
+                    continue;
+                }
+
                 const bitmapOffset = secondaryMagic + bitmapEntry.offsetRaw;
                 const texInfo = this.parseBitmapTag(bitmapOffset, secondaryMagic);
                 if (!texInfo || texInfo.width <= 0 || texInfo.height <= 0) { skipped++; continue; }
 
-                // Find best LOD (first non-empty)
+                // Find best LOD (first non-empty) — now supports external LODs via ancillary buffers
                 let pixelData = null;
                 for (let lod = 0; lod < 6; lod++) {
                     if (texInfo.lodOffsets[lod] === 0 || texInfo.lodSizes[lod] === 0) continue;
-                    const noff = this.decodeNormalOffset(texInfo.lodOffsets[lod]);
-                    if (noff.location !== 0) { external++; continue; }
                     pixelData = await this.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
                     if (pixelData) break;
                 }
 
                 if (!pixelData) { skipped++; continue; }
 
-                // Decode based on compression format
-                let rgba;
-                const w = texInfo.width, h = texInfo.height;
-                switch (texInfo.compressionFormat) {
-                    case 0: // DXT1
-                        rgba = H2MapParser.decodeDXT1(pixelData, w, h);
-                        break;
-                    case 1: // DXT3
-                        rgba = H2MapParser.decodeDXT3(pixelData, w, h);
-                        break;
-                    case 2: // DXT5
-                        rgba = H2MapParser.decodeDXT5(pixelData, w, h);
-                        break;
-                    case 4: // 32-bit (A8R8G8B8)
-                        rgba = H2MapParser.decodeA8R8G8B8(pixelData, w, h);
-                        break;
-                    default:
-                        skipped++;
-                        continue;
-                }
+                const rgba = this.decodePixelData(pixelData, texInfo.compressionFormat, texInfo.width, texInfo.height);
+                if (!rgba) { skipped++; continue; }
 
-                textures.set(shaderId, { rgba, width: w, height: h });
+                textures.set(shaderId, { rgba, width: texInfo.width, height: texInfo.height });
                 loaded++;
             } catch (e) {
                 failed++;
@@ -1050,8 +1079,83 @@ export class H2MapParser {
             }
         }
 
-        console.log(`[SpartanLoungeMap] Textures: ${loaded} loaded, ${skipped} skipped, ${failed} failed, ${external} external-only`);
+        console.log(`[SpartanLoungeMap] Textures: ${loaded} loaded (${fromShared} from shared), ${skipped} skipped, ${failed} failed`);
         return textures;
+    }
+
+    // Decode compressed pixel data to RGBA based on format
+    decodePixelData(pixelData, compressionFormat, width, height) {
+        switch (compressionFormat) {
+            case 0: return H2MapParser.decodeDXT1(pixelData, width, height);
+            case 1: return H2MapParser.decodeDXT3(pixelData, width, height);
+            case 2: return H2MapParser.decodeDXT5(pixelData, width, height);
+            case 4: return H2MapParser.decodeA8R8G8B8(pixelData, width, height);
+            default: return null;
+        }
+    }
+
+    // Load a bitmap texture by ID from shared.map
+    async loadBitmapFromShared(bitmapId) {
+        if (!this.sharedParser) return null;
+        const entry = this.sharedParser._tagIdMap.get(bitmapId);
+        if (!entry || entry.tag !== 'bitm' || entry.dataSize === 0) return null;
+
+        const offset = this.sharedParser._secondaryMagic + entry.offsetRaw;
+        const texInfo = this.sharedParser.parseBitmapTag(offset, this.sharedParser._secondaryMagic);
+        if (!texInfo || texInfo.width <= 0 || texInfo.height <= 0) return null;
+
+        let pixelData = null;
+        for (let lod = 0; lod < 6; lod++) {
+            if (texInfo.lodOffsets[lod] === 0 || texInfo.lodSizes[lod] === 0) continue;
+            pixelData = await this.sharedParser.decompressLodData(texInfo.lodOffsets[lod], texInfo.lodSizes[lod]);
+            if (pixelData) break;
+        }
+        if (!pixelData) return null;
+
+        const rgba = this.decodePixelData(pixelData, texInfo.compressionFormat, texInfo.width, texInfo.height);
+        if (!rgba) return null;
+        return { rgba, width: texInfo.width, height: texInfo.height };
+    }
+
+    // Load a texture by shader ID from shared.map (full shader→bitmap chain)
+    async loadTextureFromShared(shaderId) {
+        if (!this.sharedParser) return null;
+        const shaderEntry = this.sharedParser._tagIdMap.get(shaderId);
+        if (!shaderEntry || shaderEntry.tag !== 'shad' || shaderEntry.dataSize === 0) return null;
+
+        const shaderOffset = this.sharedParser._secondaryMagic + shaderEntry.offsetRaw;
+        const bitmapId = this.sharedParser.parseShaderTag(shaderOffset, this.sharedParser._secondaryMagic);
+        if (!bitmapId) return null;
+
+        return this.loadBitmapFromShared(bitmapId);
+    }
+
+    // Initialize shared.map parser for external texture lookups
+    initSharedParser(sharedBuffer) {
+        if (!sharedBuffer) return;
+        console.log(`[SpartanLoungeMap] Initializing shared.map parser (${(sharedBuffer.byteLength / 1024 / 1024).toFixed(1)} MB)...`);
+
+        const shared = new H2MapParser(sharedBuffer);
+        const sharedHeader = shared.parseHeader();
+        const sharedIndexHeader = shared.parseIndexHeader(sharedHeader);
+        const sharedTagIndex = shared.parseTagIndex(sharedIndexHeader);
+        const sharedSecondaryMagic = shared.calculateSecondaryMagic(sharedHeader, sharedIndexHeader, sharedTagIndex);
+
+        // Build tag ID map for shared.map (skip NULL/empty entries)
+        shared._tagIdMap = new Map();
+        for (const entry of sharedTagIndex) {
+            if (entry.dataSize > 0) {
+                shared._tagIdMap.set(entry.id, entry);
+            }
+        }
+        shared._secondaryMagic = sharedSecondaryMagic;
+        shared._header = sharedHeader;
+
+        const bitmCount = sharedTagIndex.filter(e => e.tag === 'bitm' && e.dataSize > 0).length;
+        const shadCount = sharedTagIndex.filter(e => e.tag === 'shad' && e.dataSize > 0).length;
+        console.log(`[SpartanLoungeMap] shared.map: ${shared._tagIdMap.size} valid tags (${bitmCount} bitmaps, ${shadCount} shaders)`);
+
+        this.sharedParser = shared;
     }
 
     // ===== Full parse pipeline =====
