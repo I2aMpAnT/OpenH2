@@ -1,4 +1,5 @@
 ﻿using OpenH2.Core.Architecture;
+using OpenH2.Core.GameObjects;
 using OpenH2.Core.Maps.Vista;
 using OpenH2.Core.Tags;
 using OpenH2.Core.Tags.Scenario;
@@ -61,7 +62,7 @@ namespace OpenH2.Engine.Entities
         public Entity FromEquipmentPlacement(ScenarioTag.EquipmentPlacement item)
         {
             var entity = ItemFactory.CreateFromEquipmentPlacement(this.Map, this.Map.Scenario, item);
-            item.GameObject = entity;
+            item.GameObject = (IEquipment)entity;
             return entity;
         }
 
