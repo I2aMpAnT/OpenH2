@@ -330,51 +330,39 @@
             "emissiveMapIndex": 0,
             "emissiveType": "EmissiveOnly",
             "detail1MapIndex": 1,
-            "detail1ScaleIndex": 1,
-            "diffuseColor": [ 0 ]
+            "detail1ScaleIndex": 1
         },
         "shaders\\shader_templates\\opaque\\illum_clamped": {
             "name": "IllumClamped",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly",
-            "diffuseColor": [ 0 ]
+            "emissiveType": "EmissiveOnly"
         },
         // Transparent additive illumination (teleporters, lights)
         "shaders\\shader_templates\\transparent\\one_add_illum": {
             "name": "OneAddIllum",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly",
-            "diffuseColor": [ 0 ]
+            "emissiveType": "EmissiveOnly"
         },
         "shaders\\shader_templates\\transparent\\one_add_illum_no_fog": {
             "name": "OneAddIllumNoFog",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly",
-            "diffuseColor": [ 0 ]
+            "emissiveType": "EmissiveOnly"
         },
         // Plasma/shield/camo transparent effects
         "shaders\\shader_templates\\transparent\\plasma_shield": {
             "name": "PlasmaShield",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly",
-            "diffuseColor": [ 0 ]
+            "emissiveType": "EmissiveOnly"
         },
         "shaders\\shader_templates\\transparent\\meter_active_camo": {
             "name": "MeterActiveCamo",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly",
-            "diffuseColor": [ 0 ]
+            "emissiveType": "EmissiveOnly"
         },
         "shaders\\shader_templates\\transparent\\plasma_alpha_active_camo": {
             "name": "PlasmaAlphaActiveCamo",
             "diffuseMapIndex": 0,
             "alphaMapIndex": 2
-        },
-        // Water (render as simple transparent for now)
-        "shaders\\shader_templates\\water\\water_pool": {
-            "name": "WaterPool",
-            "diffuseMapIndex": 0,
-            "alphaMapIndex": 0
         }
     }
 }

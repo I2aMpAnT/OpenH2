@@ -124,10 +124,14 @@ namespace OpenH2.Engine.Systems
                     entities.Add(scene.EntityCreator.FromInstancedGeometry(bsp, instance));
                 }
 
-                // Find appropriate skybox
-                if(terrain.SkyIndex >= 0 && terrain.SkyIndex < scene.Map.Scenario.SkyboxInstances.Length)
+                // Find appropriate skybox (65535 = 0xFFFF = default, use sky 0)
+                var skyIdx = terrain.SkyIndex;
+                if (skyIdx == 65535 || skyIdx == ushort.MaxValue)
+                    skyIdx = 0;
+
+                if(skyIdx < (scene.Map.Scenario.SkyboxInstances?.Length ?? 0))
                 {
-                    var sky = scene.Map.Scenario.SkyboxInstances[terrain.SkyIndex];
+                    var sky = scene.Map.Scenario.SkyboxInstances[skyIdx];
 
                     if(sky.Skybox.IsInvalid == false)
                     {
