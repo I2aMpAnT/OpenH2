@@ -1746,15 +1746,22 @@ async function loadMapAndTelemetry() {
             await waitForMapName();
 
             loadingText.textContent = 'Loading 3D map...';
-            const glbFilename = mapNameToGlbFilename(mapName);
-            const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
+            const mapFilename = mapNameToGlbFilename(mapName);
             try {
-                await loadGLB(glbPath, (progress) => {
+                await loadH2Map(mapFilename, (progress) => {
                     loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
                 });
-            } catch (glbError) {
-                console.warn('GLB not found, using fallback view:', glbError);
-                showFallbackMessage();
+            } catch (mapError) {
+                console.warn('.map load failed, trying GLB fallback:', mapError);
+                const glbPath = `${CONFIG.mapsPath}${mapFilename}.glb`;
+                try {
+                    await loadGLB(glbPath, (progress) => {
+                        loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
+                    });
+                } catch (glbError) {
+                    console.warn('GLB not found either:', glbError);
+                    showFallbackMessage();
+                }
             }
 
             adjustLightingForMap(mapName.toLowerCase());
@@ -1799,17 +1806,23 @@ async function loadMapAndTelemetry() {
         await loadSpartanModel();
 
         loadingText.textContent = 'Loading 3D map...';
-        // Convert map name to GLB filename format (lowercase, no spaces, underscores for some)
-        const glbFilename = mapNameToGlbFilename(mapName);
-        const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
+        const mapFilename = mapNameToGlbFilename(mapName);
 
         try {
-            await loadGLB(glbPath, (progress) => {
+            await loadH2Map(mapFilename, (progress) => {
                 loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
             });
-        } catch (glbError) {
-            console.warn('GLB not found, using fallback view:', glbError);
-            showFallbackMessage();
+        } catch (mapError) {
+            console.warn('.map load failed, trying GLB fallback:', mapError);
+            const glbPath = `${CONFIG.mapsPath}${mapFilename}.glb`;
+            try {
+                await loadGLB(glbPath, (progress) => {
+                    loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
+                });
+            } catch (glbError) {
+                console.warn('GLB not found either:', glbError);
+                showFallbackMessage();
+            }
         }
 
         // Adjust lighting for specific maps
@@ -2406,12 +2419,16 @@ async function loadNewMap(newMapName) {
         scene.remove(mapModel);
         mapModel = null;
     }
-    const glbFilename = mapNameToGlbFilename(newMapName);
-    const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
+    const mapFilename = mapNameToGlbFilename(newMapName);
     try {
-        await loadGLB(glbPath);
-    } catch (e) {
-        console.warn('Map not found:', e);
+        await loadH2Map(mapFilename, null);
+    } catch (mapError) {
+        console.warn('.map load failed, trying GLB:', mapError);
+        try {
+            await loadGLB(`${CONFIG.mapsPath}${mapFilename}.glb`);
+        } catch (e) {
+            console.warn('Map not found:', e);
+        }
     }
     adjustLightingForMap(newMapName.toLowerCase());
     createSkybox(newMapName);
@@ -3571,13 +3588,18 @@ async function selectMap(selectedMapName) {
     loadingProgress.textContent = '0%';
 
     try {
-        // Load the new map
-        const glbFilename = mapNameToGlbFilename(selectedMapName);
-        const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
-
-        await loadGLB(glbPath, (progress) => {
-            loadingProgress.textContent = `${Math.round(progress * 100)}%`;
-        });
+        // Load the new map (.map first, GLB fallback)
+        const mapFilename = mapNameToGlbFilename(selectedMapName);
+        try {
+            await loadH2Map(mapFilename, (progress) => {
+                loadingProgress.textContent = `${Math.round(progress * 100)}%`;
+            });
+        } catch (mapError) {
+            console.warn('.map load failed, trying GLB:', mapError);
+            await loadGLB(`${CONFIG.mapsPath}${mapFilename}.glb`, (progress) => {
+                loadingProgress.textContent = `${Math.round(progress * 100)}%`;
+            });
+        }
 
         // Adjust lighting for specific maps
         adjustLightingForMap(selectedMapName.toLowerCase());
