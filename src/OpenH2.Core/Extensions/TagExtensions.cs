@@ -11,9 +11,6 @@ namespace OpenH2.Core.Extensions
             if (index.HasValue == false)
                 return null;
 
-            if (index.Value >= args.BitmapArguments.Length)
-                return null;
-
             if (map.TryGetTag(args.BitmapArguments[index.Value].Bitmap, out var bitm))
                 return bitm;
 

@@ -10,6 +10,5 @@
         public long Detail1Handle { get; set; }
         public long Detail2Handle { get; set; }
         public long ColorChangeHandle { get; set; }
-        public long LightmapHandle { get; set; }
     }
 }

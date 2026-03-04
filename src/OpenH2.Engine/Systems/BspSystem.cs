@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using OpenH2.Core.Architecture;
-using OpenH2.Core.Tags;
 using OpenH2.Engine.Stores;
 using OpenH2.Foundation.Logging;
 using Silk.NET.Input;
@@ -79,59 +77,17 @@ namespace OpenH2.Engine.Systems
 
                 var bsp = scene.Map.GetTag(terrain.Bsp);
 
-                // Try to load lightmap bitmap from the ltmp tag
-                BitmapTag lightmapBitmap = null;
-                if (terrain.LightmapId.IsInvalid == false)
-                {
-                    try
-                    {
-                        if (scene.Map.TryGetTag<LightmapTag>(terrain.LightmapId.Id, out var ltmpTag)
-                            && ltmpTag.Groups != null && ltmpTag.Groups.Length > 0)
-                        {
-                            var group = ltmpTag.Groups[0];
-                            if (group.LightmapBitmap.IsInvalid == false)
-                                scene.Map.TryGetTag(group.LightmapBitmap, out lightmapBitmap);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"Failed to load lightmap for BSP[{i}]: {ex.Message}", Logger.Color.Red);
-                    }
-                }
-
-                // Count mesh stats
-                var clusterMeshCount = 0;
-                foreach (var cluster in bsp.Clusters)
-                    clusterMeshCount += cluster.Model?.Meshes?.Length ?? 0;
-
-                var emptyDefs = 0;
-                var defMeshCount = 0;
-                foreach (var def in bsp.InstancedGeometryDefinitions)
-                {
-                    var mc = def.Model?.Meshes?.Length ?? 0;
-                    if (mc == 0) emptyDefs++;
-                    defMeshCount += mc;
-                }
-
-                Logger.Log($"BSP[{i}]: {bsp.Name}, {bsp.Clusters.Length} clusters ({clusterMeshCount} meshes), " +
-                    $"{bsp.InstancedGeometryInstances.Length} instances -> {bsp.InstancedGeometryDefinitions.Length} defs ({defMeshCount} meshes, {emptyDefs} empty), " +
-                    $"lightmap={lightmapBitmap != null}, sky={terrain.SkyIndex}", Logger.Color.White);
-
-                entities.Add(scene.EntityCreator.FromBsp(bsp, lightmapBitmap));
+                entities.Add(scene.EntityCreator.FromBsp(bsp));
 
                 foreach (var instance in bsp.InstancedGeometryInstances)
                 {
                     entities.Add(scene.EntityCreator.FromInstancedGeometry(bsp, instance));
                 }
 
-                // Find appropriate skybox (65535 = 0xFFFF = default, use sky 0)
-                var skyIdx = terrain.SkyIndex;
-                if (skyIdx == 65535 || skyIdx == ushort.MaxValue)
-                    skyIdx = 0;
-
-                if(skyIdx < (scene.Map.Scenario.SkyboxInstances?.Length ?? 0))
+                // Find appropriate skybox
+                if(terrain.SkyIndex >= 0 && terrain.SkyIndex < scene.Map.Scenario.SkyboxInstances.Length)
                 {
-                    var sky = scene.Map.Scenario.SkyboxInstances[skyIdx];
+                    var sky = scene.Map.Scenario.SkyboxInstances[terrain.SkyIndex];
 
                     if(sky.Skybox.IsInvalid == false)
                     {

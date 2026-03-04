@@ -48,8 +48,5 @@ void main() {
 
 	diffuseColor = vec4(diffuseColor.rgb, 1);
 
-    // Gamma correction for sRGB textures
-    diffuseColor.rgb = pow(diffuseColor.rgb, vec3(1.0 / 2.2));
-
     out_color = diffuseColor;
 }

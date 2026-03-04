@@ -104,35 +104,6 @@ namespace OpenH2.Engine.EntityFactories
             return entities;
         }
 
-        public static Scenery CreateFromEquipmentPlacement(H2vMap map, ScenarioTag scenario, ScenarioTag.EquipmentPlacement instance)
-        {
-            var scenery = new Scenery();
-            scenery.FriendlyName = "Equipment_" + instance.Index;
-
-            var def = scenario.EquipmentDefinitions[instance.Index];
-
-            if (map.TryGetTag(def.Equipment, out var eqip) == false)
-                return scenery;
-
-            scenery.FriendlyName = eqip.Name;
-
-            var meshes = MeshFactory.GetRenderModel(map, eqip.Hlmt);
-            var components = new List<Component>();
-
-            components.Add(new RenderModelComponent(scenery, new Model<BitmapTag>
-            {
-                Note = $"[{eqip.Id}] {eqip.Name}",
-                Flags = ModelFlags.Diffuse | ModelFlags.CastsShadows | ModelFlags.ReceivesShadows,
-                Meshes = meshes
-            }));
-
-            var orientation = QuaternionExtensions.FromH2vOrientation(instance.Orientation);
-            var xform = new TransformComponent(scenery, instance.Position, orientation);
-
-            scenery.SetComponents(xform, components.ToArray());
-            return scenery;
-        }
-
         public static Vehicle CreateFromVehicleInstance(H2vMap map, ScenarioTag scenario, ScenarioTag.VehicleInstance instance)
         {
             var item = new Vehicle();

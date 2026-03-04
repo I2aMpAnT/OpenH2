@@ -3,7 +3,6 @@
     public enum MeshElementType : ushort
     {
         TriangleList = 11,
-        TriangleListEnvironment = 10,
         TriangleStrip = 3,
         TriangleStripDecal = 2,
 

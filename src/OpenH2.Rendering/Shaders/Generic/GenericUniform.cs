@@ -54,19 +54,11 @@ namespace OpenH2.Rendering.Shaders.Generic
             ColorChangeAmount = 1f;
             ColorChangeColor = colorChangeData;
 
-            UseSpecular = material.SpecularMap != null;
-            SpecularAmount = 1f;
-            SpecularHandle = bindings.SpecularHandle;
-            // Use material specular color, default to subtle white if not set
-            var sc = material.SpecularColor;
-            SpecularColor = sc.LengthSquared() > 0
-                ? new Vector4(sc, 1f)
-                : new Vector4(0.5f, 0.5f, 0.5f, 1f);
-
-            UseLightmap = material.LightmapBitmap != null;
-            LightmapAmount = 1f;
-            LightmapHandle = bindings.LightmapHandle;
-            LightmapPad = Vector4.Zero;
+            // Currently unused
+            UseSpecular = false;
+            SpecularAmount = 0f;
+            SpecularColor = Vector4.Zero;
+            SpecularHandle = 0;
         }
 
         public bool UseDiffuse;
@@ -108,11 +100,6 @@ namespace OpenH2.Rendering.Shaders.Generic
         public float ColorChangeAmount;
         public long ColorChangeMaskHandle;
         public Vector4 ColorChangeColor;
-
-        public bool UseLightmap;
-        public float LightmapAmount;
-        public long LightmapHandle;
-        public Vector4 LightmapPad;
 
         public static readonly int Size = Marshal.SizeOf<GenericUniform>();
     }

@@ -274,7 +274,6 @@ namespace OpenH2.Rendering.OpenGL
                 var primitiveType = command.ElementType switch
                 {
                     MeshElementType.TriangleList => PrimitiveType.Triangles,
-                    MeshElementType.TriangleListEnvironment => PrimitiveType.Triangles,
                     MeshElementType.TriangleStrip => PrimitiveType.TriangleStrip,
                     MeshElementType.TriangleStripDecal => PrimitiveType.TriangleStrip,
                     MeshElementType.Point => PrimitiveType.Points,

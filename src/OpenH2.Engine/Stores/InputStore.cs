@@ -1,4 +1,3 @@
-using System;
 using Silk.NET.Input;
 using Silk.NET.Input.Extensions;
 using System.Collections.Generic;
@@ -25,7 +24,7 @@ namespace OpenH2.Engine.Stores
         private HashSet<ButtonName> currentButtons = new();
         private HashSet<ButtonName> previousButtons = new();
 
-        private const float DeadZone = 0.20f;
+        private const float DeadZone = 0.15f;
 
         public void SetMouse(MouseState mouse)
         {
@@ -58,16 +57,13 @@ namespace OpenH2.Engine.Stores
 
             GamepadConnected = true;
 
-            var rawLeft = gamepad.Thumbsticks.Count > 0
+            LeftStick = ApplyDeadZone(gamepad.Thumbsticks.Count > 0
                 ? new Vector2(gamepad.Thumbsticks[0].X, gamepad.Thumbsticks[0].Y)
-                : Vector2.Zero;
+                : Vector2.Zero);
 
-            var rawRight = gamepad.Thumbsticks.Count > 1
+            RightStick = ApplyDeadZone(gamepad.Thumbsticks.Count > 1
                 ? new Vector2(gamepad.Thumbsticks[1].X, gamepad.Thumbsticks[1].Y)
-                : Vector2.Zero;
-
-            LeftStick = ApplyDeadZone(rawLeft);
-            RightStick = ApplyDeadZone(rawRight);
+                : Vector2.Zero);
 
             LeftTrigger = gamepad.Triggers.Count > 0 ? gamepad.Triggers[0].Position : 0f;
             RightTrigger = gamepad.Triggers.Count > 1 ? gamepad.Triggers[1].Position : 0f;
@@ -81,21 +77,11 @@ namespace OpenH2.Engine.Stores
 
         private static Vector2 ApplyDeadZone(Vector2 stick)
         {
-            var magnitude = stick.Length();
-            if (magnitude < DeadZone)
+            if (stick.Length() < DeadZone)
                 return Vector2.Zero;
 
-            // Rescale from [deadzone, 1.0] to [0.0, 1.0] so there's no jump at threshold
-            var normalized = stick / magnitude;
-            var rescaled = (magnitude - DeadZone) / (1.0f - DeadZone);
-            rescaled = MathF.Min(rescaled, 1.0f);
-
-            // Square the magnitude for finer control near center, snappier at edges
-            rescaled *= rescaled;
-
-            return normalized * rescaled;
+            return stick;
         }
-
 
         public bool GamepadButtonDown(ButtonName button)
         {

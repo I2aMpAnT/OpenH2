@@ -64,11 +64,6 @@ namespace OpenH2.Core.Architecture
                 this.AddEntity(EntityCreator.FromItemCollectionPlacement(item));
             }
 
-            foreach (var equip in this.Map.Scenario.EquipmentPlacements)
-            {
-                this.AddEntity(EntityCreator.FromEquipmentPlacement(equip));
-            }
-
             foreach (var item in this.Map.Scenario.VehicleInstances)
             {
                 // HACK: sometimes maxval, headlong
@@ -143,7 +138,7 @@ namespace OpenH2.Core.Architecture
                 ScenarioTag.WellKnownVarType.Biped => null,
                 ScenarioTag.WellKnownVarType.Vehicle => EntityCreator.FromVehicleInstance(Scenario.VehicleInstances[def.Index]),
                 ScenarioTag.WellKnownVarType.Weapon => null,
-                ScenarioTag.WellKnownVarType.Equipment => EntityCreator.FromEquipmentPlacement(Scenario.EquipmentPlacements[def.Index]),
+                ScenarioTag.WellKnownVarType.Equipment => null,
                 ScenarioTag.WellKnownVarType.Scenery => EntityCreator.FromSceneryInstance(Scenario.SceneryInstances[def.Index]),
                 ScenarioTag.WellKnownVarType.Machinery => EntityCreator.FromMachineryInstance(Scenario.MachineryInstances[def.Index]),
                 ScenarioTag.WellKnownVarType.Controller => null,

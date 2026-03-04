@@ -76,7 +76,7 @@ namespace OpenH2.Core.Factories
 
             if (stemsWarned.Contains(shader.ShaderTemplate.Id) == false)
             {
-                Console.WriteLine($"Using heuristic for shader '{shader.Name}' template='{templateKey}' stem[{shader.ShaderTemplate.Id}]");
+                Console.WriteLine($"Using heuristic for shader '{shader.Name}' stem[{shader.ShaderTemplate.Id}]");
                 stemsWarned.Add(shader.ShaderTemplate.Id);
             }
 
@@ -138,13 +138,6 @@ namespace OpenH2.Core.Factories
                     map.TryGetTag(info.DiffuseBitmap, out var diff);
                     mat.DiffuseMap = diff;
                 }
-
-                if (info.EmissiveBitmap.IsInvalid == false && mat.EmissiveMap == default)
-                {
-                    map.TryGetTag(info.EmissiveBitmap, out var emissive);
-                    mat.EmissiveMap = emissive;
-                    mat.EmissiveType = EmissiveType.DiffuseBlended;
-                }
             }
 
             var args = shader.Arguments[0];
@@ -159,15 +152,8 @@ namespace OpenH2.Core.Factories
                     continue;
                 }
 
-                if (bitm == mat.DiffuseMap || bitm == mat.AlphaMap || bitm == mat.EmissiveMap)
+                if (bitm == mat.DiffuseMap || bitm == mat.AlphaMap)
                 {
-                    continue;
-                }
-
-                if (mat.EmissiveMap == null && (bitm.Name.Contains("illum") || bitm.Name.Contains("emissive") || bitm.Name.Contains("glow") || bitm.TextureUsage == TextureUsage.Light))
-                {
-                    mat.EmissiveMap = bitm;
-                    mat.EmissiveType = EmissiveType.DiffuseBlended;
                     continue;
                 }
 
@@ -202,12 +188,6 @@ namespace OpenH2.Core.Factories
                     {
                         detailScale = args.ShaderInputs[inputOffset];
                         inputOffset++;
-                    }
-
-                    // If scale search failed, use a sensible default instead of zero
-                    if (detailScale.X < 1 || detailScale.Y < 1)
-                    {
-                        detailScale = new Vector4(1, 1, 0, 0);
                     }
 
                     if (mat.DetailMap1 == null)

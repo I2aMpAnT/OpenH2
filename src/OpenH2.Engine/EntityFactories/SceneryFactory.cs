@@ -24,30 +24,12 @@ namespace OpenH2.Engine.EntityFactories
 
             var def = bsp.InstancedGeometryDefinitions[instance.Index];
 
+            var transparentMeshes = new List<Mesh<BitmapTag>>(def.Model.Meshes.Length);
             var renderModelMeshes = new List<Mesh<BitmapTag>>(def.Model.Meshes.Length);
 
             foreach (var mesh in def.Model.Meshes)
             {
                 var mat = map.CreateMaterial(mesh);
-
-                // Instanced geometry is world geometry. Force alpha=1 on
-                // DiffuseColor so the fragment shader's alpha discard doesn't
-                // kill fragments with zero-alpha DiffuseColor.
-                var dc = mat.DiffuseColor;
-                if (mat.DiffuseMap == null && dc.X == 0 && dc.Y == 0 && dc.Z == 0)
-                {
-                    dc = new Vector4(0.5f, 0.5f, 0.5f, 1f);
-                }
-                else
-                {
-                    dc = new Vector4(dc.X, dc.Y, dc.Z, 1f);
-                }
-
-                mat = mat with
-                {
-                    DiffuseColor = dc,
-                    AlphaMap = null
-                };
 
                 var renderMesh = new Mesh<BitmapTag>()
                 {
@@ -61,7 +43,14 @@ namespace OpenH2.Engine.EntityFactories
                     Material = mat
                 };
 
-                renderModelMeshes.Add(renderMesh);
+                if (mat.AlphaMap == null)
+                {
+                    renderModelMeshes.Add(renderMesh);
+                }
+                else
+                {
+                    transparentMeshes.Add(renderMesh);
+                }
             }
 
             var comps = new List<Component>();
@@ -72,6 +61,16 @@ namespace OpenH2.Engine.EntityFactories
                 Meshes = renderModelMeshes.ToArray(),
                 Flags = ModelFlags.Diffuse | ModelFlags.ReceivesShadows | ModelFlags.IsStatic
             }));
+
+            foreach (var mesh in transparentMeshes)
+            {
+                comps.Add(new RenderModelComponent(scenery, new Model<BitmapTag>
+                {
+                    Note = $"[{bsp.Id}] {bsp.Name}//instanced//{instance.Index}",
+                    Meshes = new[] { mesh },
+                    Flags = ModelFlags.IsTransparent | ModelFlags.IsStatic
+                }));
+            }
 
             var xform = new TransformComponent(scenery, instance.Position, QuaternionExtensions.From3x3Mat(instance.RotationMatrix))
             {

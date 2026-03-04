@@ -17,9 +17,9 @@ namespace OpenH2.Engine.Entities
             this.Map = map;
         }
 
-        public Entity FromBsp(BspTag bsp, BitmapTag lightmapBitmap = null)
+        public Entity FromBsp(BspTag bsp)
         {
-            return TerrainFactory.FromBspData(this.Map, bsp, lightmapBitmap);
+            return TerrainFactory.FromBspData(this.Map, bsp);
         }
 
         public Entity FromInstancedGeometry(BspTag bsp, BspTag.InstancedGeometryInstance instance)
@@ -56,11 +56,6 @@ namespace OpenH2.Engine.Entities
         public Entity FromItemCollectionPlacement(ScenarioTag.ItemCollectionPlacement item)
         {
             return ItemFactory.FromTag(this.Map, this.Map.Scenario, item);
-        }
-
-        public Entity FromEquipmentPlacement(ScenarioTag.EquipmentPlacement item)
-        {
-            return ItemFactory.CreateFromEquipmentPlacement(this.Map, this.Map.Scenario, item);
         }
 
         public Entity FromVehicleInstance(ScenarioTag.VehicleInstance item)
