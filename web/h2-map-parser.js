@@ -23,6 +23,17 @@ export class H2MapParser {
         }
         return str;
     }
+    // Read a 4-byte FourCC tag (big-endian string stored as LE uint32)
+    // Same format as tag types in the tag index (e.g. "head", "foot", "tags", "sbsp")
+    readFourCC(offset) {
+        const val = this.readUint32(offset);
+        return String.fromCharCode(
+            (val >>> 24) & 0xFF,
+            (val >>> 16) & 0xFF,
+            (val >>> 8) & 0xFF,
+            val & 0xFF
+        );
+    }
     readVec3(offset) {
         return {
             x: this.readFloat32(offset),
@@ -50,7 +61,7 @@ export class H2MapParser {
         console.log(`[SpartanLoungeMap] File size: ${(this.buffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
 
         const header = {
-            fileHead: this.readString(0, 4),         // "head"
+            fileHead: this.readFourCC(0),              // "head"
             version: this.readInt32(4),
             totalBytes: this.readInt32(8),
             indexOffsetRaw: this.readInt32(16),
@@ -67,7 +78,7 @@ export class H2MapParser {
             fileTableSize: this.readInt32(724),
             filesIndex: this.readInt32(728),
             storedSignature: this.readInt32(752),
-            footer: this.readString(2044, 4)          // "foot"
+            footer: this.readFourCC(2044)              // "foot"
         };
 
         header.indexOffset = this.decodeNormalOffset(header.indexOffsetRaw);
@@ -102,7 +113,7 @@ export class H2MapParser {
             scenarioTagId: this.readUint32(off + 12),
             globalsTagId: this.readUint32(off + 20),
             tagIndexCount: this.readInt32(off + 24),
-            tagsLabel: this.readString(off + 28, 4)  // "tags"
+            tagsLabel: this.readFourCC(off + 28)      // "tags"
         };
 
         // Calculate primary magic
