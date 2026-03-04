@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using OpenH2.Launcher.ViewModels;
 using PropertyChanged;
@@ -31,7 +31,7 @@ namespace OpenH2.Launcher
             AvaloniaXamlLoader.Load(this);
         }
 
-        private void ListBox_DoubleTapped(object sender, TappedEventArgs e)
+        private void ListBox_DoubleTapped(object sender, RoutedEventArgs e)
         {
             if (this.DataContext is MainWindowViewModel vm)
             {
