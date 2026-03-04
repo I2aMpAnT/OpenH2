@@ -15,7 +15,8 @@ namespace OpenH2.Rendering.Vulkan.Internals
             bool invertY = true,
             PolygonMode polyMode = PolygonMode.Fill,
             CullModeFlags cullMode = CullModeFlags.CullModeBackBit,
-            bool depthTest = true);
+            bool depthTest = true,
+            bool depthWrite = true);
 
     internal record PipelineBinding(uint location, DescriptorType type, uint count = 1, DescriptorBindingFlags flags = 0);
 
@@ -356,7 +357,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             {
                 SType = StructureType.PipelineDepthStencilStateCreateInfo,
                 DepthTestEnable = config.depthTest,
-                DepthWriteEnable = true,
+                DepthWriteEnable = config.depthWrite,
                 DepthCompareOp = CompareOp.Less,
                 DepthBoundsTestEnable = false,
                 StencilTestEnable = false,
