@@ -135,7 +135,7 @@ namespace OpenH2.Core.Tags
 
         public override void PopulateExternalData(MapStream reader)
         {
-            
+            var clusterIdx = 0;
 
             foreach (var part in Clusters)
             {
@@ -144,6 +144,7 @@ namespace OpenH2.Core.Tags
                     // TODO: determine why this happens, and if it's expected?
                     //Console.WriteLine("Bsp part with max DataBlock offset");
                     part.Model = new MeshCollection(new ModelMesh[0]);
+                    clusterIdx++;
                     continue;
                 }
 
@@ -163,8 +164,9 @@ namespace OpenH2.Core.Tags
                     resource.Data = resourceData;
                 }
 
-                var meshes = ModelResourceContainerProcessor.ProcessContainer(part, ModelShaderReferences);
+                var meshes = ModelResourceContainerProcessor.ProcessContainer(part, ModelShaderReferences, $"cluster_{clusterIdx}");
                 part.Model = new MeshCollection(meshes);
+                clusterIdx++;
             }
 
             foreach (var def in InstancedGeometryDefinitions)

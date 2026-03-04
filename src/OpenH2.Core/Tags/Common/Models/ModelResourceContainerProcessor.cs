@@ -3,12 +3,15 @@ using OpenH2.Core.Extensions;
 using OpenH2.Core.Maps;
 using OpenH2.Foundation;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 
 namespace OpenH2.Core.Tags.Common.Models
 {
     public static class ModelResourceContainerProcessor
     {
+        private static bool diagnosticsDumped = false;
+
         private struct PartDescription
         {
             public PartDescription(int indexStart, int indexCount, TagRef<ShaderTag> shader, MeshElementType elementType)
@@ -39,6 +42,33 @@ namespace OpenH2.Core.Tags.Common.Models
             {
                 var partData = container.Resources[currentResource].Data.Span;
 
+                // Dump raw hex for first container to verify field offsets
+                if (!diagnosticsDumped)
+                {
+                    diagnosticsDumped = true;
+                    Console.WriteLine($"[MeshDiag] First container: verts={container.VertexCount}, totalIdx={container.Header.IndexCount}, " +
+                        $"parts={container.Header.PartInfoCount}, compression={container.CompressionFlags}, partDataLen={partData.Length}");
+
+                    for (var d = 0; d < Math.Min(3, (int)container.Header.PartInfoCount); d++)
+                    {
+                        var dStart = d * 72;
+                        var hexBytes = new List<string>();
+                        for (int b = 0; b < Math.Min(20, partData.Length - dStart); b++)
+                            hexBytes.Add(partData[dStart + b].ToString("X2"));
+                        Console.WriteLine($"  Part[{d}] raw hex (first 20 bytes): {string.Join(" ", hexBytes)}");
+
+                        // Show both uint16 and uint32 interpretations
+                        var u16_0 = BinaryPrimitives.ReadUInt16LittleEndian(partData.Slice(dStart + 0, 2));
+                        var u16_2 = BinaryPrimitives.ReadUInt16LittleEndian(partData.Slice(dStart + 2, 2));
+                        var u16_4 = BinaryPrimitives.ReadUInt16LittleEndian(partData.Slice(dStart + 4, 2));
+                        var u16_6 = BinaryPrimitives.ReadUInt16LittleEndian(partData.Slice(dStart + 6, 2));
+                        var u16_8 = BinaryPrimitives.ReadUInt16LittleEndian(partData.Slice(dStart + 8, 2));
+                        var u32_8 = BinaryPrimitives.ReadUInt32LittleEndian(partData.Slice(dStart + 8, 4));
+                        var u32_12 = BinaryPrimitives.ReadUInt32LittleEndian(partData.Slice(dStart + 12, 4));
+                        Console.WriteLine($"  Part[{d}] u16@0={u16_0} u16@2={u16_2} u16@4={u16_4} u16@6={u16_6} u16@8={u16_8} | u32@8={u32_8} u32@12={u32_12}");
+                    }
+                }
+
                 for (var i = 0; i < container.Header.PartInfoCount; i++)
                 {
                     var start = i * 72;
@@ -47,6 +77,19 @@ namespace OpenH2.Core.Tags.Common.Models
                     var matId = partData.ReadUInt16At(start + 4);
                     var indexStart = partData.ReadUInt16At(start + 6);
                     var indexCount = partData.ReadUInt16At(start + 8);
+
+                    // Validate matId
+                    if (matId >= shaders.Length)
+                    {
+                        Console.WriteLine($"[MeshDiag] WARNING: {note} Part[{i}]: matId={matId} >= shaders.Length={shaders.Length}, skipping");
+                        continue;
+                    }
+
+                    // Validate index range
+                    if (indexStart + indexCount > container.Header.IndexCount)
+                    {
+                        Console.WriteLine($"[MeshDiag] WARNING: {note} Part[{i}]: indexStart={indexStart}+indexCount={indexCount}={indexStart + indexCount} > totalIdx={container.Header.IndexCount}");
+                    }
 
                     var partDescription = new PartDescription(indexStart, indexCount, shaders[matId].ShaderId, elementType);
 
@@ -176,6 +219,21 @@ namespace OpenH2.Core.Tags.Common.Models
 
                     currentResource++;
                 }
+            }
+
+            // Log vertex position range for compression detection
+            if (container.VertexCount > 0 && container.CompressionFlags != 0)
+            {
+                var minPos = verts[0].Position;
+                var maxPos = verts[0].Position;
+                for (var i = 1; i < Math.Min(container.VertexCount, 100); i++)
+                {
+                    var p = verts[i].Position;
+                    minPos = System.Numerics.Vector3.Min(minPos, p);
+                    maxPos = System.Numerics.Vector3.Max(maxPos, p);
+                }
+                Console.WriteLine($"[MeshDiag] {note ?? "container"}: CompressionFlags={container.CompressionFlags}, " +
+                    $"vertexRange=[{minPos}]->[{maxPos}]");
             }
 
             var meshes = new List<ModelMesh>(parts.Count);
