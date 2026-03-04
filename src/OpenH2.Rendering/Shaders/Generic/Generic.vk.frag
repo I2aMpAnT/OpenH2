@@ -211,6 +211,13 @@ void main() {
         finalColor.a = alpha;
     }
 
+    // Discard nearly-transparent fragments so they don't write to the depth
+    // buffer and block visible geometry behind them. This handles:
+    // - Emissive-only surfaces (teleporter glow, energy effects) with alpha ~0
+    // - Alpha-test surfaces where the alpha map clips to 0
+    if(finalColor.a < 0.1)
+        discard;
+
     // Gamma correction: textures are sRGB (sampled to linear), convert back for display
     finalColor.rgb = pow(finalColor.rgb, vec3(1.0 / 2.2));
 
