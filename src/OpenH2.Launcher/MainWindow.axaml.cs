@@ -18,6 +18,12 @@ namespace OpenH2.Launcher
 #endif
 
             this.DataContext = new MainWindowViewModel(this);
+
+            var listBox = this.FindControl<ListBox>("mapListBox");
+            if (listBox != null)
+            {
+                listBox.DoubleTapped += ListBox_DoubleTapped;
+            }
         }
 
         private void InitializeComponent()

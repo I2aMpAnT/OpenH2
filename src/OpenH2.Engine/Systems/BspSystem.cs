@@ -97,7 +97,7 @@ namespace OpenH2.Engine.Systems
                                 var readLen = Math.Min(32, tagEntry.DataSize);
                                 var rawData = scene.Map.ReadData(ltmpTag.DataFile, tagEntry.Offset, readLen);
                                 var hexDump = BitConverter.ToString(rawData.ToArray()).Replace("-", " ");
-                                Logger.Log($"BSP[{i}] ltmp raw[0..{readLen}] @offset={tagEntry.Offset.Value}: {hexDump}", Logger.Color.Yellow);
+                                Logger.Log($"BSP[{i}] ltmp raw[0..{readLen}] @offset={tagEntry.Offset.Value}: {hexDump}", Logger.Color.Cyan);
 
                                 // Parse first 8 bytes as two uint32s (count + offset for the reflexive)
                                 var span = rawData.Span;
@@ -105,7 +105,7 @@ namespace OpenH2.Engine.Systems
                                 {
                                     var count = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(span);
                                     var ptr = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(4));
-                                    Logger.Log($"BSP[{i}] ltmp reflexive at 0: count={count}, ptr=0x{ptr:X8}", Logger.Color.Yellow);
+                                    Logger.Log($"BSP[{i}] ltmp reflexive at 0: count={count}, ptr=0x{ptr:X8}", Logger.Color.Cyan);
                                 }
                             }
                             catch (Exception dumpEx)
