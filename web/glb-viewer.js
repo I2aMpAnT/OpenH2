@@ -1,17 +1,11 @@
-// SpartanLoungeViewer - 3D Game Replay System
-// Native Halo 2 .map rendering with Three.js/WebGL
-// Falls back to GLB loading if .map file unavailable
+// GLB Viewer - 3D Game Replay System
+// Uses Three.js for rendering and loads telemetry data for playback
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-import { H2MapParser } from './h2-map-parser.js';
-import { H2Renderer } from './h2-renderer.js';
-
-// Active H2 renderer instance (for cleanup on map switch)
-let h2RendererInstance = null;
 
 // ===== Configuration =====
 const CONFIG = {
@@ -337,7 +331,7 @@ function setupScene() {
     scene.background = new THREE.Color(0x0a0a12);
     scene.fog = new THREE.Fog(0x0a0a12, 50, 200);
 
-    camera = new THREE.PerspectiveCamera(78, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(70, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, CONFIG.defaultCameraHeight, 0);
     camera.lookAt(0, 0, 0);
 
@@ -1746,22 +1740,15 @@ async function loadMapAndTelemetry() {
             await waitForMapName();
 
             loadingText.textContent = 'Loading 3D map...';
-            const mapFilename = mapNameToGlbFilename(mapName);
+            const glbFilename = mapNameToGlbFilename(mapName);
+            const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
             try {
-                await loadH2Map(mapFilename, (progress) => {
+                await loadGLB(glbPath, (progress) => {
                     loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
                 });
-            } catch (mapError) {
-                console.warn('.map load failed, trying GLB fallback:', mapError);
-                const glbPath = `${CONFIG.mapsPath}${mapFilename}.glb`;
-                try {
-                    await loadGLB(glbPath, (progress) => {
-                        loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
-                    });
-                } catch (glbError) {
-                    console.warn('GLB not found either:', glbError);
-                    showFallbackMessage();
-                }
+            } catch (glbError) {
+                console.warn('GLB not found, using fallback view:', glbError);
+                showFallbackMessage();
             }
 
             adjustLightingForMap(mapName.toLowerCase());
@@ -1806,23 +1793,17 @@ async function loadMapAndTelemetry() {
         await loadSpartanModel();
 
         loadingText.textContent = 'Loading 3D map...';
-        const mapFilename = mapNameToGlbFilename(mapName);
+        // Convert map name to GLB filename format (lowercase, no spaces, underscores for some)
+        const glbFilename = mapNameToGlbFilename(mapName);
+        const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
 
         try {
-            await loadH2Map(mapFilename, (progress) => {
+            await loadGLB(glbPath, (progress) => {
                 loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
             });
-        } catch (mapError) {
-            console.warn('.map load failed, trying GLB fallback:', mapError);
-            const glbPath = `${CONFIG.mapsPath}${mapFilename}.glb`;
-            try {
-                await loadGLB(glbPath, (progress) => {
-                    loadingProgress.textContent = `${Math.round(50 + progress * 50)}%`;
-                });
-            } catch (glbError) {
-                console.warn('GLB not found either:', glbError);
-                showFallbackMessage();
-            }
+        } catch (glbError) {
+            console.warn('GLB not found, using fallback view:', glbError);
+            showFallbackMessage();
         }
 
         // Adjust lighting for specific maps
@@ -1852,162 +1833,7 @@ async function loadMapAndTelemetry() {
     }
 }
 
-// ===== IndexedDB map cache =====
-const MAP_CACHE_DB = 'SpartanLoungeMapCache';
-const MAP_CACHE_STORE = 'maps';
-const MAP_CACHE_VERSION = 1;
-
-function openMapCacheDB() {
-    return new Promise((resolve, reject) => {
-        const req = indexedDB.open(MAP_CACHE_DB, MAP_CACHE_VERSION);
-        req.onupgradeneeded = () => req.result.createObjectStore(MAP_CACHE_STORE);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-    });
-}
-
-async function getCachedMap(filename) {
-    try {
-        const db = await openMapCacheDB();
-        return new Promise((resolve) => {
-            const tx = db.transaction(MAP_CACHE_STORE, 'readonly');
-            const req = tx.objectStore(MAP_CACHE_STORE).get(filename);
-            req.onsuccess = () => resolve(req.result || null);
-            req.onerror = () => resolve(null);
-        });
-    } catch { return null; }
-}
-
-async function cacheMap(filename, arrayBuffer) {
-    try {
-        const db = await openMapCacheDB();
-        const tx = db.transaction(MAP_CACHE_STORE, 'readwrite');
-        tx.objectStore(MAP_CACHE_STORE).put(arrayBuffer, filename);
-    } catch (e) {
-        console.warn('[SpartanLounge] Failed to cache map in IndexedDB:', e.message);
-    }
-}
-
-async function loadH2Map(mapFilename, onProgress) {
-    const mapUrl = `/maps3D/Cartographer/${mapFilename}.map`;
-    console.log(`[SpartanLounge] Loading .map: ${mapUrl}`);
-
-    // Cleanup previous H2 renderer
-    if (h2RendererInstance) {
-        h2RendererInstance.dispose();
-        h2RendererInstance = null;
-    }
-
-    let mapBuffer;
-
-    // Check IndexedDB cache first
-    const cached = await getCachedMap(mapFilename);
-    if (cached) {
-        console.log(`[SpartanLounge] Cache hit: ${mapFilename} (${(cached.byteLength / 1024 / 1024).toFixed(1)} MB)`);
-        mapBuffer = new Uint8Array(cached);
-        onProgress?.(0.7);
-    } else {
-        // Download from server
-        const response = await fetch(mapUrl);
-        if (!response.ok) throw new Error(`Map not found: ${response.status}`);
-
-        const contentLength = response.headers.get('content-length');
-        const totalBytes = contentLength ? parseInt(contentLength) : 0;
-        let receivedBytes = 0;
-        const reader = response.body.getReader();
-        const chunks = [];
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            receivedBytes += value.length;
-            if (totalBytes > 0 && onProgress) {
-                onProgress(receivedBytes / totalBytes * 0.7); // 0-70% for download
-            }
-        }
-
-        mapBuffer = new Uint8Array(receivedBytes);
-        let offset = 0;
-        for (const chunk of chunks) {
-            mapBuffer.set(chunk, offset);
-            offset += chunk.length;
-        }
-        console.log(`[SpartanLounge] Downloaded ${(receivedBytes / 1024 / 1024).toFixed(1)} MB`);
-
-        // Store in IndexedDB for next time (fire and forget)
-        cacheMap(mapFilename, mapBuffer.buffer.slice(0));
-        console.log(`[SpartanLounge] Caching ${mapFilename} to IndexedDB`);
-    }
-
-    // Load shared.map for external textures
-    let sharedBuffer = null;
-    try {
-        const sharedCached = await getCachedMap('shared');
-        if (sharedCached) {
-            console.log(`[SpartanLounge] shared.map cache hit (${(sharedCached.byteLength / 1024 / 1024).toFixed(1)} MB)`);
-            sharedBuffer = sharedCached;
-        } else {
-            console.log('[SpartanLounge] Fetching shared.map for external textures...');
-            const sharedResp = await fetch('/maps3D/Cartographer/shared.map');
-            if (sharedResp.ok) {
-                sharedBuffer = await sharedResp.arrayBuffer();
-                console.log(`[SpartanLounge] shared.map downloaded (${(sharedBuffer.byteLength / 1024 / 1024).toFixed(1)} MB)`);
-                cacheMap('shared', sharedBuffer.slice(0));
-            } else {
-                console.warn(`[SpartanLounge] shared.map not available (${sharedResp.status}) — external textures will be missing`);
-            }
-        }
-    } catch (e) {
-        console.warn(`[SpartanLounge] Failed to load shared.map: ${e.message}`);
-    }
-
-    // Parse
-    console.log('[SpartanLounge] Parsing .map file...');
-    console.time('[SpartanLounge] Parse time');
-    onProgress?.(0.75);
-    const parser = new H2MapParser(mapBuffer.buffer);
-
-    // Initialize shared.map for external texture lookups
-    if (sharedBuffer) {
-        parser.setAncillaryMaps({ shared: sharedBuffer });
-        parser.initSharedParser(sharedBuffer);
-    }
-
-    const parsedMap = await parser.parse();
-    console.timeEnd('[SpartanLounge] Parse time');
-
-    // Build scene
-    console.log('[SpartanLounge] Building Three.js scene...');
-    console.time('[SpartanLounge] Build time');
-    onProgress?.(0.85);
-    const h2r = new H2Renderer(scene);
-    h2r.setupLighting();
-    h2r.buildFromParsedData(parsedMap);
-    h2RendererInstance = h2r;
-    console.timeEnd('[SpartanLounge] Build time');
-
-    // Set mapModel to the group so existing code (camera, etc.) works
-    mapModel = h2r.mapGroup;
-
-    const gridHelper = scene.getObjectByName('gridHelper');
-    if (gridHelper) scene.remove(gridHelper);
-
-    onProgress?.(1.0);
-}
-
 async function loadGLB(path, onProgress) {
-    // Try .map file first via SpartanLoungeViewer
-    const mapFilename = path.replace(/.*\//, '').replace(/\.glb$/, '');
-    try {
-        await loadH2Map(mapFilename, onProgress);
-        console.log('[SpartanLounge] Loaded .map successfully');
-        return;
-    } catch (mapErr) {
-        console.warn(`[SpartanLounge] .map not available (${mapErr.message}), falling back to GLB`);
-    }
-
-    // Fallback to GLB loading
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
@@ -2032,7 +1858,7 @@ async function loadGLB(path, onProgress) {
                 resolve(gltf);
             },
             (progress) => {
-                if (progress.lengthComputable && onProgress) onProgress(progress.loaded / progress.total);
+                if (progress.lengthComputable) onProgress(progress.loaded / progress.total);
             },
             reject
         );
@@ -2438,26 +2264,17 @@ function handleTheaterUpdate(data) {
 }
 
 async function loadNewMap(newMapName) {
-    // Cleanup previous H2 renderer
-    if (h2RendererInstance) {
-        h2RendererInstance.dispose();
-        h2RendererInstance = null;
-    }
     // Remove existing map model
     if (mapModel) {
         scene.remove(mapModel);
         mapModel = null;
     }
-    const mapFilename = mapNameToGlbFilename(newMapName);
+    const glbFilename = mapNameToGlbFilename(newMapName);
+    const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
     try {
-        await loadH2Map(mapFilename, null);
-    } catch (mapError) {
-        console.warn('.map load failed, trying GLB:', mapError);
-        try {
-            await loadGLB(`${CONFIG.mapsPath}${mapFilename}.glb`);
-        } catch (e) {
-            console.warn('Map not found:', e);
-        }
+        await loadGLB(glbPath);
+    } catch (e) {
+        console.warn('GLB not found for new map:', e);
     }
     adjustLightingForMap(newMapName.toLowerCase());
     createSkybox(newMapName);
@@ -3186,7 +3003,7 @@ function setViewMode(mode) {
 
     // Restore FOV when leaving POV
     if (prevMode === 'pov' && mode !== 'pov') {
-        camera.fov = 78;
+        camera.fov = 70;
         camera.updateProjectionMatrix();
         const reticle = document.getElementById('pov-reticle');
         if (reticle) reticle.style.display = 'none';
@@ -3617,18 +3434,13 @@ async function selectMap(selectedMapName) {
     loadingProgress.textContent = '0%';
 
     try {
-        // Load the new map (.map first, GLB fallback)
-        const mapFilename = mapNameToGlbFilename(selectedMapName);
-        try {
-            await loadH2Map(mapFilename, (progress) => {
-                loadingProgress.textContent = `${Math.round(progress * 100)}%`;
-            });
-        } catch (mapError) {
-            console.warn('.map load failed, trying GLB:', mapError);
-            await loadGLB(`${CONFIG.mapsPath}${mapFilename}.glb`, (progress) => {
-                loadingProgress.textContent = `${Math.round(progress * 100)}%`;
-            });
-        }
+        // Load the new map
+        const glbFilename = mapNameToGlbFilename(selectedMapName);
+        const glbPath = `${CONFIG.mapsPath}${glbFilename}.glb`;
+
+        await loadGLB(glbPath, (progress) => {
+            loadingProgress.textContent = `${Math.round(progress * 100)}%`;
+        });
 
         // Adjust lighting for specific maps
         adjustLightingForMap(selectedMapName.toLowerCase());
