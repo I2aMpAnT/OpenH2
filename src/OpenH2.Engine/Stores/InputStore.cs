@@ -66,12 +66,6 @@ namespace OpenH2.Engine.Stores
                 ? new Vector2(gamepad.Thumbsticks[1].X, gamepad.Thumbsticks[1].Y)
                 : Vector2.Zero;
 
-            // Debug: log raw stick values when significant input detected
-            if (rawLeft.Length() > 0.5f || rawRight.Length() > 0.5f)
-            {
-                Console.WriteLine($"[STICK] L: ({rawLeft.X:F2}, {rawLeft.Y:F2})  R: ({rawRight.X:F2}, {rawRight.Y:F2})");
-            }
-
             LeftStick = ApplyDeadZone(rawLeft);
             RightStick = ApplyDeadZone(rawRight);
 
