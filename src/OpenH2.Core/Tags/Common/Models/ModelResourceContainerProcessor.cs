@@ -226,7 +226,7 @@ namespace OpenH2.Core.Tags.Common.Models
             {
                 var minPos = verts[0].Position;
                 var maxPos = verts[0].Position;
-                for (var i = 1; i < Math.Min(container.VertexCount, 100); i++)
+                for (var i = 1; i < Math.Min((int)container.VertexCount, 100); i++)
                 {
                     var p = verts[i].Position;
                     minPos = System.Numerics.Vector3.Min(minPos, p);
