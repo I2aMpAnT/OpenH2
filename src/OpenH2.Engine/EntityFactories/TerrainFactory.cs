@@ -59,10 +59,19 @@ namespace OpenH2.Engine.EntityFactories
                     dc = new Vector4(dc.X, dc.Y, dc.Z, 1f);
                 }
 
+                // DIAGNOSTIC: Strip all maps except DiffuseMap to find which
+                // map causes invisible surfaces. Flat white (no maps) had no
+                // holes, so one of these maps must be causing the issue.
                 mat = mat with
                 {
                     DiffuseColor = dc,
-                    AlphaMap = null
+                    AlphaMap = null,
+                    DetailMap1 = null,
+                    DetailMap2 = null,
+                    EmissiveMap = null,
+                    NormalMap = null,
+                    SpecularMap = null,
+                    ColorChangeMask = null
                 };
 
                 // Set lightmap bitmap on terrain materials
