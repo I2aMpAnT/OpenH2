@@ -223,7 +223,8 @@
         "shaders\\shader_templates\\transparent\\two_add_clouds": {
             "name": "TwoAddClouds",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly"
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
         },
         "shaders\\shader_templates\\opaque\\tex_bump_two_detail": {
             "name": "TexBumpTwoDetail",
@@ -338,26 +339,32 @@
             "emissiveType": "EmissiveOnly"
         },
         // Transparent additive illumination (teleporters, lights)
+        // diffuseColor alpha=0 keeps these invisible in opaque pass;
+        // emissive glow sets alpha via max(0, intensity) for blending
         "shaders\\shader_templates\\transparent\\one_add_illum": {
             "name": "OneAddIllum",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly"
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
         },
         "shaders\\shader_templates\\transparent\\one_add_illum_no_fog": {
             "name": "OneAddIllumNoFog",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly"
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
         },
         // Plasma/shield/camo transparent effects
         "shaders\\shader_templates\\transparent\\plasma_shield": {
             "name": "PlasmaShield",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly"
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
         },
         "shaders\\shader_templates\\transparent\\meter_active_camo": {
             "name": "MeterActiveCamo",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly"
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
         },
         "shaders\\shader_templates\\transparent\\plasma_alpha_active_camo": {
             "name": "PlasmaAlphaActiveCamo",
