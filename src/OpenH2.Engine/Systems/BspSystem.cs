@@ -85,61 +85,12 @@ namespace OpenH2.Engine.Systems
                 {
                     try
                     {
-                        if (scene.Map.TryGetTag<LightmapTag>(terrain.LightmapId.Id, out var ltmpTag))
+                        if (scene.Map.TryGetTag<LightmapTag>(terrain.LightmapId.Id, out var ltmpTag)
+                            && ltmpTag.Groups != null && ltmpTag.Groups.Length > 0)
                         {
-                            var groupCount = ltmpTag.Groups?.Length ?? 0;
-                            Logger.Log($"BSP[{i}] ltmp tag found, {groupCount} groups, tag offset={ltmpTag.Offset}, tag length={ltmpTag.Length}", Logger.Color.White);
-
-                            // Dump first 32 bytes of ltmp tag data to debug structure
-                            try
-                            {
-                                var tagEntry = ltmpTag.TagIndexEntry;
-                                var readLen = Math.Min(32, tagEntry.DataSize);
-                                var rawData = scene.Map.ReadData(ltmpTag.DataFile, tagEntry.Offset, readLen);
-                                var hexDump = BitConverter.ToString(rawData.ToArray()).Replace("-", " ");
-                                Logger.Log($"BSP[{i}] ltmp raw[0..{readLen}] @offset={tagEntry.Offset.Value}: {hexDump}", Logger.Color.Cyan);
-
-                                // Parse first 8 bytes as two uint32s (count + offset for the reflexive)
-                                var span = rawData.Span;
-                                if (span.Length >= 8)
-                                {
-                                    var count = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(span);
-                                    var ptr = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(4));
-                                    Logger.Log($"BSP[{i}] ltmp reflexive at 0: count={count}, ptr=0x{ptr:X8}", Logger.Color.Cyan);
-                                }
-                            }
-                            catch (Exception dumpEx)
-                            {
-                                Logger.Log($"BSP[{i}] ltmp raw dump failed: {dumpEx.Message}", Logger.Color.Red);
-                            }
-
-                            if (ltmpTag.Groups != null && ltmpTag.Groups.Length > 0)
-                            {
-                                var group = ltmpTag.Groups[0];
-                                var clusterInfoCount = group.ClusterRenderInfo?.Length ?? 0;
-                                Logger.Log($"BSP[{i}] group[0]: {clusterInfoCount} cluster entries, bitmap ref={group.LightmapBitmap.Id}, invalid={group.LightmapBitmap.IsInvalid}", Logger.Color.White);
-
-                                if (group.LightmapBitmap.IsInvalid == false)
-                                {
-                                    if (scene.Map.TryGetTag(group.LightmapBitmap, out lightmapBitmap))
-                                    {
-                                        Logger.Log($"Loaded lightmap bitmap for BSP[{i}]: {lightmapBitmap.Name}", Logger.Color.Cyan);
-                                    }
-                                    else
-                                    {
-                                        Logger.Log($"BSP[{i}] lightmap bitmap ref valid but tag not found: {group.LightmapBitmap.Id}", Logger.Color.Red);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Logger.Log($"BSP[{i}] ltmp tag not found for id={terrain.LightmapId.Id}", Logger.Color.Magenta);
-                        }
-
-                        if (lightmapBitmap == null)
-                        {
-                            Logger.Log($"BSP[{i}] no lightmap - using fallback lighting", Logger.Color.Magenta);
+                            var group = ltmpTag.Groups[0];
+                            if (group.LightmapBitmap.IsInvalid == false)
+                                scene.Map.TryGetTag(group.LightmapBitmap, out lightmapBitmap);
                         }
                     }
                     catch (Exception ex)
@@ -148,17 +99,23 @@ namespace OpenH2.Engine.Systems
                     }
                 }
 
-                // Log cluster geometry stats
-                var emptyClusterCount = 0;
-                var validClusterCount = 0;
+                // Count mesh stats
+                var clusterMeshCount = 0;
                 foreach (var cluster in bsp.Clusters)
+                    clusterMeshCount += cluster.Model?.Meshes?.Length ?? 0;
+
+                var emptyDefs = 0;
+                var defMeshCount = 0;
+                foreach (var def in bsp.InstancedGeometryDefinitions)
                 {
-                    if (cluster.Model == null || cluster.Model.Meshes.Length == 0)
-                        emptyClusterCount++;
-                    else
-                        validClusterCount++;
+                    var mc = def.Model?.Meshes?.Length ?? 0;
+                    if (mc == 0) emptyDefs++;
+                    defMeshCount += mc;
                 }
-                Logger.Log($"BSP[{i}]: {bsp.Name}, {bsp.Clusters.Length} clusters ({validClusterCount} with geometry, {emptyClusterCount} empty), {bsp.InstancedGeometryInstances.Length} instances, lightmap={lightmapBitmap != null}", Logger.Color.White);
+
+                Logger.Log($"BSP[{i}]: {bsp.Name}, {bsp.Clusters.Length} clusters ({clusterMeshCount} meshes), " +
+                    $"{bsp.InstancedGeometryInstances.Length} instances -> {bsp.InstancedGeometryDefinitions.Length} defs ({defMeshCount} meshes, {emptyDefs} empty), " +
+                    $"lightmap={lightmapBitmap != null}, sky={terrain.SkyIndex}", Logger.Color.White);
 
                 entities.Add(scene.EntityCreator.FromBsp(bsp, lightmapBitmap));
 
