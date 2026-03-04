@@ -73,13 +73,21 @@ namespace OpenH2.Rendering.Vulkan
 
         public long GetOrBind(BitmapTag bitm)
         {
-            if (bitm == null) 
+            if (bitm == null)
                 return 0;
 
             if (BoundTextureIndexes.TryGetValue(bitm.Id, out var index))
                 return index;
 
             var (img, sampler) = Upload(bitm);
+
+            // If texture upload failed (0-dimension, empty data, etc.), use the
+            // error texture so the descriptor set has a valid image/sampler.
+            if (img == null || sampler == null)
+            {
+                Console.WriteLine($"[TextureDiag] Upload failed for bitmap 0x{bitm.Id:X8} ({bitm.TextureInfos[0].Width}x{bitm.TextureInfos[0].Height}, {bitm.TextureInfos[0].Format}), using error texture");
+                (img, sampler) = device.UnboundTexture;
+            }
 
             index = this.textures.AddTexture(img, sampler);
             BoundTextureIndexes[bitm.Id] = index;
@@ -93,16 +101,29 @@ namespace OpenH2.Rendering.Vulkan
                 return tex;
             }
 
+            if (bitm.TextureInfos == null || bitm.TextureInfos.Length == 0)
+            {
+                Console.WriteLine($"[TextureDiag] Bitmap 0x{bitm.Id:X8} has no TextureInfos");
+                return default;
+            }
+
             // HACK: hard coding texture 0
             var width = bitm.TextureInfos[0].Width;
             var height = bitm.TextureInfos[0].Height;
 
             if (width == 0 || height == 0)
             {
+                Console.WriteLine($"[TextureDiag] Bitmap 0x{bitm.Id:X8} has zero dimensions: {width}x{height}");
                 return default;
             }
 
             var topLod = bitm.TextureInfos[0].LevelsOfDetail[0];
+
+            if (topLod.Data.Length == 0)
+            {
+                Console.WriteLine($"[TextureDiag] Bitmap 0x{bitm.Id:X8} has empty data ({width}x{height}, {bitm.TextureInfos[0].Format})");
+                return default;
+            }
 
             using var tmp = VkBuffer<byte>.CreatePacked(device, topLod.Data.Length, BufferUsageFlags.BufferUsageTransferSrcBit, MemoryPropertyFlags.MemoryPropertyHostVisibleBit | MemoryPropertyFlags.MemoryPropertyHostCoherentBit);
             tmp.LoadFull(topLod.Data.Span);

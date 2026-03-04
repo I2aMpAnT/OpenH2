@@ -41,24 +41,19 @@ namespace OpenH2.Engine.EntityFactories
             {
                 var mat = map.CreateMaterial(mesh);
 
-                // DIAGNOSTIC: Force flat white to isolate geometry vs material issues
+                // BSP terrain is always opaque world geometry. Force alpha=1 on
+                // DiffuseColor and remove alpha maps so the fragment shader's
+                // alpha discard (< 0.1) never kills terrain fragments.
                 mat = mat with
                 {
-                    DiffuseColor = new Vector4(1f, 1f, 1f, 1f),
-                    DiffuseMap = null,
-                    DetailMap1 = null,
-                    DetailMap2 = null,
-                    AlphaMap = null,
-                    EmissiveMap = null,
-                    NormalMap = null,
-                    SpecularMap = null,
-                    ColorChangeMask = null
+                    DiffuseColor = new Vector4(mat.DiffuseColor.X, mat.DiffuseColor.Y, mat.DiffuseColor.Z, 1f),
+                    AlphaMap = null
                 };
 
                 // Set lightmap bitmap on terrain materials
                 if (lightmapBitmap != null)
                 {
-                    // mat = mat with { LightmapBitmap = lightmapBitmap };
+                    mat = mat with { LightmapBitmap = lightmapBitmap };
                 }
 
                 var renderMesh = new Mesh<BitmapTag>()
