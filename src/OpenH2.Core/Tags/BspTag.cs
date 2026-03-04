@@ -165,6 +165,24 @@ namespace OpenH2.Core.Tags
                 }
 
                 var meshes = ModelResourceContainerProcessor.ProcessContainer(part, ModelShaderReferences, $"cluster_{clusterIdx}");
+
+                // BSP cluster triangles have reversed winding order compared to the
+                // CCW front-face convention. Swap indices 1<->2 per triangle to fix.
+                foreach (var mesh in meshes)
+                {
+                    if (mesh.ElementType == Foundation.MeshElementType.TriangleList
+                        || mesh.ElementType == Foundation.MeshElementType.TriangleListEnvironment)
+                    {
+                        var idx = mesh.Indices;
+                        for (int t = 0; t + 2 < idx.Length; t += 3)
+                        {
+                            var tmp = idx[t + 1];
+                            idx[t + 1] = idx[t + 2];
+                            idx[t + 2] = tmp;
+                        }
+                    }
+                }
+
                 part.Model = new MeshCollection(meshes);
                 clusterIdx++;
             }

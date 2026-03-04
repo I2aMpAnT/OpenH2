@@ -277,6 +277,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             var (topology, restart) = primitiveType switch
             {
                 MeshElementType.TriangleList => (PrimitiveTopology.TriangleList, false),
+                MeshElementType.TriangleListEnvironment => (PrimitiveTopology.TriangleList, false),
                 MeshElementType.TriangleStrip => (PrimitiveTopology.TriangleStrip, true),
                 MeshElementType.TriangleStripDecal => (PrimitiveTopology.TriangleStrip, true),
                 MeshElementType.Point => (PrimitiveTopology.PointList, false),
