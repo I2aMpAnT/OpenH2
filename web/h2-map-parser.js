@@ -162,16 +162,27 @@ export class H2MapParser {
     }
 
     // Calculate secondary magic from first tag entry
+    // C# reference: SecondaryMagic = firstObjOffset - (PrimaryMagic + RawSecondaryOffset)
+    // JS convention is inverted: physical = virtual + magic, so magic = secondaryPhysical - firstVirtual
     calculateSecondaryMagic(header, indexHeader, tagIndex) {
         if (tagIndex.length === 0) {
             console.error('[SpartanLoungeMap] No tags found - cannot calculate secondary magic');
             return 0;
         }
-        // Secondary magic: first tag's physical offset in file minus its raw offset
-        // The first tag data starts right after the tag index
-        const firstTagPhysical = indexHeader.tagIndexOffset + indexHeader.tagIndexCount * 16;
-        const magic = firstTagPhysical - tagIndex[0].offsetRaw;
-        console.log(`[SpartanLoungeMap] Secondary magic: 0x${(magic >>> 0).toString(16)} (firstTagPhys=0x${firstTagPhysical.toString(16)}, firstTagRaw=0x${(tagIndex[0].offsetRaw >>> 0).toString(16)})`);
+
+        // The physical start of the tag data section comes from the header's secondary offset
+        // converted via primary magic (matching C# PrimaryOffset behavior)
+        const secondaryPhysical = indexHeader.primaryMagic + header.rawSecondaryOffset;
+        const magic = secondaryPhysical - tagIndex[0].offsetRaw;
+
+        // Also compute the old (potentially wrong) value for comparison
+        const tagIndexEnd = indexHeader.tagIndexOffset + indexHeader.tagIndexCount * 16;
+        const oldMagic = tagIndexEnd - tagIndex[0].offsetRaw;
+
+        console.log(`[SpartanLoungeMap] Secondary magic: 0x${(magic >>> 0).toString(16)} (secondaryPhys=0x${secondaryPhysical.toString(16)}, firstTagRaw=0x${(tagIndex[0].offsetRaw >>> 0).toString(16)})`);
+        if (magic !== oldMagic) {
+            console.warn(`[SpartanLoungeMap] Secondary magic DIFFERS from tag-index-end method: 0x${(oldMagic >>> 0).toString(16)} (tagIndexEnd=0x${tagIndexEnd.toString(16)}) — delta=${magic - oldMagic} bytes`);
+        }
 
         // Log tag type distribution
         const tagTypes = {};
@@ -196,16 +207,52 @@ export class H2MapParser {
         const abs = tagDataOffset + fieldOffset;
         const count = this.readInt32(abs);
         const rawOffset = this.readInt32(abs + 4);
-        if (count <= 0 || rawOffset === 0) return { count: 0, offset: 0 };
+        if (count <= 0 || rawOffset === 0) {
+            if (count !== 0) {
+                console.warn(`[SpartanLoungeMap] readRefArray(+${fieldOffset}): early return — count=${count}, rawOffset=0x${(rawOffset >>> 0).toString(16)}`);
+            }
+            return { count: 0, offset: 0 };
+        }
+        const physOffset = secondaryMagic + rawOffset;
+        if (physOffset < 0 || physOffset >= this.buffer.byteLength) {
+            console.error(`[SpartanLoungeMap] readRefArray(+${fieldOffset}): out of bounds! count=${count}, rawPtr=0x${(rawOffset >>> 0).toString(16)}, phys=${physOffset} (0x${(physOffset >>> 0).toString(16)}), fileSize=${this.buffer.byteLength}`);
+            return { count: 0, offset: 0 };
+        }
         return {
             count,
-            offset: secondaryMagic + rawOffset
+            offset: physOffset
         };
+    }
+
+    // Hex dump helper for debugging BSP reflexive issues
+    hexDump(offset, length = 32) {
+        const bytes = [];
+        for (let i = 0; i < length; i++) {
+            if (offset + i < this.buffer.byteLength) {
+                bytes.push(this.u8[offset + i].toString(16).padStart(2, '0'));
+            }
+        }
+        return bytes.join(' ');
     }
 
     // ===== BSP Tag Parsing =====
     parseBspTag(tagDataOffset, secondaryMagic) {
-        console.log(`[SpartanLoungeMap] BSP tag at 0x${tagDataOffset.toString(16)}`);
+        console.log(`[SpartanLoungeMap] BSP tag at 0x${tagDataOffset.toString(16)}, secondaryMagic=${secondaryMagic} (0x${(secondaryMagic >>> 0).toString(16)})`);
+
+        // Hex dump around key BSP offsets for debugging
+        console.log(`[SpartanLoungeMap]   hex[+0..+15]: ${this.hexDump(tagDataOffset, 16)}`);
+        console.log(`[SpartanLoungeMap]   hex[+8..+11] (checksum): ${this.hexDump(tagDataOffset + 8, 4)}`);
+        console.log(`[SpartanLoungeMap]   hex[+52..+75] (bounds): ${this.hexDump(tagDataOffset + 52, 24)}`);
+        console.log(`[SpartanLoungeMap]   hex[+156..+171] (clusters reflexive): ${this.hexDump(tagDataOffset + 156, 16)}`);
+        console.log(`[SpartanLoungeMap]   hex[+164..+179] (shaders reflexive): ${this.hexDump(tagDataOffset + 164, 16)}`);
+
+        // Log raw reflexive values at key offsets
+        const clustersCount = this.readInt32(tagDataOffset + 156);
+        const clustersPtr = this.readInt32(tagDataOffset + 160);
+        const shadersCount = this.readInt32(tagDataOffset + 164);
+        const shadersPtr = this.readInt32(tagDataOffset + 168);
+        console.log(`[SpartanLoungeMap]   clusters reflexive: count=${clustersCount}, ptr=0x${(clustersPtr >>> 0).toString(16)} → phys=0x${((secondaryMagic + clustersPtr) >>> 0).toString(16)}`);
+        console.log(`[SpartanLoungeMap]   shaders reflexive: count=${shadersCount}, ptr=0x${(shadersPtr >>> 0).toString(16)} → phys=0x${((secondaryMagic + shadersPtr) >>> 0).toString(16)}`);
 
         const bsp = {
             checksum: this.readInt32(tagDataOffset + 8),
@@ -255,6 +302,10 @@ export class H2MapParser {
             }
         }
         console.log(`[SpartanLoungeMap]   cluster totals: ${totalVerts} verts, ${totalTris} tris, ${totalResources} resources`);
+
+        // Hex dump for instanced geometry reflexives
+        console.log(`[SpartanLoungeMap]   hex[+312..+327] (igDefs reflexive): ${this.hexDump(tagDataOffset + 312, 16)}`);
+        console.log(`[SpartanLoungeMap]   hex[+320..+335] (igInsts reflexive): ${this.hexDump(tagDataOffset + 320, 16)}`);
 
         // Parse instanced geometry definitions (offset 312)
         const igDefRef = this.readRefArray(tagDataOffset, 312, secondaryMagic);
