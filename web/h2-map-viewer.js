@@ -45,6 +45,41 @@ export function mapNameToFilename(mapName) {
  * @param {function} onProgress - Progress callback (0-100)
  * @returns {Promise<H2Renderer>} The renderer instance
  */
+// ===== IndexedDB map cache =====
+const MAP_CACHE_DB = 'SpartanLoungeMapCache';
+const MAP_CACHE_STORE = 'maps';
+
+function openMapCacheDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(MAP_CACHE_DB, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(MAP_CACHE_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function getCachedMap(filename) {
+    try {
+        const db = await openMapCacheDB();
+        return new Promise((resolve) => {
+            const tx = db.transaction(MAP_CACHE_STORE, 'readonly');
+            const req = tx.objectStore(MAP_CACHE_STORE).get(filename);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch { return null; }
+}
+
+async function cacheMap(filename, arrayBuffer) {
+    try {
+        const db = await openMapCacheDB();
+        const tx = db.transaction(MAP_CACHE_STORE, 'readwrite');
+        tx.objectStore(MAP_CACHE_STORE).put(arrayBuffer, filename);
+    } catch (e) {
+        console.warn('[SpartanLounge] Failed to cache map in IndexedDB:', e.message);
+    }
+}
+
 export async function loadH2Map(scene, mapName, onProgress) {
     const filename = mapNameToFilename(mapName);
     const url = `/maps3D/Cartographer/${filename}.map`;
@@ -52,40 +87,53 @@ export async function loadH2Map(scene, mapName, onProgress) {
     console.log(`[SpartanLounge] Loading map: ${url}`);
     onProgress?.(5);
 
-    // Fetch the .map file as ArrayBuffer
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to load map: ${response.status} ${response.statusText}`);
-    }
+    let mapBuffer;
 
-    const contentLength = response.headers.get('content-length');
-    const totalBytes = contentLength ? parseInt(contentLength) : 0;
-
-    // Stream download with progress
-    let receivedBytes = 0;
-    const reader = response.body.getReader();
-    const chunks = [];
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        receivedBytes += value.length;
-        if (totalBytes > 0) {
-            const pct = Math.floor((receivedBytes / totalBytes) * 60) + 5; // 5-65%
-            onProgress?.(pct);
+    // Check IndexedDB cache first
+    const cached = await getCachedMap(filename);
+    if (cached) {
+        console.log(`[SpartanLounge] Cache hit: ${filename} (${(cached.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+        mapBuffer = new Uint8Array(cached);
+        onProgress?.(65);
+    } else {
+        // Fetch from server
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load map: ${response.status} ${response.statusText}`);
         }
+
+        const contentLength = response.headers.get('content-length');
+        const totalBytes = contentLength ? parseInt(contentLength) : 0;
+
+        let receivedBytes = 0;
+        const reader = response.body.getReader();
+        const chunks = [];
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            receivedBytes += value.length;
+            if (totalBytes > 0) {
+                const pct = Math.floor((receivedBytes / totalBytes) * 60) + 5; // 5-65%
+                onProgress?.(pct);
+            }
+        }
+
+        mapBuffer = new Uint8Array(receivedBytes);
+        let offset = 0;
+        for (const chunk of chunks) {
+            mapBuffer.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        console.log(`[SpartanLounge] Downloaded ${(receivedBytes / 1024 / 1024).toFixed(1)} MB`);
+
+        // Cache for next time (fire and forget)
+        cacheMap(filename, mapBuffer.buffer.slice(0));
+        console.log(`[SpartanLounge] Caching ${filename} to IndexedDB`);
     }
 
-    // Combine chunks into single ArrayBuffer
-    const mapBuffer = new Uint8Array(receivedBytes);
-    let offset = 0;
-    for (const chunk of chunks) {
-        mapBuffer.set(chunk, offset);
-        offset += chunk.length;
-    }
-
-    console.log(`[SpartanLounge] Downloaded ${(receivedBytes / 1024 / 1024).toFixed(1)} MB`);
     onProgress?.(70);
 
     // Parse the map file

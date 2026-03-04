@@ -337,7 +337,7 @@ function setupScene() {
     scene.background = new THREE.Color(0x0a0a12);
     scene.fog = new THREE.Fog(0x0a0a12, 50, 200);
 
-    camera = new THREE.PerspectiveCamera(70, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(78, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, CONFIG.defaultCameraHeight, 0);
     camera.lookAt(0, 0, 0);
 
@@ -1839,6 +1839,42 @@ async function loadMapAndTelemetry() {
     }
 }
 
+// ===== IndexedDB map cache =====
+const MAP_CACHE_DB = 'SpartanLoungeMapCache';
+const MAP_CACHE_STORE = 'maps';
+const MAP_CACHE_VERSION = 1;
+
+function openMapCacheDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(MAP_CACHE_DB, MAP_CACHE_VERSION);
+        req.onupgradeneeded = () => req.result.createObjectStore(MAP_CACHE_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function getCachedMap(filename) {
+    try {
+        const db = await openMapCacheDB();
+        return new Promise((resolve) => {
+            const tx = db.transaction(MAP_CACHE_STORE, 'readonly');
+            const req = tx.objectStore(MAP_CACHE_STORE).get(filename);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch { return null; }
+}
+
+async function cacheMap(filename, arrayBuffer) {
+    try {
+        const db = await openMapCacheDB();
+        const tx = db.transaction(MAP_CACHE_STORE, 'readwrite');
+        tx.objectStore(MAP_CACHE_STORE).put(arrayBuffer, filename);
+    } catch (e) {
+        console.warn('[SpartanLounge] Failed to cache map in IndexedDB:', e.message);
+    }
+}
+
 async function loadH2Map(mapFilename, onProgress) {
     const mapUrl = `/maps3D/Cartographer/${mapFilename}.map`;
     console.log(`[SpartanLounge] Loading .map: ${mapUrl}`);
@@ -1849,33 +1885,47 @@ async function loadH2Map(mapFilename, onProgress) {
         h2RendererInstance = null;
     }
 
-    // Fetch the .map file
-    const response = await fetch(mapUrl);
-    if (!response.ok) throw new Error(`Map not found: ${response.status}`);
+    let mapBuffer;
 
-    const contentLength = response.headers.get('content-length');
-    const totalBytes = contentLength ? parseInt(contentLength) : 0;
-    let receivedBytes = 0;
-    const reader = response.body.getReader();
-    const chunks = [];
+    // Check IndexedDB cache first
+    const cached = await getCachedMap(mapFilename);
+    if (cached) {
+        console.log(`[SpartanLounge] Cache hit: ${mapFilename} (${(cached.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+        mapBuffer = new Uint8Array(cached);
+        onProgress?.(0.7);
+    } else {
+        // Download from server
+        const response = await fetch(mapUrl);
+        if (!response.ok) throw new Error(`Map not found: ${response.status}`);
 
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        receivedBytes += value.length;
-        if (totalBytes > 0 && onProgress) {
-            onProgress(receivedBytes / totalBytes * 0.7); // 0-70% for download
+        const contentLength = response.headers.get('content-length');
+        const totalBytes = contentLength ? parseInt(contentLength) : 0;
+        let receivedBytes = 0;
+        const reader = response.body.getReader();
+        const chunks = [];
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            receivedBytes += value.length;
+            if (totalBytes > 0 && onProgress) {
+                onProgress(receivedBytes / totalBytes * 0.7); // 0-70% for download
+            }
         }
-    }
 
-    const mapBuffer = new Uint8Array(receivedBytes);
-    let offset = 0;
-    for (const chunk of chunks) {
-        mapBuffer.set(chunk, offset);
-        offset += chunk.length;
+        mapBuffer = new Uint8Array(receivedBytes);
+        let offset = 0;
+        for (const chunk of chunks) {
+            mapBuffer.set(chunk, offset);
+            offset += chunk.length;
+        }
+        console.log(`[SpartanLounge] Downloaded ${(receivedBytes / 1024 / 1024).toFixed(1)} MB`);
+
+        // Store in IndexedDB for next time (fire and forget)
+        cacheMap(mapFilename, mapBuffer.buffer.slice(0));
+        console.log(`[SpartanLounge] Caching ${mapFilename} to IndexedDB`);
     }
-    console.log(`[SpartanLounge] Downloaded ${(receivedBytes / 1024 / 1024).toFixed(1)} MB`);
 
     // Parse
     console.log('[SpartanLounge] Parsing .map file...');
@@ -3090,7 +3140,7 @@ function setViewMode(mode) {
 
     // Restore FOV when leaving POV
     if (prevMode === 'pov' && mode !== 'pov') {
-        camera.fov = 70;
+        camera.fov = 78;
         camera.updateProjectionMatrix();
         const reticle = document.getElementById('pov-reticle');
         if (reticle) reticle.style.display = 'none';
