@@ -224,8 +224,9 @@ namespace OpenH2.Core.ExternalFormats
                     }
                 }
 
-                // Heuristic fallback
-                if (diffuseBitmap == null && args.BitmapArguments != null)
+                // Heuristic fallback — skip for EmissiveOnly shaders which intentionally
+                // have no diffuse (they use brightness-to-alpha from emissive instead)
+                if (diffuseBitmap == null && args.BitmapArguments != null && !isEmissiveOnly)
                 {
                     // Try WellKnownMapProperties — index 0 in the array = Diffuse
                     if (args.WellKnownMapProperties != null && args.WellKnownMapProperties.Length > 0)
