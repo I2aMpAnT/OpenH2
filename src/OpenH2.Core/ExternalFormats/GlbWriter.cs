@@ -678,6 +678,20 @@ namespace OpenH2.Core.ExternalFormats
 
             byte[] result = placeholderUpscale ? new byte[outW * outH * 4] : diffuseRgba;
 
+            // For placeholder upscale, check if the alpha channel is usable
+            // (DXT1 textures often have all-opaque alpha = useless for cutout)
+            bool alphaAllOpaque = false;
+            if (placeholderUpscale)
+            {
+                alphaAllOpaque = true;
+                for (int i = 3; i < alphaRgba.Length && alphaAllOpaque; i += 4)
+                {
+                    if (alphaRgba[i] < 250) alphaAllOpaque = false;
+                }
+                if (alphaAllOpaque)
+                    Console.WriteLine($"  [tex] Alpha channel all-opaque, deriving alpha from brightness");
+            }
+
             for (int y = 0; y < outH; y++)
             {
                 for (int x = 0; x < outW; x++)
@@ -689,15 +703,29 @@ namespace OpenH2.Core.ExternalFormats
                     int ay = alphaH == outH ? y : (y * alphaH / outH);
                     int alphaIdx = (ay * alphaW + ax) * 4;
 
+                    byte r = alphaRgba[alphaIdx];
+                    byte g = alphaRgba[alphaIdx + 1];
+                    byte b = alphaRgba[alphaIdx + 2];
+
                     if (placeholderUpscale)
                     {
                         // Use alpha bitmap's RGB as color (tiny diffuse is useless)
-                        result[outIdx]     = alphaRgba[alphaIdx];
-                        result[outIdx + 1] = alphaRgba[alphaIdx + 1];
-                        result[outIdx + 2] = alphaRgba[alphaIdx + 2];
+                        result[outIdx]     = r;
+                        result[outIdx + 1] = g;
+                        result[outIdx + 2] = b;
                     }
 
-                    byte a = alphaFromRed ? alphaRgba[alphaIdx] : alphaRgba[alphaIdx + 3];
+                    byte a;
+                    if (placeholderUpscale && alphaAllOpaque)
+                    {
+                        // Derive alpha from brightness — dark background becomes transparent
+                        float brightness = (r * 0.299f + g * 0.587f + b * 0.114f) / 255f;
+                        a = (byte)(Math.Min(brightness * 2.0f, 1.0f) * 255);
+                    }
+                    else
+                    {
+                        a = alphaFromRed ? r : alphaRgba[alphaIdx + 3];
+                    }
                     result[outIdx + 3] = a;
                 }
             }
