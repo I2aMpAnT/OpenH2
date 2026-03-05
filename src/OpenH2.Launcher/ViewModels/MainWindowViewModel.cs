@@ -307,50 +307,7 @@ namespace OpenH2.Launcher.ViewModels
                 // Skyboxes — scale to encompass map geometry
                 if (scenario.SkyboxInstances != null)
                 {
-                    // Compute map bounds from BSPs to determine skybox scale
-                    float mapExtent = 100f;
-                    var mapCenter = Vector3.Zero;
-                    foreach (var bsp in bsps)
-                    {
-                        float dx = bsp.MaxX - bsp.MinX;
-                        float dy = bsp.MaxY - bsp.MinY;
-                        float dz = bsp.MaxZ - bsp.MinZ;
-                        float extent = Math.Max(dx, Math.Max(dy, dz));
-                        if (extent > mapExtent) mapExtent = extent;
-                        mapCenter = new Vector3(
-                            (bsp.MinX + bsp.MaxX) * 0.5f,
-                            (bsp.MinY + bsp.MaxY) * 0.5f,
-                            (bsp.MinZ + bsp.MaxZ) * 0.5f);
-                    }
-
-                    // Scale skybox to 10x the map extent so it surrounds everything
-                    float skyScale = mapExtent * 10f;
-
-                    foreach (var sky in scenario.SkyboxInstances)
-                    {
-                        if (!scene.TryGetTag(sky.Skybox, out SkyboxTag skyTag)) continue;
-                        if (!scene.TryGetTag(skyTag.Model, out RenderModelTag mode)) continue;
-
-                        var skyXform = Matrix4x4.CreateScale(skyScale)
-                            * Matrix4x4.CreateTranslation(mapCenter);
-
-                        // Export only Region[5] — the Halo ring (identified as CYAN)
-                        if (mode.Regions != null && mode.Regions.Length > 5 && mode.Sections != null)
-                        {
-                            var region = mode.Regions[5];
-                            if (region.Permutations?.Length > 0)
-                            {
-                                var sectionIndex = region.Permutations[0].HighestPieceIndex;
-                                if (sectionIndex >= 0 && sectionIndex < mode.Sections.Length
-                                    && mode.Sections[sectionIndex].Model != null)
-                                {
-                                    writer.AddMeshCollection(mode.Sections[sectionIndex].Model,
-                                        skyXform, "skybox_halo_ring");
-                                }
-                            }
-                        }
-                        objectCount++;
-                    }
+                    // Skybox export disabled
                 }
             }
         }
