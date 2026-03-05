@@ -26,7 +26,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             var colorAttach = new AttachmentDescription
             {
                 Format = device.SurfaceFormat.Format,
-                Samples = SampleCountFlags.SampleCount8Bit,
+                Samples = device.MsaaSamples,
                 LoadOp = AttachmentLoadOp.Clear,
                 StoreOp = AttachmentStoreOp.Store,
                 StencilLoadOp = AttachmentLoadOp.DontCare,
@@ -39,7 +39,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             var depthAttach = new AttachmentDescription
             {
                 Format = Format.D32Sfloat,
-                Samples = SampleCountFlags.SampleCount8Bit,
+                Samples = device.MsaaSamples,
                 LoadOp = AttachmentLoadOp.Clear,
                 StoreOp = AttachmentStoreOp.DontCare,
                 StencilLoadOp = AttachmentLoadOp.DontCare,

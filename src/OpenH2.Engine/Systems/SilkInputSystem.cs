@@ -1,4 +1,4 @@
-﻿using OpenH2.Core.Architecture;
+using OpenH2.Core.Architecture;
 using OpenH2.Engine.Stores;
 using Silk.NET.Input;
 using Silk.NET.Input.Extensions;
@@ -21,6 +21,15 @@ namespace OpenH2.Engine.Systems
             var state = this.inputCtx.CaptureState();
             inputs.SetMouse(state.Mice[0]);
             inputs.SetKeys(state.Keyboards[0]);
+
+            if (this.inputCtx.Gamepads.Count > 0)
+            {
+                inputs.SetGamepad(this.inputCtx.Gamepads[0]);
+            }
+            else
+            {
+                inputs.SetGamepad(null);
+            }
         }
     }
 }

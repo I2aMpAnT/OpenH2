@@ -52,11 +52,11 @@ namespace OpenH2.Rendering.Vulkan.Internals
         public void InitializeFramebuffers(in RenderPass renderPass)
         {
             // TODO find a supported depth format instead of hardcoding D32Sfloat
-            depthImage = new VkImage(device, Extent, Format.D32Sfloat, ImageUsageFlags.ImageUsageDepthStencilAttachmentBit, ImageAspectFlags.ImageAspectDepthBit, sampleCountFlags: SampleCountFlags.SampleCount8Bit);
+            depthImage = new VkImage(device, Extent, Format.D32Sfloat, ImageUsageFlags.ImageUsageDepthStencilAttachmentBit, ImageAspectFlags.ImageAspectDepthBit, sampleCountFlags: device.MsaaSamples);
             depthImage.CreateView();
 
             colorImage = new VkImage(device, Extent, this.device.SurfaceFormat.Format, ImageUsageFlags.ImageUsageTransientAttachmentBit | ImageUsageFlags.ImageUsageColorAttachmentBit,
-                tiling: ImageTiling.Optimal, generateMips: false, sampleCountFlags: SampleCountFlags.SampleCount8Bit);
+                tiling: ImageTiling.Optimal, generateMips: false, sampleCountFlags: device.MsaaSamples);
             colorImage.CreateView();
 
             var attachments = stackalloc ImageView[3];

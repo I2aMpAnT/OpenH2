@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Spartan Lounge!</title>
+    <link rel="icon" type="image/x-icon" href="/SpartanLoungeLogo.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;600;700&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Highway+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/glb-viewer.css">
+    <style>
+        @font-face {
+            font-family: 'Highway Gothic';
+            src: local('Highway Gothic'), local('Interstate'), local('Clearview Highway');
+            font-weight: 400;
+        }
+        /* Hidden map selector dropdown */
+        .map-name-clickable {
+            cursor: pointer;
+            position: relative;
+        }
+        .map-name-clickable:hover {
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+        .viewer-title {
+            position: relative;
+        }
+        .map-selector-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 25, 35, 0.95);
+            border: 1px solid rgba(168, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .map-selector-header {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            color: rgba(168, 212, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(168, 212, 255, 0.2);
+        }
+        .map-selector-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .map-selector-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'Highway Gothic', sans-serif;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.15s;
+        }
+        .map-selector-item:hover {
+            background: rgba(168, 212, 255, 0.2);
+            color: #fff;
+        }
+        .map-selector-item.current {
+            background: rgba(168, 212, 255, 0.15);
+            color: #00aaff;
+        }
+        /* Scoreboard — matches overlay/Scoreboard.html exactly */
+        #scoreboard { width: 340px; font-family: 'Overpass', 'Highway Gothic', 'Arial', sans-serif; color: white; }
+        #scoreboard .team-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 4px 10px; font-size: 18px; font-weight: 600;
+            text-shadow: 1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black;
+        }
+        #scoreboard .team-header.red { background-color: #C54245; }
+        #scoreboard .team-header.blue { background-color: #4169A8; }
+        #scoreboard .team-gap { height: 6px; }
+        #scoreboard .players-section { display: flex; flex-direction: column; }
+        #scoreboard .player-row {
+            display: flex; align-items: center; padding: 2px 6px; font-size: 14px;
+            text-shadow: 1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black;
+        }
+        #scoreboard .player-row.red { background-color: #C54245; }
+        #scoreboard .player-row.blue { background-color: #4169A8; }
+        #scoreboard .player-emblem {
+            width: 22px; height: 22px; margin-right: 4px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #scoreboard .player-emblem img { max-width: 22px; max-height: 22px; }
+        #scoreboard .dead-x {
+            width: 22px; height: 22px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #scoreboard .player-row.quit { opacity: 0.4; }
+        #scoreboard .player-row.quit .player-name { color: #999; text-decoration: line-through; }
+        #scoreboard .player-name {
+            flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            text-align: left;
+        }
+        #scoreboard .player-weapon {
+            width: 22px; height: 16px; margin-left: 4px; margin-right: 4px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #scoreboard .player-weapon img { max-width: 22px; max-height: 16px; filter: brightness(0) invert(1); }
+        #scoreboard .player-stats { display: flex; gap: 2px; font-size: 13px; }
+        #scoreboard .stat-label { opacity: 0.7; }
+        #scoreboard .stat-value { min-width: 12px; text-align: right; }
+        /* Killfeed styling */
+        .killfeed { position: absolute; top: 10px; right: 10px; z-index: 5; max-width: 340px; }
+        .kill-entry {
+            display: flex; align-items: center; gap: 6px;
+            padding: 3px 8px; margin-bottom: 2px;
+            background: rgba(0,0,0,0.6); border-radius: 4px;
+            font-size: 13px; white-space: nowrap;
+            text-shadow: 1px 1px 0 black;
+        }
+        .kill-entry .red-text { color: #ff4444; }
+        .kill-entry .blue-text { color: #4488ff; }
+        .kill-entry .weapon { color: #aaa; font-size: 11px; }
+        .kill-weapon-icon { height: 16px; width: auto; max-width: 32px; filter: brightness(0) invert(1); }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <!-- Header -->
+        <header class="viewer-header">
+            <a href="/index.html" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+                Back to Stats
+            </a>
+            <div class="viewer-title">
+                <img src="/SpartanLoungeSquare.png" alt="SpartanLounge" class="viewer-logo">
+                <span id="mapName" class="map-name-clickable" onclick="toggleMapSelector()">Theater Mode</span>
+                <div id="mapSelector" class="map-selector-dropdown" style="display: none;">
+                    <div class="map-selector-header">Select Map (Free Look)</div>
+                    <div class="map-selector-list" id="mapSelectorList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="game-info">
+                <span id="gameType"></span>
+                <span id="gameDate"></span>
+            </div>
+        </header>
+
+        <!-- 3D Canvas Container -->
+        <div id="canvas-container">
+            <canvas id="glb-canvas"></canvas>
+
+            <!-- FPS Counter -->
+            <div id="fps-counter" style="position: absolute; top: 10px; left: 10px; color: #00aaff; font-family: 'Share Tech Mono', monospace; font-size: 14px; opacity: 0.7; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.8);">0 FPS</div>
+
+            <!-- Game Timer -->
+            <div id="game-timer" class="game-timer">00:00</div>
+
+            <!-- Loading overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading 3D Map...</div>
+                <div class="loading-progress" id="loading-progress">0%</div>
+            </div>
+
+            <!-- Error overlay -->
+            <div id="error-overlay" class="error-overlay" style="display: none;">
+                <div class="error-icon">!</div>
+                <div class="error-text" id="error-text">Failed to load map</div>
+                <button class="error-retry" onclick="retryLoad()">Retry</button>
+            </div>
+
+            <!-- Scoreboard (Tab to toggle) — matches overlay/Scoreboard.html -->
+            <div id="scoreboard" class="scoreboard">
+                <div class="team-header red">
+                    <span class="team-name" id="red-team-name">Red Team</span>
+                    <span class="team-score" id="red-team-score">0</span>
+                </div>
+                <div class="team-header blue">
+                    <span class="team-name" id="blue-team-name">Blue Team</span>
+                    <span class="team-score" id="blue-team-score">0</span>
+                </div>
+                <div class="team-gap"></div>
+                <div id="players-section" class="players-section"></div>
+            </div>
+
+            <!-- Killfeed (K to toggle) -->
+            <div id="killfeed" class="killfeed">
+                <!-- Kill entries populated by JS -->
+            </div>
+
+            <!-- POV Reticle Overlay — red circle, lowered at 60% -->
+            <div id="pov-reticle" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10;">
+                <svg style="position:absolute; left:50%; top:60%; transform:translate(-50%,-50%); width:20px; height:20px; opacity:0.85;">
+                    <circle cx="10" cy="10" r="8" fill="none" stroke="red" stroke-width="1.5"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="playback-controls">
+            <div class="timeline-container">
+                <div class="time-display">
+                    <span id="currentTime">00:00</span>
+                    <span class="time-separator">/</span>
+                    <span id="totalTime">00:00</span>
+                </div>
+                <div class="timeline-wrapper">
+                    <input type="range" id="timeline" class="timeline-slider" min="0" max="100" value="0">
+                    <div class="timeline-progress" id="timeline-progress"></div>
+                </div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="control-btn" id="skipBackBtn" title="Skip Back 10s">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+                </button>
+                <button class="control-btn play-btn" id="playPauseBtn" title="Play/Pause">
+                    <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <button class="control-btn" id="skipForwardBtn" title="Skip Forward 10s">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+                </button>
+                <div class="speed-control">
+                    <label>Speed:</label>
+                    <select id="playbackSpeed">
+                        <option value="0.25">0.25x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="2">2x</option>
+                        <option value="4">4x</option>
+                        <option value="8">8x</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="view-controls">
+                <button class="view-btn active" id="viewModeBtn" title="Cycle View Mode (Y)">
+                    <svg id="viewModeIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    <span id="viewModeText">Free</span>
+                </button>
+                <button class="view-btn" id="povBtn" title="First-Person POV (V)">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/></svg>
+                    <span>POV</span>
+                </button>
+                <select id="followPlayerSelect" class="follow-select" style="display: none;">
+                    <option value="">Select Player...</option>
+                </select>
+                <div class="trails-control">
+                    <button class="view-btn" id="trailsToggleBtn" title="Toggle Trails (L)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M2 12h4l3-9 4 18 3-9h4"/></svg>
+                        <span>Trails</span>
+                    </button>
+                    <select id="trailPlayerSelect" class="trail-select" multiple>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <button class="view-btn" id="deathMarkersBtn" title="Toggle Death Markers (D)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ff0000" stroke-width="3" stroke-linecap="round" width="18" height="18">
+                        <path d="M6 6l12 12M18 6l-12 12"/>
+                    </svg>
+                    <span>Deaths</span>
+                </button>
+                <button class="view-btn" id="heatmapBtn" title="Toggle Death Heatmap (H)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" width="18" height="18">
+                        <circle cx="12" cy="12" r="10" fill="rgba(255,0,0,0.3)"/>
+                        <circle cx="12" cy="12" r="6" fill="rgba(255,100,0,0.5)"/>
+                        <circle cx="12" cy="12" r="3" fill="rgba(255,0,0,0.7)"/>
+                    </svg>
+                    <span>Heatmap</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls Hint (Collapsible) -->
+        <div id="controls-hint" class="controls-hint collapsed">
+            <div class="controls-header">
+                <button class="input-toggle" id="inputToggleBtn" title="Click to switch input type">
+                    <span id="inputTypeText">Keyboard</span>
+                </button>
+                <button class="controls-collapse-btn" id="controlsCollapseBtn" title="Toggle Controls">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                </button>
+            </div>
+            <div class="controls-content" id="controlsContent">
+                <!-- Keyboard controls (default) -->
+                <div id="keyboardControls">
+                    <div class="controls-section-title">Movement</div>
+                    <div><kbd>WASD</kbd> Move</div>
+                    <div><kbd>Q</kbd><kbd>E</kbd> Up/Down</div>
+                    <div><kbd>Shift</kbd> Sprint</div>
+                    <div><kbd>Z</kbd> Speed Boost</div>
+                    <div><kbd>Mouse</kbd> Look Around</div>
+                    <div class="controls-section-title">Playback</div>
+                    <div><kbd>Space</kbd> Play/Pause</div>
+                    <div><kbd>←</kbd><kbd>→</kbd> Skip 10s</div>
+                    <div class="controls-section-title">Camera</div>
+                    <div><kbd>Y</kbd> Cycle View</div>
+                    <div><kbd>V</kbd> POV Mode</div>
+                    <div><kbd>T</kbd> Top-Down</div>
+                    <div><kbd>F</kbd> Fullscreen</div>
+                    <div><kbd>[</kbd><kbd>]</kbd> Cycle Player</div>
+                    <div class="controls-section-title">Display</div>
+                    <div><kbd>Tab</kbd> Scoreboard</div>
+                    <div><kbd>K</kbd> Killfeed</div>
+                    <div><kbd>P</kbd> Player Names</div>
+                    <div><kbd>L</kbd> Trails</div>
+                    <div><kbd>X</kbd> Death Markers</div>
+                    <div><kbd>H</kbd> Heatmap</div>
+                </div>
+                <!-- Controller controls -->
+                <div id="controllerControls" style="display: none;">
+                    <div class="controls-section-title">Movement</div>
+                    <div><span class="gpad">Left Stick</span> Move</div>
+                    <div><span class="gpad">Right Stick</span> Look</div>
+                    <div><span class="gpad">LT</span> Sprint</div>
+                    <div><span class="gpad">RT</span> Speed Boost</div>
+                    <div class="controls-section-title">Playback</div>
+                    <div><span class="gpad">A</span> Play/Pause</div>
+                    <div><span class="gpad">DPad L/R</span> Skip 10s</div>
+                    <div class="controls-section-title">Camera</div>
+                    <div><span class="gpad">Y</span> Cycle View</div>
+                    <div><span class="gpad">RS Click</span> Top-Down</div>
+                    <div><span class="gpad">Start</span> Fullscreen</div>
+                    <div><span class="gpad">LB</span><span class="gpad">RB</span> Cycle Player</div>
+                    <div class="controls-section-title">Display</div>
+                    <div><span class="gpad">Back</span> Scoreboard</div>
+                    <div><span class="gpad">DPad Down</span> Killfeed</div>
+                    <div><span class="gpad">X</span> Player Names</div>
+                    <div><span class="gpad">B</span> Trails</div>
+                    <div><span class="gpad">DPad Up</span> Death Markers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js and SpartanLoungeViewer -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="/glb-viewer.js"></script>
+    <!-- H2 map parser and renderer loaded as ES modules by glb-viewer.js -->
+</body>
+</html>

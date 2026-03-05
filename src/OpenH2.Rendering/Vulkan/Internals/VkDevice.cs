@@ -51,6 +51,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
 
         public PhysicalDeviceProperties PhysicalProperties { get; private set; }
         public PhysicalDeviceMemoryProperties MemoryProperties { get; private set; }
+        public SampleCountFlags MsaaSamples { get; private set; }
 
         public (VkImage, VkSampler) UnboundTexture { get; set; }
 
@@ -69,6 +70,7 @@ namespace OpenH2.Rendering.Vulkan.Internals
             }
 
             PhysicalProperties = props;
+            MsaaSamples = GetMaxUsableSampleCount(props);
 
             vk.GetPhysicalDeviceMemoryProperties(physicalDevice, out var memProps);
             MemoryProperties = memProps;
@@ -291,6 +293,34 @@ namespace OpenH2.Rendering.Vulkan.Internals
             return (graphics, present);
         }
 
+        private static int ScoreDevice(PhysicalDeviceProperties props)
+        {
+            var score = 0;
+
+            // Strongly prefer discrete GPUs
+            if (props.DeviceType == PhysicalDeviceType.DiscreteGpu)
+                score += 10000;
+            else if (props.DeviceType == PhysicalDeviceType.IntegratedGpu)
+                score += 1000;
+
+            // Prefer NVIDIA (0x10DE) and AMD (0x1002) over Intel (0x8086)
+            if (props.VendorID == 0x10DE || props.VendorID == 0x1002)
+                score += 500;
+
+            return score;
+        }
+
+        private static SampleCountFlags GetMaxUsableSampleCount(PhysicalDeviceProperties props)
+        {
+            var counts = props.Limits.FramebufferColorSampleCounts & props.Limits.FramebufferDepthSampleCounts;
+
+            if ((counts & SampleCountFlags.SampleCount8Bit) != 0) return SampleCountFlags.SampleCount8Bit;
+            if ((counts & SampleCountFlags.SampleCount4Bit) != 0) return SampleCountFlags.SampleCount4Bit;
+            if ((counts & SampleCountFlags.SampleCount2Bit) != 0) return SampleCountFlags.SampleCount2Bit;
+
+            return SampleCountFlags.SampleCount1Bit;
+        }
+
         private bool ChooseDevice(
             Instance instance,
             out PhysicalDevice physicalDevice,
@@ -310,32 +340,56 @@ namespace OpenH2.Rendering.Vulkan.Internals
             var devices = new PhysicalDevice[deviceCount];
             vk.EnumeratePhysicalDevices(instance, ref deviceCount, ref devices[0]);
 
+            PhysicalDevice bestDevice = default;
+            PhysicalDeviceProperties bestProps = default;
+            (uint? graphics, uint? present) bestQueues = default;
+            SurfaceCapabilitiesKHR bestCaps = default;
+            SurfaceFormatKHR bestFormat = default;
+            PresentModeKHR bestPresentMode = PresentModeKHR.PresentModeFifoKhr;
+            int bestScore = -1;
+
             Console.WriteLine("Devices");
             foreach (var device in devices)
             {
                 vk.GetPhysicalDeviceProperties(device, out var props);
                 vk.GetPhysicalDeviceFeatures(device, out var feats);
 
-                Console.WriteLine("\t" + Encoding.UTF8.GetNullTerminatedString(props.DeviceName, 128));
+                var name = Encoding.UTF8.GetNullTerminatedString(props.DeviceName, 128);
+                var score = ScoreDevice(props);
+                Console.WriteLine($"\t{name} (score: {score})");
 
                 if (!feats.GeometryShader)
                     continue;
 
-                queueFamilies = FindQueueFamilies(device);
+                var queues = FindQueueFamilies(device);
 
-                // TODO: query all required extensions (swapchain, etc)
-
-                if (!QuerySwapchainSupport(device, out capabilities, out var formats, out var presentModes))
+                if (!QuerySwapchainSupport(device, out var caps, out var formats, out var presentModes))
                     continue;
 
-                format = ChooseFormat(formats);
-                presentMode = ChoosePresentMode(presentModes);
-
-                if (!queueFamilies.graphics.HasValue)
+                if (!queues.graphics.HasValue)
                     continue;
 
-                physicalDevice = device;
-                physicalDeviceProps = props;
+                if (score > bestScore)
+                {
+                    bestDevice = device;
+                    bestProps = props;
+                    bestQueues = queues;
+                    bestCaps = caps;
+                    bestFormat = ChooseFormat(formats);
+                    bestPresentMode = ChoosePresentMode(presentModes);
+                    bestScore = score;
+                }
+            }
+
+            if (bestScore >= 0)
+            {
+                physicalDevice = bestDevice;
+                physicalDeviceProps = bestProps;
+                queueFamilies = bestQueues;
+                capabilities = bestCaps;
+                format = bestFormat;
+                presentMode = bestPresentMode;
+                Console.WriteLine($"Selected: {Encoding.UTF8.GetNullTerminatedString(bestProps.DeviceName, 128)}");
                 return true;
             }
 

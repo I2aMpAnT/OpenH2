@@ -43,7 +43,7 @@
         "shaders\\shader_templates\\opaque\\tex_bump_plasma_one_channel_illum": {
             "name": "TexBumpPlasmaOneChannelIllum",
             "diffuseMapIndex": 1,
-            "emissiveMap": 3,
+            "emissiveMapIndex": 3,
             "detail1MapIndex": 2,
             "detail1ScaleIndex": 3,
             "emissiveType": "EmissiveOnly"
@@ -223,7 +223,8 @@
         "shaders\\shader_templates\\transparent\\two_add_clouds": {
             "name": "TwoAddClouds",
             "emissiveMapIndex": 0,
-            "emissiveType": "EmissiveOnly"
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
         },
         "shaders\\shader_templates\\opaque\\tex_bump_two_detail": {
             "name": "TexBumpTwoDetail",
@@ -255,6 +256,120 @@
             "specularMapIndex": 4,
             "emissiveMapIndex": 5,
             "emissiveType": "DiffuseBlended"
+        },
+
+        // Warlock and multiplayer shader templates
+        "shaders\\shader_templates\\opaque\\tex_bump_detail_blend_detail": {
+            "name": "TexBumpDetailBlendDetail",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "diffuseMapIndex": 1,
+            "detail1MapIndex": 2,
+            "detail1ScaleIndex": 2,
+            "detail2MapIndex": 3,
+            "detail2ScaleIndex": 3
+        },
+        "shaders\\shader_templates\\opaque\\tex_bump_detail_overlay": {
+            "name": "TexBumpDetailOverlay",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "diffuseMapIndex": 1,
+            "detail1MapIndex": 2,
+            "detail1ScaleIndex": 2
+        },
+        "shaders\\shader_templates\\opaque\\tex_bump_env": {
+            "name": "TexBumpEnv",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "specularMapIndex": 1,
+            "diffuseMapIndex": 2
+        },
+        "shaders\\shader_templates\\opaque\\tex_bump_active_camo": {
+            "name": "TexBumpActiveCamo",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "diffuseMapIndex": 2
+        },
+        "shaders\\shader_templates\\opaque\\tex_bump_alpha_test_single_pass": {
+            "name": "TexBumpAlphaTestSinglePass",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "alphaMapIndex": 2,
+            "diffuseMapIndex": 3,
+            "detail1MapIndex": 4,
+            "detail1ScaleIndex": 2
+        },
+        "shaders\\shader_templates\\opaque\\tex_bump_alpha_test_clamped": {
+            "name": "TexBumpAlphaTestClamped",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "alphaMapIndex": 2,
+            "diffuseMapIndex": 3,
+            "detail1MapIndex": 4,
+            "detail1ScaleIndex": 2
+        },
+        "shaders\\shader_templates\\opaque\\tex_bump_dprs_env": {
+            "name": "TexBumpDprsEnv",
+            "normalMapIndex": 0,
+            "normalScaleIndex": 0,
+            "specularMapIndex": 1,
+            "diffuseMapIndex": 2
+        },
+        "shaders\\shader_templates\\opaque\\tex_alpha_test": {
+            "name": "TexAlphaTest",
+            "diffuseMapIndex": 0,
+            "alphaMapIndex": 0
+        },
+        "shaders\\shader_templates\\opaque\\tex_detail_blend": {
+            "name": "TexDetailBlend",
+            "diffuseMapIndex": 0,
+            "detail1MapIndex": 1,
+            "detail1ScaleIndex": 1
+        },
+        "shaders\\shader_templates\\opaque\\illum_detail": {
+            "name": "IllumDetail",
+            "emissiveMapIndex": 0,
+            "emissiveType": "EmissiveOnly",
+            "detail1MapIndex": 1,
+            "detail1ScaleIndex": 1
+        },
+        "shaders\\shader_templates\\opaque\\illum_clamped": {
+            "name": "IllumClamped",
+            "emissiveMapIndex": 0,
+            "emissiveType": "EmissiveOnly"
+        },
+        // Transparent additive illumination (teleporters, lights)
+        // diffuseColor alpha=0 keeps these invisible in opaque pass;
+        // emissive glow sets alpha via max(0, intensity) for blending
+        "shaders\\shader_templates\\transparent\\one_add_illum": {
+            "name": "OneAddIllum",
+            "emissiveMapIndex": 0,
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
+        },
+        "shaders\\shader_templates\\transparent\\one_add_illum_no_fog": {
+            "name": "OneAddIllumNoFog",
+            "emissiveMapIndex": 0,
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
+        },
+        // Plasma/shield/camo transparent effects
+        "shaders\\shader_templates\\transparent\\plasma_shield": {
+            "name": "PlasmaShield",
+            "emissiveMapIndex": 0,
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
+        },
+        "shaders\\shader_templates\\transparent\\meter_active_camo": {
+            "name": "MeterActiveCamo",
+            "emissiveMapIndex": 0,
+            "emissiveType": "EmissiveOnly",
+            "diffuseColor": [ 0, 0, 0, 0 ]
+        },
+        "shaders\\shader_templates\\transparent\\plasma_alpha_active_camo": {
+            "name": "PlasmaAlphaActiveCamo",
+            "diffuseMapIndex": 0,
+            "alphaMapIndex": 2
         }
     }
 }
