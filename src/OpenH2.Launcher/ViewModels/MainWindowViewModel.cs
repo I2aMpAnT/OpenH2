@@ -313,6 +313,87 @@ namespace OpenH2.Launcher.ViewModels
                     }
                 }
 
+                // Weapon placements
+                if (scenario.WeaponPlacements != null && scenario.WeaponDefinitions != null)
+                {
+                    foreach (var inst in scenario.WeaponPlacements)
+                    {
+                        if (inst.Index >= scenario.WeaponDefinitions.Length)
+                            continue;
+                        var def = scenario.WeaponDefinitions[inst.Index];
+                        if (!scene.TryGetTag(def.Weapon, out WeaponTag weap)) continue;
+                        if (!scene.TryGetTag(weap.Hlmt, out HaloModelTag hlmt)) continue;
+                        if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
+
+                        var xform = Matrix4x4.CreateFromQuaternion(
+                                QuaternionExtensions.FromH2vOrientation(inst.Orientation))
+                            * Matrix4x4.CreateTranslation(inst.Position);
+
+                        AddRenderModelMeshes(writer, mode, xform, $"weapon_{objectCount}");
+                        objectCount++;
+                    }
+                }
+
+                // Equipment placements
+                if (scenario.EquipmentPlacements != null && scenario.EquipmentDefinitions != null)
+                {
+                    foreach (var inst in scenario.EquipmentPlacements)
+                    {
+                        if (inst.Index >= scenario.EquipmentDefinitions.Length)
+                            continue;
+                        var def = scenario.EquipmentDefinitions[inst.Index];
+                        if (!scene.TryGetTag(def.Equipment, out EquipmentTag eqip)) continue;
+                        if (!scene.TryGetTag(eqip.Hlmt, out HaloModelTag hlmt)) continue;
+                        if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
+
+                        var xform = Matrix4x4.CreateFromQuaternion(
+                                QuaternionExtensions.FromH2vOrientation(inst.Orientation))
+                            * Matrix4x4.CreateTranslation(inst.Position);
+
+                        AddRenderModelMeshes(writer, mode, xform, $"equipment_{objectCount}");
+                        objectCount++;
+                    }
+                }
+
+                // Item collection placements (powerups, weapon spawns on MP maps)
+                if (scenario.ItemCollectionPlacements != null)
+                {
+                    foreach (var inst in scenario.ItemCollectionPlacements)
+                    {
+                        if (inst.ItemCollectionReference.IsInvalid)
+                            continue;
+                        if (!scene.TryGetTag<BaseTag>(inst.ItemCollectionReference, out var itemTag))
+                            continue;
+
+                        if (itemTag is ItemCollectionTag itmc && itmc.Items != null)
+                        {
+                            foreach (var item in itmc.Items)
+                            {
+                                if (!scene.TryGetTag<BaseTag>(item.ItemTag, out var resolvedTag))
+                                    continue;
+
+                                TagRef<HaloModelTag> itemHlmt = default;
+
+                                if (resolvedTag is WeaponTag weap)
+                                    itemHlmt = weap.Hlmt;
+                                else if (resolvedTag is EquipmentTag eqip)
+                                    itemHlmt = eqip.Hlmt;
+
+                                if (itemHlmt.IsInvalid) continue;
+                                if (!scene.TryGetTag(itemHlmt, out HaloModelTag hlmt)) continue;
+                                if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
+
+                                var xform = Matrix4x4.CreateFromQuaternion(
+                                        QuaternionExtensions.FromH2vOrientation(inst.Orientation))
+                                    * Matrix4x4.CreateTranslation(inst.Position);
+
+                                AddRenderModelMeshes(writer, mode, xform, $"itmc_{objectCount}");
+                                objectCount++;
+                            }
+                        }
+                    }
+                }
+
                 // Skyboxes — scale to encompass map geometry
                 if (scenario.SkyboxInstances != null)
                 {

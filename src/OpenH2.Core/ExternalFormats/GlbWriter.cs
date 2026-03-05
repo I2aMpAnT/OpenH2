@@ -117,8 +117,9 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // Transparent/additive effect shaders without emissive = white garbage
-                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0)
+                    // Transparent/additive effect shaders without emissive or alpha = white garbage
+                    // But alpha-masked effect shaders (teleporter plasma) have real cutout geometry
+                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0 && !mat.UseAlphaMask)
                         continue;
                 }
 
