@@ -117,15 +117,12 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // Transparent/additive effect shaders: skip unless they have emissive
-                    // (handled via EmissiveOnly path) or a diffuse texture with alpha
-                    // (e.g. teleporter_plasma has a valid alpha-blended diffuse)
-                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0
-                        && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
+                    // EmissiveOnly shaders are additive-blend effects (light volumes,
+                    // teleporter glow, etc.) that can't be represented in glTF — skip all
+                    if (mat.SkipRendering && mat.IsEmissiveOnly)
                         continue;
-                    // EmissiveOnly with no brightness-alpha texture (tiny placeholder bitmaps)
-                    // can't render properly in glTF — skip these light volumes
-                    if (mat.SkipRendering && mat.IsEmissiveOnly && mat.TextureIndex < 0)
+                    // Other transparent/additive shaders: skip unless they have alpha-blended diffuse
+                    if (mat.SkipRendering && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
                         continue;
                 }
 
