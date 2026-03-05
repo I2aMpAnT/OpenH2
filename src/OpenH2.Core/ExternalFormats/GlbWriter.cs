@@ -67,19 +67,36 @@ namespace OpenH2.Core.ExternalFormats
 
             if (!scene.TryGetTag(mesh.Shader, out ShaderTag shader))
             {
+                Console.WriteLine($"  [tex] Shader {shaderId:X8} not found in scene");
                 materialByShader[shaderId] = GetFallbackMaterial();
                 return materialByShader[shaderId];
             }
 
-            // Try to find diffuse bitmap via Arguments path first, then legacy BitmapInfos
+            // Try to find diffuse bitmap using WellKnownMapProperties first (most accurate),
+            // then Arguments[0] fallback, then legacy BitmapInfos
             BitmapTag diffuseBitmap = null;
 
             if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
                 var args = shader.Arguments[0];
-                if (args.BitmapArguments != null && args.BitmapArguments.Length > 0)
+
+                // Try WellKnownMapProperties — index 0 = Diffuse
+                if (diffuseBitmap == null && args.WellKnownMapProperties != null && args.BitmapArguments != null)
                 {
-                    // First bitmap argument is typically diffuse
+                    foreach (var prop in args.WellKnownMapProperties)
+                    {
+                        // Property 0 = Diffuse (see ShaderTag comments)
+                        if (prop.B == 0 && prop.MapIndex < args.BitmapArguments.Length)
+                        {
+                            scene.TryGetTag(args.BitmapArguments[prop.MapIndex].Bitmap, out diffuseBitmap);
+                            break;
+                        }
+                    }
+                }
+
+                // Fallback: first bitmap argument is typically diffuse
+                if (diffuseBitmap == null && args.BitmapArguments != null && args.BitmapArguments.Length > 0)
+                {
                     scene.TryGetTag(args.BitmapArguments[0].Bitmap, out diffuseBitmap);
                 }
             }
@@ -91,7 +108,14 @@ namespace OpenH2.Core.ExternalFormats
 
             int texIdx = -1;
             if (diffuseBitmap != null)
+            {
                 texIdx = GetOrCreateTexture(diffuseBitmap);
+            }
+            else
+            {
+                Console.WriteLine($"  [tex] No diffuse bitmap for shader '{shader.Name}' ({shaderId:X8})" +
+                    $" args={shader.Arguments?.Length ?? 0} bitmapInfos={shader.BitmapInfos?.Length ?? 0}");
+            }
 
             idx = materials.Count;
             materials.Add(new GlbMaterial
@@ -118,6 +142,7 @@ namespace OpenH2.Core.ExternalFormats
 
             if (bitmap.TextureInfos == null || bitmap.TextureInfos.Length == 0)
             {
+                Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): no TextureInfos");
                 textureByBitmap[bitmap.Id] = -1;
                 return -1;
             }
@@ -125,6 +150,7 @@ namespace OpenH2.Core.ExternalFormats
             var info = bitmap.TextureInfos[0];
             if (info.LevelsOfDetail == null || info.LevelsOfDetail.Length == 0 || info.LevelsOfDetail[0].Data.Length == 0)
             {
+                Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): no LOD data");
                 textureByBitmap[bitmap.Id] = -1;
                 return -1;
             }
@@ -133,6 +159,7 @@ namespace OpenH2.Core.ExternalFormats
             var height = info.Height;
             if (width <= 0 || height <= 0)
             {
+                Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): invalid size {width}x{height}");
                 textureByBitmap[bitmap.Id] = -1;
                 return -1;
             }
@@ -144,14 +171,16 @@ namespace OpenH2.Core.ExternalFormats
             {
                 rgba = DecodeToRgba(rawData, width, height, info.Format);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): decode threw {ex.Message}");
                 textureByBitmap[bitmap.Id] = -1;
                 return -1;
             }
 
             if (rgba == null)
             {
+                Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): unsupported format {info.Format}");
                 textureByBitmap[bitmap.Id] = -1;
                 return -1;
             }
@@ -291,6 +320,9 @@ namespace OpenH2.Core.ExternalFormats
             while (binStream.Position % 4 != 0) binWriter.Write((byte)0);
 
             var binData = binStream.ToArray();
+
+            Console.WriteLine($"  [glb] {textures.Count} textures baked, {materials.Count} materials, {meshes.Count} meshes");
+            Console.WriteLine($"  [glb] Binary buffer: {binData.Length / 1024}KB (textures: {textures.Sum(t => t.PngData.Length) / 1024}KB)");
 
             // Build glTF JSON
             var gltfImages = textures.Select((tex, i) => new
@@ -740,7 +772,7 @@ namespace OpenH2.Core.ExternalFormats
             // zlib header
             compressedStream.WriteByte(0x78);
             compressedStream.WriteByte(0x01);
-            using (var deflate = new DeflateStream(compressedStream, CompressionLevel.Fastest, true))
+            using (var deflate = new DeflateStream(compressedStream, CompressionLevel.Optimal, true))
             {
                 deflate.Write(rawBytes, 0, rawBytes.Length);
             }
