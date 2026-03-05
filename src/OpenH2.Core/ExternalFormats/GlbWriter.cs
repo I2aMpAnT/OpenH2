@@ -382,13 +382,7 @@ namespace OpenH2.Core.ExternalFormats
             var shaderName = shader.Name ?? "";
             bool renderAsSolid = skipRendering
                 && (shaderName.Contains("teleporter") || shaderName.Contains("grav_lift"));
-            // DEBUG: render water_streams as bright red to identify drapes
-            bool debugRedWater = skipRendering && shaderName.Contains("water_stream");
-            bool debugRedInvisible = skipRendering && shaderName.Contains("invisible");
-            bool renderAsDebug = debugRedWater || debugRedInvisible;
-            float[] emissiveFactor = renderAsSolid ? new[] { 0.0f, 0.8f, 0.3f }
-                : renderAsDebug ? new[] { 1.0f, 0.0f, 0.0f }
-                : null;
+            float[] emissiveFactor = renderAsSolid ? new[] { 0.0f, 0.8f, 0.3f } : null;
 
             idx = materials.Count;
             materials.Add(new GlbMaterial
@@ -400,7 +394,7 @@ namespace OpenH2.Core.ExternalFormats
                 SkipRendering = skipRendering,
                 IsEmissiveOnly = isEmissiveOnly,
                 EmissiveFactor = emissiveFactor,
-                RenderAsSolidEmissive = renderAsSolid || renderAsDebug
+                RenderAsSolidEmissive = renderAsSolid
             });
             materialByShader[shaderId] = idx;
             return idx;
@@ -551,7 +545,10 @@ namespace OpenH2.Core.ExternalFormats
             // Composite alpha map into diffuse alpha channel
             if (alphaBitmap != null && alphaBitmap.Id != bitmap.Id)
             {
-                rgba = CompositeAlphaMap(rgba, width, height, alphaBitmap, alphaFromRed);
+                var alphaResult = CompositeAlphaMap(rgba, width, height, alphaBitmap, alphaFromRed);
+                rgba = alphaResult.rgba;
+                width = alphaResult.w;
+                height = alphaResult.h;
             }
 
             var pngData = EncodePng(rgba, width, height);
@@ -638,21 +635,21 @@ namespace OpenH2.Core.ExternalFormats
             return result;
         }
 
-        private byte[] CompositeAlphaMap(byte[] diffuseRgba, int diffW, int diffH,
+        private (byte[] rgba, int w, int h) CompositeAlphaMap(byte[] diffuseRgba, int diffW, int diffH,
             BitmapTag alphaBitmap, bool alphaFromRed)
         {
             if (alphaBitmap.TextureInfos == null || alphaBitmap.TextureInfos.Length == 0)
-                return diffuseRgba;
+                return (diffuseRgba, diffW, diffH);
 
             var alphaInfo = alphaBitmap.TextureInfos[0];
             if (alphaInfo.LevelsOfDetail == null || alphaInfo.LevelsOfDetail.Length == 0
                 || alphaInfo.LevelsOfDetail[0].Data.Length == 0)
-                return diffuseRgba;
+                return (diffuseRgba, diffW, diffH);
 
             var alphaW = (int)alphaInfo.Width;
             var alphaH = (int)alphaInfo.Height;
             if (alphaW <= 0 || alphaH <= 0)
-                return diffuseRgba;
+                return (diffuseRgba, diffW, diffH);
 
             byte[] alphaRgba;
             try
@@ -661,32 +658,50 @@ namespace OpenH2.Core.ExternalFormats
             }
             catch
             {
-                return diffuseRgba;
+                return (diffuseRgba, diffW, diffH);
             }
             if (alphaRgba == null)
-                return diffuseRgba;
+                return (diffuseRgba, diffW, diffH);
+
+            // When the diffuse is a tiny placeholder (<=8x8) and the alpha bitmap
+            // is much larger, the diffuse has no useful color/shape data.
+            // Upscale to alpha resolution and use alpha bitmap's RGB as color.
+            bool placeholderUpscale = (diffW <= 8 && diffH <= 8)
+                && (alphaW * alphaH > diffW * diffH * 16);
+
+            int outW = placeholderUpscale ? alphaW : diffW;
+            int outH = placeholderUpscale ? alphaH : diffH;
 
             Console.WriteLine($"  [tex] Compositing alpha '{alphaBitmap.Name}' ({alphaW}x{alphaH}) " +
-                $"into diffuse ({diffW}x{diffH}), alphaFromRed={alphaFromRed}");
+                $"into diffuse ({diffW}x{diffH}), alphaFromRed={alphaFromRed}" +
+                (placeholderUpscale ? $" -> UPSCALE to {outW}x{outH}" : ""));
 
-            for (int y = 0; y < diffH; y++)
+            byte[] result = placeholderUpscale ? new byte[outW * outH * 4] : diffuseRgba;
+
+            for (int y = 0; y < outH; y++)
             {
-                for (int x = 0; x < diffW; x++)
+                for (int x = 0; x < outW; x++)
                 {
-                    int diffIdx = (y * diffW + x) * 4;
+                    int outIdx = (y * outW + x) * 4;
 
-                    // Map to alpha bitmap coords (stretch if sizes differ)
-                    int ax = alphaW == diffW ? x : (x * alphaW / diffW);
-                    int ay = alphaH == diffH ? y : (y * alphaH / diffH);
+                    // Map to alpha bitmap coords
+                    int ax = alphaW == outW ? x : (x * alphaW / outW);
+                    int ay = alphaH == outH ? y : (y * alphaH / outH);
                     int alphaIdx = (ay * alphaW + ax) * 4;
 
-                    if (alphaFromRed)
-                        diffuseRgba[diffIdx + 3] = alphaRgba[alphaIdx]; // red channel
-                    else
-                        diffuseRgba[diffIdx + 3] = alphaRgba[alphaIdx + 3]; // alpha channel
+                    if (placeholderUpscale)
+                    {
+                        // Use alpha bitmap's RGB as color (tiny diffuse is useless)
+                        result[outIdx]     = alphaRgba[alphaIdx];
+                        result[outIdx + 1] = alphaRgba[alphaIdx + 1];
+                        result[outIdx + 2] = alphaRgba[alphaIdx + 2];
+                    }
+
+                    byte a = alphaFromRed ? alphaRgba[alphaIdx] : alphaRgba[alphaIdx + 3];
+                    result[outIdx + 3] = a;
                 }
             }
-            return diffuseRgba;
+            return (result, outW, outH);
         }
 
         /// <summary>
