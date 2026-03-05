@@ -334,36 +334,19 @@ namespace OpenH2.Launcher.ViewModels
                         var skyXform = Matrix4x4.CreateScale(skyScale)
                             * Matrix4x4.CreateTranslation(mapCenter);
 
-                        // Color each skybox region distinctly for identification
-                        var regionColors = new[]
+                        // Only export Region[1] — the Halo ring
+                        if (mode.Regions != null && mode.Regions.Length > 1 && mode.Sections != null)
                         {
-                            new { R = 1.0f, G = 0.0f, B = 0.0f, Label = "RED" },
-                            new { R = 0.0f, G = 0.0f, B = 1.0f, Label = "BLUE" },
-                            new { R = 0.0f, G = 1.0f, B = 0.0f, Label = "GREEN" },
-                            new { R = 1.0f, G = 1.0f, B = 0.0f, Label = "YELLOW" },
-                        };
-
-                        if (mode.Regions != null && mode.Sections != null)
-                        {
-                            for (int ri = 0; ri < mode.Regions.Length; ri++)
+                            var region = mode.Regions[1];
+                            if (region.Permutations?.Length > 0)
                             {
-                                var region = mode.Regions[ri];
-                                if (region.Permutations == null || region.Permutations.Length == 0)
-                                    continue;
-                                var perm = region.Permutations[0];
-                                var sectionIndex = perm.HighestPieceIndex;
-                                if (sectionIndex < 0 || sectionIndex >= mode.Sections.Length
-                                    || mode.Sections[sectionIndex].Model == null)
-                                    continue;
-
-                                var color = regionColors[ri % regionColors.Length];
-                                var colorMatIdx = writer.CreateSolidColorMaterial(
-                                    $"skybox_{color.Label}", color.R, color.G, color.B);
-
-                                Console.WriteLine($"[Skybox] Region[{ri}]: '{region.PartName}' = {color.Label}");
-
-                                writer.AddMeshCollection(mode.Sections[sectionIndex].Model,
-                                    skyXform, $"skybox_{ri}_{region.PartName}", colorMatIdx);
+                                var sectionIndex = region.Permutations[0].HighestPieceIndex;
+                                if (sectionIndex >= 0 && sectionIndex < mode.Sections.Length
+                                    && mode.Sections[sectionIndex].Model != null)
+                                {
+                                    writer.AddMeshCollection(mode.Sections[sectionIndex].Model,
+                                        skyXform, "skybox_halo_ring");
+                                }
                             }
                         }
                         objectCount++;
