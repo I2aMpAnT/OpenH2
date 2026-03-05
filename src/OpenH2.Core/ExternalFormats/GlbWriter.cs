@@ -137,6 +137,7 @@ namespace OpenH2.Core.ExternalFormats
             BitmapTag diffuseBitmap = null;
             BitmapTag detailBitmap = null;
             Vector4 detailScale = new Vector4(1, 1, 0, 0);
+            bool useAlphaMask = false;
 
             if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
@@ -150,6 +151,10 @@ namespace OpenH2.Core.ExternalFormats
                     // Resolve aliases
                     if (materialConfig.Aliases != null && materialConfig.Aliases.TryGetValue(templateKey, out var alias))
                         templateKey = alias.Alias;
+
+                    // Detect alpha-tested / transparent shaders
+                    if (templateKey.Contains("alpha") || templateKey.Contains("transparent"))
+                        useAlphaMask = true;
 
                     if (materialConfig.Mappings != null && materialConfig.Mappings.TryGetValue(templateKey, out var mapping))
                     {
@@ -165,6 +170,9 @@ namespace OpenH2.Core.ExternalFormats
                             detailBitmap = args.GetBitmap(scene, mapping.Detail1MapIndex);
                             detailScale = args.GetInput(mapping.Detail1ScaleIndex);
                         }
+
+                        if (mapping.AlphaMapIndex.HasValue)
+                            useAlphaMask = true;
                     }
                     else
                     {
@@ -231,11 +239,12 @@ namespace OpenH2.Core.ExternalFormats
                                 {
                                     detailBitmap = bitm;
                                     // Try to find scale from nearby shader inputs
+                                    // Look for a Vector4 where X,Y are reasonable tiling values (>= 1)
                                     int inputOffset = i;
                                     while (inputOffset < args.ShaderInputs.Length)
                                     {
                                         var s = args.ShaderInputs[inputOffset];
-                                        if (s.X >= 1 && s.Y >= 1 && s.Z == 0 && s.W == 0)
+                                        if (s.X >= 1 && s.Y >= 1 && Math.Abs(s.Z) < 0.01f && Math.Abs(s.W) < 0.01f)
                                         {
                                             detailScale = s;
                                             break;
@@ -306,7 +315,8 @@ namespace OpenH2.Core.ExternalFormats
             materials.Add(new GlbMaterial
             {
                 Name = shader.Name ?? $"shader_{shaderId:X8}",
-                TextureIndex = texIdx
+                TextureIndex = texIdx,
+                UseAlphaMask = useAlphaMask
             });
             materialByShader[shaderId] = idx;
             return idx;
@@ -419,9 +429,13 @@ namespace OpenH2.Core.ExternalFormats
             if (detailRgba == null)
                 return diffuseRgba;
 
-            // Detail scale X,Y = how many times the detail tiles across UV space
-            float tileU = detailScale.X >= 1 ? detailScale.X : 1;
-            float tileV = detailScale.Y >= 1 ? detailScale.Y : 1;
+            // Detail scale X,Y = how many times the detail tiles across one UV unit.
+            // If the scale is < 1, use the raw value as a fraction; if unreasonably small, default to 8.
+            float tileU = Math.Abs(detailScale.X) >= 0.5f ? Math.Abs(detailScale.X) : 8f;
+            float tileV = Math.Abs(detailScale.Y) >= 0.5f ? Math.Abs(detailScale.Y) : 8f;
+
+            Console.WriteLine($"  [tex] Compositing detail '{detailBitmap.Name}' ({detW}x{detH}) " +
+                $"into diffuse ({diffW}x{diffH}), scale=({detailScale.X},{detailScale.Y},{detailScale.Z},{detailScale.W}), tile={tileU}x{tileV}");
 
             // Blend: diffuse * (detail * 2). Detail maps are centered at ~0.5 gray.
             // Multiplying by 2 means: gray=no change, lighter=brighten, darker=darken.
@@ -433,8 +447,11 @@ namespace OpenH2.Core.ExternalFormats
                     int diffIdx = (y * diffW + x) * 4;
 
                     // Map diffuse pixel to detail UV (tiled)
+                    // tileU/V = number of detail repetitions across the diffuse texture
                     float u = (float)x / diffW * tileU;
                     float v = (float)y / diffH * tileV;
+
+                    // Wrap into detail texture pixel coords
                     int detX = ((int)(u * detW)) % detW;
                     int detY = ((int)(v * detH)) % detH;
                     if (detX < 0) detX += detW;
@@ -451,9 +468,6 @@ namespace OpenH2.Core.ExternalFormats
                     result[diffIdx + 3] = diffuseRgba[diffIdx + 3]; // preserve alpha
                 }
             }
-
-            Console.WriteLine($"  [tex] Composited detail '{detailBitmap.Name}' ({detW}x{detH}) " +
-                $"into diffuse ({diffW}x{diffH}), tile={tileU}x{tileV}");
             return result;
         }
 
@@ -642,12 +656,20 @@ namespace OpenH2.Core.ExternalFormats
                     pbr["baseColorFactor"] = new[] { 0.5f, 0.5f, 0.5f, 1.0f };
                 }
 
-                return new Dictionary<string, object>
+                var matObj = new Dictionary<string, object>
                 {
                     { "name", m.Name },
                     { "pbrMetallicRoughness", pbr },
                     { "doubleSided", true }
                 };
+
+                if (m.UseAlphaMask)
+                {
+                    matObj["alphaMode"] = "MASK";
+                    matObj["alphaCutoff"] = 0.5f;
+                }
+
+                return matObj;
             }).ToArray();
 
             var sceneNodes = Enumerable.Range(0, nodes.Count).ToArray();
@@ -1221,6 +1243,7 @@ namespace OpenH2.Core.ExternalFormats
             public string Name;
             public int TextureIndex = -1;
             public float[] BaseColorFactor;
+            public bool UseAlphaMask;
         }
 
         private class GlbTexture
