@@ -24,7 +24,7 @@ namespace OpenH2.Core.ExternalFormats
         private readonly List<GlbMesh> meshes = new();
         private readonly Dictionary<uint, int> materialByShader = new();
         private readonly List<GlbMaterial> materials = new();
-        private readonly Dictionary<uint, int> textureByBitmap = new();
+        private readonly Dictionary<(uint, uint), int> textureByBitmap = new();
         private readonly List<GlbTexture> textures = new();
         private int fallbackMatIdx = -1;
 
@@ -135,6 +135,8 @@ namespace OpenH2.Core.ExternalFormats
             }
 
             BitmapTag diffuseBitmap = null;
+            BitmapTag detailBitmap = null;
+            Vector4 detailScale = new Vector4(1, 1, 0, 0);
 
             if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
@@ -155,6 +157,13 @@ namespace OpenH2.Core.ExternalFormats
                         if (mapping.DiffuseMapIndex.HasValue)
                         {
                             diffuseBitmap = args.GetBitmap(scene, mapping.DiffuseMapIndex);
+                        }
+
+                        // Also grab detail map if configured
+                        if (mapping.Detail1MapIndex.HasValue)
+                        {
+                            detailBitmap = args.GetBitmap(scene, mapping.Detail1MapIndex);
+                            detailScale = args.GetInput(mapping.Detail1ScaleIndex);
                         }
                     }
                     else
@@ -206,6 +215,39 @@ namespace OpenH2.Core.ExternalFormats
                         }
                     }
 
+                    // Heuristic: find detail maps from BitmapArguments
+                    if (detailBitmap == null && args.BitmapArguments != null)
+                    {
+                        for (int i = 0; i < args.BitmapArguments.Length; i++)
+                        {
+                            if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
+                                continue;
+                            if (bitm == diffuseBitmap)
+                                continue;
+                            if (bitm.TextureUsage == TextureUsage.Detail || (bitm.Name != null && bitm.Name.Contains("detail")))
+                            {
+                                if (bitm.TextureInfos != null && bitm.TextureInfos.Length > 0
+                                    && bitm.TextureInfos[0].Width > 16 && bitm.TextureInfos[0].Height > 16)
+                                {
+                                    detailBitmap = bitm;
+                                    // Try to find scale from nearby shader inputs
+                                    int inputOffset = i;
+                                    while (inputOffset < args.ShaderInputs.Length)
+                                    {
+                                        var s = args.ShaderInputs[inputOffset];
+                                        if (s.X >= 1 && s.Y >= 1 && s.Z == 0 && s.W == 0)
+                                        {
+                                            detailScale = s;
+                                            break;
+                                        }
+                                        inputOffset++;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     // Last resort: largest non-bump bitmap by pixel area
                     if (diffuseBitmap == null && args.BitmapArguments.Length > 0)
                     {
@@ -253,7 +295,7 @@ namespace OpenH2.Core.ExternalFormats
             int texIdx = -1;
             if (diffuseBitmap != null)
             {
-                texIdx = GetOrCreateTexture(diffuseBitmap);
+                texIdx = GetOrCreateTexture(diffuseBitmap, detailBitmap, detailScale);
             }
             else
             {
@@ -278,15 +320,16 @@ namespace OpenH2.Core.ExternalFormats
             return fallbackMatIdx;
         }
 
-        private int GetOrCreateTexture(BitmapTag bitmap)
+        private int GetOrCreateTexture(BitmapTag bitmap, BitmapTag detailBitmap = null, Vector4 detailScale = default)
         {
-            if (textureByBitmap.TryGetValue(bitmap.Id, out var idx))
+            var cacheKey = (bitmap.Id, detailBitmap?.Id ?? 0u);
+            if (textureByBitmap.TryGetValue(cacheKey, out var idx))
                 return idx;
 
             if (bitmap.TextureInfos == null || bitmap.TextureInfos.Length == 0)
             {
                 Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): no TextureInfos");
-                textureByBitmap[bitmap.Id] = -1;
+                textureByBitmap[cacheKey] = -1;
                 return -1;
             }
 
@@ -294,16 +337,16 @@ namespace OpenH2.Core.ExternalFormats
             if (info.LevelsOfDetail == null || info.LevelsOfDetail.Length == 0 || info.LevelsOfDetail[0].Data.Length == 0)
             {
                 Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): no LOD data");
-                textureByBitmap[bitmap.Id] = -1;
+                textureByBitmap[cacheKey] = -1;
                 return -1;
             }
 
-            var width = info.Width;
-            var height = info.Height;
+            var width = (int)info.Width;
+            var height = (int)info.Height;
             if (width <= 0 || height <= 0)
             {
                 Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): invalid size {width}x{height}");
-                textureByBitmap[bitmap.Id] = -1;
+                textureByBitmap[cacheKey] = -1;
                 return -1;
             }
 
@@ -317,15 +360,21 @@ namespace OpenH2.Core.ExternalFormats
             catch (Exception ex)
             {
                 Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): decode threw {ex.Message}");
-                textureByBitmap[bitmap.Id] = -1;
+                textureByBitmap[cacheKey] = -1;
                 return -1;
             }
 
             if (rgba == null)
             {
                 Console.WriteLine($"  [tex] Bitmap '{bitmap.Name}' ({bitmap.Id:X8}): unsupported format {info.Format}");
-                textureByBitmap[bitmap.Id] = -1;
+                textureByBitmap[cacheKey] = -1;
                 return -1;
+            }
+
+            // Composite detail map into diffuse if available
+            if (detailBitmap != null)
+            {
+                rgba = CompositeDetailMap(rgba, width, height, detailBitmap, detailScale);
             }
 
             var pngData = EncodePng(rgba, width, height);
@@ -338,8 +387,74 @@ namespace OpenH2.Core.ExternalFormats
                 Width = width,
                 Height = height
             });
-            textureByBitmap[bitmap.Id] = idx;
+            textureByBitmap[cacheKey] = idx;
             return idx;
+        }
+
+        private byte[] CompositeDetailMap(byte[] diffuseRgba, int diffW, int diffH,
+            BitmapTag detailBitmap, Vector4 detailScale)
+        {
+            if (detailBitmap.TextureInfos == null || detailBitmap.TextureInfos.Length == 0)
+                return diffuseRgba;
+
+            var detInfo = detailBitmap.TextureInfos[0];
+            if (detInfo.LevelsOfDetail == null || detInfo.LevelsOfDetail.Length == 0
+                || detInfo.LevelsOfDetail[0].Data.Length == 0)
+                return diffuseRgba;
+
+            var detW = (int)detInfo.Width;
+            var detH = (int)detInfo.Height;
+            if (detW <= 0 || detH <= 0)
+                return diffuseRgba;
+
+            byte[] detailRgba;
+            try
+            {
+                detailRgba = DecodeToRgba(detInfo.LevelsOfDetail[0].Data.Span, detW, detH, detInfo.Format);
+            }
+            catch
+            {
+                return diffuseRgba;
+            }
+            if (detailRgba == null)
+                return diffuseRgba;
+
+            // Detail scale X,Y = how many times the detail tiles across UV space
+            float tileU = detailScale.X >= 1 ? detailScale.X : 1;
+            float tileV = detailScale.Y >= 1 ? detailScale.Y : 1;
+
+            // Blend: diffuse * (detail * 2). Detail maps are centered at ~0.5 gray.
+            // Multiplying by 2 means: gray=no change, lighter=brighten, darker=darken.
+            var result = new byte[diffuseRgba.Length];
+            for (int y = 0; y < diffH; y++)
+            {
+                for (int x = 0; x < diffW; x++)
+                {
+                    int diffIdx = (y * diffW + x) * 4;
+
+                    // Map diffuse pixel to detail UV (tiled)
+                    float u = (float)x / diffW * tileU;
+                    float v = (float)y / diffH * tileV;
+                    int detX = ((int)(u * detW)) % detW;
+                    int detY = ((int)(v * detH)) % detH;
+                    if (detX < 0) detX += detW;
+                    if (detY < 0) detY += detH;
+                    int detIdx = (detY * detW + detX) * 4;
+
+                    for (int c = 0; c < 3; c++) // R, G, B
+                    {
+                        float diff = diffuseRgba[diffIdx + c] / 255f;
+                        float det = detailRgba[detIdx + c] / 255f;
+                        float blended = diff * (det * 2f);
+                        result[diffIdx + c] = (byte)(Math.Min(blended, 1f) * 255f);
+                    }
+                    result[diffIdx + 3] = diffuseRgba[diffIdx + 3]; // preserve alpha
+                }
+            }
+
+            Console.WriteLine($"  [tex] Composited detail '{detailBitmap.Name}' ({detW}x{detH}) " +
+                $"into diffuse ({diffW}x{diffH}), tile={tileU}x{tileV}");
+            return result;
         }
 
         private static readonly Vector3 SunDirection = Vector3.Normalize(new Vector3(-0.4f, -1.0f, 0.6f));
