@@ -176,11 +176,16 @@ namespace OpenH2.Core.ExternalFormats
                     if (templateKey.Contains("alpha"))
                         useAlphaMask = true;
 
-                    // Transparent/additive shaders (not alpha-test) are effect objects
-                    // (light cones, water volumes, particles) — skip as solid geometry
-                    if (templateKey.Contains("transparent") || templateKey.Contains("\\add")
+                    // Additive/plasma/camo/shield shaders are always effect objects — skip
+                    bool isEffectShader = templateKey.Contains("\\add")
                         || templateKey.Contains("_add_") || templateKey.Contains("plasma")
-                        || templateKey.Contains("active_camo") || templateKey.Contains("shield"))
+                        || templateKey.Contains("active_camo") || templateKey.Contains("shield");
+
+                    // Transparent shaders that are NOT alpha-tested are also effects
+                    // (light cones, water volumes, particles) — skip as solid geometry.
+                    // But alpha-tested transparent shaders (vegetation, fences) are real
+                    // cutout geometry that should be rendered with alphaMode: MASK.
+                    if (isEffectShader || (templateKey.Contains("transparent") && !useAlphaMask))
                         skipRendering = true;
 
                     if (materialConfig.Mappings != null && materialConfig.Mappings.TryGetValue(templateKey, out var mapping))
