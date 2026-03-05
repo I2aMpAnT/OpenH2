@@ -381,15 +381,28 @@ namespace OpenH2.Core.ExternalFormats
             Console.WriteLine($"  [mat] '{shader.Name}': texIdx={texIdx}, emissiveTexIdx={emissiveTexIdx}, " +
                 $"skip={skipRendering}, alpha={useAlphaMask}");
 
+            // For non-overlay teleporter/grav-lift meshes, add green emissive so
+            // they visually read as energy objects (their glow overlays are skipped
+            // because glTF lacks additive blending)
+            float[] emissiveFactor = null;
+            var shaderName = shader.Name ?? "";
+            if (!isEmissiveOnly && !skipRendering
+                && (shaderName.Contains("teleporter") || shaderName.Contains("grav_lift")
+                    || shaderName.Contains("obelisk")))
+            {
+                emissiveFactor = new[] { 0.0f, 0.8f, 0.3f };
+            }
+
             idx = materials.Count;
             materials.Add(new GlbMaterial
             {
-                Name = shader.Name ?? $"shader_{shaderId:X8}",
+                Name = shaderName.Length > 0 ? shaderName : $"shader_{shaderId:X8}",
                 TextureIndex = texIdx,
                 EmissiveTextureIndex = emissiveTexIdx,
                 UseAlphaMask = useAlphaMask,
                 SkipRendering = skipRendering,
-                IsEmissiveOnly = isEmissiveOnly
+                IsEmissiveOnly = isEmissiveOnly,
+                EmissiveFactor = emissiveFactor
             });
             materialByShader[shaderId] = idx;
             return idx;
@@ -930,7 +943,11 @@ namespace OpenH2.Core.ExternalFormats
                 if (m.EmissiveTextureIndex >= 0)
                 {
                     matObj["emissiveTexture"] = new { index = m.EmissiveTextureIndex };
-                    matObj["emissiveFactor"] = new[] { 1.0f, 1.0f, 1.0f };
+                    matObj["emissiveFactor"] = m.EmissiveFactor ?? new[] { 1.0f, 1.0f, 1.0f };
+                }
+                else if (m.EmissiveFactor != null)
+                {
+                    matObj["emissiveFactor"] = m.EmissiveFactor;
                 }
 
                 return matObj;
@@ -1511,6 +1528,7 @@ namespace OpenH2.Core.ExternalFormats
             public bool UseAlphaMask;
             public bool SkipRendering;
             public bool IsEmissiveOnly;
+            public float[] EmissiveFactor;
         }
 
         private class GlbTexture
