@@ -123,6 +123,10 @@ namespace OpenH2.Core.ExternalFormats
                     if (mat.SkipRendering && mat.EmissiveTextureIndex < 0
                         && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
                         continue;
+                    // EmissiveOnly with no brightness-alpha texture (tiny placeholder bitmaps)
+                    // can't render properly in glTF — skip these light volumes
+                    if (mat.SkipRendering && mat.IsEmissiveOnly && mat.TextureIndex < 0)
+                        continue;
                 }
 
                 meshes.Add(new GlbMesh
@@ -427,6 +431,15 @@ namespace OpenH2.Core.ExternalFormats
             var height = (int)info.Height;
             if (width <= 0 || height <= 0)
             {
+                brightnessAlphaTextureCache[bitmap.Id] = -1;
+                return -1;
+            }
+
+            // Skip tiny placeholder bitmaps (e.g. default_additive 4x4) — these are
+            // additive light volumes with no real detail, can't be represented in glTF
+            if (width * height <= 64)
+            {
+                Console.WriteLine($"  [tex] BrightnessAlpha skipping tiny bitmap '{bitmap.Name}' ({width}x{height})");
                 brightnessAlphaTextureCache[bitmap.Id] = -1;
                 return -1;
             }
