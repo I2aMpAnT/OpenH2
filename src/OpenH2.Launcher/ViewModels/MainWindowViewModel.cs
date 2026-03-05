@@ -313,28 +313,7 @@ namespace OpenH2.Launcher.ViewModels
                     }
                 }
 
-                // Weapon placements
-                if (scenario.WeaponPlacements != null && scenario.WeaponDefinitions != null)
-                {
-                    foreach (var inst in scenario.WeaponPlacements)
-                    {
-                        if (inst.Index >= scenario.WeaponDefinitions.Length)
-                            continue;
-                        var def = scenario.WeaponDefinitions[inst.Index];
-                        if (!scene.TryGetTag(def.Weapon, out WeaponTag weap)) continue;
-                        if (!scene.TryGetTag(weap.Hlmt, out HaloModelTag hlmt)) continue;
-                        if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
-
-                        var xform = Matrix4x4.CreateFromQuaternion(
-                                QuaternionExtensions.FromH2vOrientation(inst.Orientation))
-                            * Matrix4x4.CreateTranslation(inst.Position);
-
-                        AddRenderModelMeshes(writer, mode, xform, $"weapon_{objectCount}");
-                        objectCount++;
-                    }
-                }
-
-                // Equipment placements
+                // Equipment placements (powerups: overshield, active camo, etc.)
                 if (scenario.EquipmentPlacements != null && scenario.EquipmentDefinitions != null)
                 {
                     foreach (var inst in scenario.EquipmentPlacements)
@@ -355,7 +334,7 @@ namespace OpenH2.Launcher.ViewModels
                     }
                 }
 
-                // Item collection placements (powerups, weapon spawns on MP maps)
+                // Item collection placements (powerups only, skip weapons)
                 if (scenario.ItemCollectionPlacements != null)
                 {
                     foreach (var inst in scenario.ItemCollectionPlacements)
@@ -372,22 +351,19 @@ namespace OpenH2.Launcher.ViewModels
                                 if (!scene.TryGetTag<BaseTag>(item.ItemTag, out var resolvedTag))
                                     continue;
 
-                                TagRef<HaloModelTag> itemHlmt = default;
+                                // Only export equipment (powerups), skip weapons
+                                if (resolvedTag is not EquipmentTag eqip)
+                                    continue;
 
-                                if (resolvedTag is WeaponTag weap)
-                                    itemHlmt = weap.Hlmt;
-                                else if (resolvedTag is EquipmentTag eqip)
-                                    itemHlmt = eqip.Hlmt;
-
-                                if (itemHlmt.IsInvalid) continue;
-                                if (!scene.TryGetTag(itemHlmt, out HaloModelTag hlmt)) continue;
+                                if (eqip.Hlmt.IsInvalid) continue;
+                                if (!scene.TryGetTag(eqip.Hlmt, out HaloModelTag hlmt)) continue;
                                 if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
 
                                 var xform = Matrix4x4.CreateFromQuaternion(
                                         QuaternionExtensions.FromH2vOrientation(inst.Orientation))
                                     * Matrix4x4.CreateTranslation(inst.Position);
 
-                                AddRenderModelMeshes(writer, mode, xform, $"itmc_{objectCount}");
+                                AddRenderModelMeshes(writer, mode, xform, $"powerup_{objectCount}");
                                 objectCount++;
                             }
                         }
