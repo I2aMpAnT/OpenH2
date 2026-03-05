@@ -124,11 +124,20 @@ namespace OpenH2.Launcher.ViewModels
                         return;
                     }
 
+                    // Redirect console output to a log file next to the GLB
+                    var logPath = Path.ChangeExtension(savePath, ".log");
+                    using var logWriter = new StreamWriter(logPath);
+                    var origOut = Console.Out;
+                    Console.SetOut(logWriter);
+
                     var writer = new GlbWriter(scene);
                     ExportMapToWriter(writer, scene);
 
                     var glbData = writer.ToGlb();
                     File.WriteAllBytes(savePath, glbData);
+
+                    Console.SetOut(origOut);
+                    Console.WriteLine($"Log written to {logPath}");
 
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         ExportStatus = $"Exported to {Path.GetFileName(savePath)} ({glbData.Length / 1024 / 1024}MB)");
