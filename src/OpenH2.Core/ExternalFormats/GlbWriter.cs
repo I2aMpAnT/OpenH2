@@ -382,7 +382,13 @@ namespace OpenH2.Core.ExternalFormats
             var shaderName = shader.Name ?? "";
             bool renderAsSolid = skipRendering
                 && (shaderName.Contains("teleporter") || shaderName.Contains("grav_lift"));
-            float[] emissiveFactor = renderAsSolid ? new[] { 0.0f, 0.8f, 0.3f } : null;
+            // DEBUG: render water_streams as bright red to identify drapes
+            bool debugRedWater = skipRendering && shaderName.Contains("water_stream");
+            bool debugRedInvisible = skipRendering && shaderName.Contains("invisible");
+            bool renderAsDebug = debugRedWater || debugRedInvisible;
+            float[] emissiveFactor = renderAsSolid ? new[] { 0.0f, 0.8f, 0.3f }
+                : renderAsDebug ? new[] { 1.0f, 0.0f, 0.0f }
+                : null;
 
             idx = materials.Count;
             materials.Add(new GlbMaterial
@@ -394,7 +400,7 @@ namespace OpenH2.Core.ExternalFormats
                 SkipRendering = skipRendering,
                 IsEmissiveOnly = isEmissiveOnly,
                 EmissiveFactor = emissiveFactor,
-                RenderAsSolidEmissive = renderAsSolid
+                RenderAsSolidEmissive = renderAsSolid || renderAsDebug
             });
             materialByShader[shaderId] = idx;
             return idx;
