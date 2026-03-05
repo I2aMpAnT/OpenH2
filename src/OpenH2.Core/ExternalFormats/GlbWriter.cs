@@ -81,7 +81,18 @@ namespace OpenH2.Core.ExternalFormats
             };
         }
 
-        public void AddMeshCollection(MeshCollection meshCollection, Matrix4x4 transform, string name)
+        public int CreateSolidColorMaterial(string name, float r, float g, float b)
+        {
+            var idx = materials.Count;
+            materials.Add(new GlbMaterial
+            {
+                Name = name,
+                BaseColorFactor = new[] { r, g, b, 1.0f }
+            });
+            return idx;
+        }
+
+        public void AddMeshCollection(MeshCollection meshCollection, Matrix4x4 transform, string name, int overrideMaterialIndex = -1)
         {
             if (meshCollection?.Meshes == null) return;
 
@@ -94,7 +105,7 @@ namespace OpenH2.Core.ExternalFormats
                 if (triangleIndices.Count == 0)
                     continue;
 
-                var matIdx = ResolveMaterial(mesh);
+                var matIdx = overrideMaterialIndex >= 0 ? overrideMaterialIndex : ResolveMaterial(mesh);
 
                 meshes.Add(new GlbMesh
                 {
@@ -503,7 +514,11 @@ namespace OpenH2.Core.ExternalFormats
                     { "roughnessFactor", 0.7f }
                 };
 
-                if (m.TextureIndex >= 0)
+                if (m.BaseColorFactor != null)
+                {
+                    pbr["baseColorFactor"] = m.BaseColorFactor;
+                }
+                else if (m.TextureIndex >= 0)
                 {
                     pbr["baseColorTexture"] = new { index = m.TextureIndex };
                 }
@@ -1090,6 +1105,7 @@ namespace OpenH2.Core.ExternalFormats
         {
             public string Name;
             public int TextureIndex = -1;
+            public float[] BaseColorFactor;
         }
 
         private class GlbTexture
