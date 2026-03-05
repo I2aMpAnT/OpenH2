@@ -358,11 +358,14 @@ namespace OpenH2.Core.ExternalFormats
             {
                 emissiveTexIdx = GetOrCreateTexture(emissiveBitmap);
                 Console.WriteLine($"  [emissive] Created texture idx={emissiveTexIdx} for '{emissiveBitmap.Name}'");
-                // For EmissiveOnly shaders (teleporters, grav lifts, camo), use emissive as diffuse too
+                // For EmissiveOnly shaders (teleporters, grav lifts, camo), create a
+                // brightness-to-alpha texture for the diffuse slot. The PBR base will be
+                // set to black [0,0,0,1] so only emissive provides color, and the alpha
+                // channel (derived from brightness) controls transparency.
                 if (isEmissiveOnly && texIdx < 0)
                 {
-                    texIdx = emissiveTexIdx;
-                    Console.WriteLine($"  [emissive] Using emissive as diffuse for EmissiveOnly shader '{shader.Name}'");
+                    texIdx = GetOrCreateBrightnessAlphaTexture(emissiveBitmap);
+                    Console.WriteLine($"  [emissive] Created brightness-alpha texture idx={texIdx} for EmissiveOnly shader '{shader.Name}'");
                 }
             }
 
@@ -376,7 +379,8 @@ namespace OpenH2.Core.ExternalFormats
                 TextureIndex = texIdx,
                 EmissiveTextureIndex = emissiveTexIdx,
                 UseAlphaMask = useAlphaMask,
-                SkipRendering = skipRendering
+                SkipRendering = skipRendering,
+                IsEmissiveOnly = isEmissiveOnly
             });
             materialByShader[shaderId] = idx;
             return idx;
@@ -388,6 +392,73 @@ namespace OpenH2.Core.ExternalFormats
             fallbackMatIdx = materials.Count;
             materials.Add(new GlbMaterial { Name = "fallback", TextureIndex = -1 });
             return fallbackMatIdx;
+        }
+
+        private readonly Dictionary<uint, int> brightnessAlphaTextureCache = new();
+
+        /// <summary>
+        /// Creates a texture where the alpha channel is derived from RGB brightness
+        /// using a power curve. Used for EmissiveOnly materials so that dim pixels
+        /// become transparent and only bright emissive areas are visible.
+        /// </summary>
+        private int GetOrCreateBrightnessAlphaTexture(BitmapTag bitmap)
+        {
+            if (brightnessAlphaTextureCache.TryGetValue(bitmap.Id, out var cached))
+                return cached;
+
+            if (bitmap.TextureInfos == null || bitmap.TextureInfos.Length == 0)
+            {
+                brightnessAlphaTextureCache[bitmap.Id] = -1;
+                return -1;
+            }
+
+            var info = bitmap.TextureInfos[0];
+            if (info.LevelsOfDetail == null || info.LevelsOfDetail.Length == 0 || info.LevelsOfDetail[0].Data.Length == 0)
+            {
+                brightnessAlphaTextureCache[bitmap.Id] = -1;
+                return -1;
+            }
+
+            var width = (int)info.Width;
+            var height = (int)info.Height;
+            if (width <= 0 || height <= 0)
+            {
+                brightnessAlphaTextureCache[bitmap.Id] = -1;
+                return -1;
+            }
+
+            byte[] rgba;
+            try
+            {
+                rgba = DecodeToRgba(info.LevelsOfDetail[0].Data.Span, width, height, info.Format);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  [tex] BrightnessAlpha '{bitmap.Name}' ({bitmap.Id:X8}): decode threw {ex.Message}");
+                brightnessAlphaTextureCache[bitmap.Id] = -1;
+                return -1;
+            }
+
+            if (rgba == null)
+            {
+                brightnessAlphaTextureCache[bitmap.Id] = -1;
+                return -1;
+            }
+
+            rgba = BrightnessToAlpha(rgba, width, height);
+
+            var pngData = EncodePng(rgba, width, height);
+
+            var idx = textures.Count;
+            textures.Add(new GlbTexture
+            {
+                Name = (bitmap.Name ?? $"bitm_{bitmap.Id:X8}") + "_brightness_alpha",
+                PngData = pngData,
+                Width = width,
+                Height = height
+            });
+            brightnessAlphaTextureCache[bitmap.Id] = idx;
+            return idx;
         }
 
         private int GetOrCreateTexture(BitmapTag bitmap, BitmapTag detailBitmap = null,
@@ -589,6 +660,35 @@ namespace OpenH2.Core.ExternalFormats
             return diffuseRgba;
         }
 
+        /// <summary>
+        /// Creates a copy of the RGBA data with alpha derived from RGB brightness.
+        /// Uses a power curve (gamma=2.0) so dim pixels become more transparent,
+        /// giving EmissiveOnly materials a pure glow appearance instead of opaque blocks.
+        /// </summary>
+        private static byte[] BrightnessToAlpha(byte[] rgba, int width, int height)
+        {
+            var result = new byte[rgba.Length];
+            Array.Copy(rgba, result, rgba.Length);
+
+            for (int i = 0; i < width * height; i++)
+            {
+                int idx = i * 4;
+                // Max of RGB channels as brightness (preserves bright single-channel colors)
+                float r = result[idx] / 255f;
+                float g = result[idx + 1] / 255f;
+                float b = result[idx + 2] / 255f;
+                float brightness = Math.Max(r, Math.Max(g, b));
+
+                // Power curve: gamma=2.0 makes mid-range pixels more transparent
+                // and only near-white pixels stay fully opaque
+                float alpha = brightness * brightness;
+
+                result[idx + 3] = (byte)(Math.Min(alpha, 1f) * 255f);
+            }
+
+            return result;
+        }
+
         private static readonly Vector3 SunDirection = Vector3.Normalize(new Vector3(-0.4f, -1.0f, 0.6f));
         private const float AmbientIntensity = 0.3f;
         private const float DirectionalIntensity = 0.5f;
@@ -761,7 +861,16 @@ namespace OpenH2.Core.ExternalFormats
                     { "roughnessFactor", 0.7f }
                 };
 
-                if (m.BaseColorFactor != null)
+                if (m.IsEmissiveOnly && m.TextureIndex >= 0)
+                {
+                    // EmissiveOnly: black PBR base so only emissive provides color.
+                    // The baseColorTexture carries brightness-derived alpha for transparency.
+                    // Factor [0,0,0,1] zeros out RGB (no material appearance) while
+                    // preserving the texture's alpha channel for blending.
+                    pbr["baseColorFactor"] = new[] { 0.0f, 0.0f, 0.0f, 1.0f };
+                    pbr["baseColorTexture"] = new { index = m.TextureIndex };
+                }
+                else if (m.BaseColorFactor != null)
                 {
                     pbr["baseColorFactor"] = m.BaseColorFactor;
                 }
@@ -781,7 +890,13 @@ namespace OpenH2.Core.ExternalFormats
                     { "doubleSided", true }
                 };
 
-                if (m.UseAlphaMask)
+                if (m.IsEmissiveOnly)
+                {
+                    // BLEND mode for EmissiveOnly: brightness-derived alpha controls
+                    // transparency so dim pixels fade out and only bright areas glow
+                    matObj["alphaMode"] = "BLEND";
+                }
+                else if (m.UseAlphaMask)
                 {
                     matObj["alphaMode"] = "MASK";
                     matObj["alphaCutoff"] = 0.5f;
@@ -1370,6 +1485,7 @@ namespace OpenH2.Core.ExternalFormats
             public float[] BaseColorFactor;
             public bool UseAlphaMask;
             public bool SkipRendering;
+            public bool IsEmissiveOnly;
         }
 
         private class GlbTexture
