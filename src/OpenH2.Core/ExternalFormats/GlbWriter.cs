@@ -107,10 +107,17 @@ namespace OpenH2.Core.ExternalFormats
 
                 var matIdx = overrideMaterialIndex >= 0 ? overrideMaterialIndex : ResolveMaterial(mesh);
 
-                // Skip meshes with no valid shader — prevents broken white geometry
-                if (overrideMaterialIndex < 0 && matIdx >= 0 && materials[matIdx].TextureIndex < 0
-                    && materials[matIdx].BaseColorFactor == null && materials[matIdx].EmissiveTextureIndex < 0)
-                    continue;
+                // Skip meshes with no valid visual data or transparent effect shaders
+                if (overrideMaterialIndex < 0 && matIdx >= 0)
+                {
+                    var mat = materials[matIdx];
+                    // No texture, no color, no emissive = invisible junk
+                    if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
+                        continue;
+                    // Transparent/additive effect shaders without emissive = white garbage
+                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0)
+                        continue;
+                }
 
                 meshes.Add(new GlbMesh
                 {
@@ -145,6 +152,7 @@ namespace OpenH2.Core.ExternalFormats
             Vector4 detailScale = new Vector4(1, 1, 0, 0);
             bool useAlphaMask = false;
             bool isEmissiveOnly = false;
+            bool skipRendering = false;
 
             if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
@@ -159,9 +167,16 @@ namespace OpenH2.Core.ExternalFormats
                     if (materialConfig.Aliases != null && materialConfig.Aliases.TryGetValue(templateKey, out var alias))
                         templateKey = alias.Alias;
 
-                    // Detect alpha-tested / transparent shaders
-                    if (templateKey.Contains("alpha") || templateKey.Contains("transparent"))
+                    // Detect alpha-tested shaders
+                    if (templateKey.Contains("alpha"))
                         useAlphaMask = true;
+
+                    // Transparent/additive shaders (not alpha-test) are effect objects
+                    // (light cones, water volumes, particles) — skip as solid geometry
+                    if (templateKey.Contains("transparent") || templateKey.Contains("\\add")
+                        || templateKey.Contains("_add_") || templateKey.Contains("plasma")
+                        || templateKey.Contains("active_camo") || templateKey.Contains("shield"))
+                        skipRendering = true;
 
                     if (materialConfig.Mappings != null && materialConfig.Mappings.TryGetValue(templateKey, out var mapping))
                     {
@@ -272,7 +287,7 @@ namespace OpenH2.Core.ExternalFormats
                         }
                     }
 
-                    // Last resort: largest non-bump bitmap by pixel area
+                    // Last resort: largest diffuse/detail bitmap by pixel area
                     if (diffuseBitmap == null && args.BitmapArguments.Length > 0)
                     {
                         BitmapTag bestCandidate = null;
@@ -282,7 +297,8 @@ namespace OpenH2.Core.ExternalFormats
                         {
                             if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
                                 continue;
-                            if (bitm.TextureUsage == TextureUsage.Bump)
+                            // Skip bump maps and light/specular maps — only want diffuse-like textures
+                            if (bitm.TextureUsage == TextureUsage.Bump || bitm.TextureUsage == TextureUsage.Light)
                                 continue;
                             if (bitm.TextureInfos == null || bitm.TextureInfos.Length == 0)
                                 continue;
@@ -341,7 +357,8 @@ namespace OpenH2.Core.ExternalFormats
                 Name = shader.Name ?? $"shader_{shaderId:X8}",
                 TextureIndex = texIdx,
                 EmissiveTextureIndex = emissiveTexIdx,
-                UseAlphaMask = useAlphaMask
+                UseAlphaMask = useAlphaMask,
+                SkipRendering = skipRendering
             });
             materialByShader[shaderId] = idx;
             return idx;
@@ -1276,6 +1293,7 @@ namespace OpenH2.Core.ExternalFormats
             public int EmissiveTextureIndex = -1;
             public float[] BaseColorFactor;
             public bool UseAlphaMask;
+            public bool SkipRendering;
         }
 
         private class GlbTexture
