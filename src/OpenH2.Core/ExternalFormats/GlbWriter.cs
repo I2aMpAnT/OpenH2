@@ -380,7 +380,7 @@ namespace OpenH2.Core.ExternalFormats
             // of skipping. These are EmissiveOnly+SkipRendering overlays that form
             // the energy beam — render them opaque green so the beam is visible.
             var shaderName = shader.Name ?? "";
-            bool renderAsSolid = isEmissiveOnly && skipRendering
+            bool renderAsSolid = skipRendering
                 && (shaderName.Contains("teleporter") || shaderName.Contains("grav_lift"));
             float[] emissiveFactor = renderAsSolid ? new[] { 0.0f, 0.8f, 0.3f } : null;
 
