@@ -117,16 +117,11 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // EmissiveOnly + SkipRendering = additive overlays (light volumes,
-                    // glow layers). These require additive blending which glTF doesn't
-                    // support — renders as white patches (MASK) or gray wash (BLEND).
-                    // Skip all of them; base meshes (skip=false) still render.
-                    if (mat.SkipRendering && mat.IsEmissiveOnly)
-                        continue;
-                    // Other transparent/additive shaders: skip unless they have
-                    // a diffuse texture with alpha
-                    if (mat.SkipRendering
-                        && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
+                    // Skip ALL SkipRendering materials — these are transparent/additive
+                    // effects (light volumes, water streams, plasma, invisible triggers)
+                    // that require additive blending which glTF doesn't support.
+                    // Exception: teleporter beam geometry rendered as solid green.
+                    if (mat.SkipRendering && !mat.RenderAsSolidEmissive)
                         continue;
                 }
 
@@ -381,17 +376,13 @@ namespace OpenH2.Core.ExternalFormats
             Console.WriteLine($"  [mat] '{shader.Name}': texIdx={texIdx}, emissiveTexIdx={emissiveTexIdx}, " +
                 $"skip={skipRendering}, alpha={useAlphaMask}");
 
-            // For non-overlay teleporter/grav-lift meshes, add green emissive so
-            // they visually read as energy objects (their glow overlays are skipped
-            // because glTF lacks additive blending)
-            float[] emissiveFactor = null;
+            // Teleporter/grav-lift beam overlays: render as solid green instead
+            // of skipping. These are EmissiveOnly+SkipRendering overlays that form
+            // the energy beam — render them opaque green so the beam is visible.
             var shaderName = shader.Name ?? "";
-            if (!isEmissiveOnly && !skipRendering
-                && (shaderName.Contains("teleporter") || shaderName.Contains("grav_lift")
-                    || shaderName.Contains("obelisk")))
-            {
-                emissiveFactor = new[] { 0.0f, 0.8f, 0.3f };
-            }
+            bool renderAsSolid = isEmissiveOnly && skipRendering
+                && (shaderName.Contains("teleporter") || shaderName.Contains("grav_lift"));
+            float[] emissiveFactor = renderAsSolid ? new[] { 0.0f, 0.8f, 0.3f } : null;
 
             idx = materials.Count;
             materials.Add(new GlbMaterial
@@ -402,7 +393,8 @@ namespace OpenH2.Core.ExternalFormats
                 UseAlphaMask = useAlphaMask,
                 SkipRendering = skipRendering,
                 IsEmissiveOnly = isEmissiveOnly,
-                EmissiveFactor = emissiveFactor
+                EmissiveFactor = emissiveFactor,
+                RenderAsSolidEmissive = renderAsSolid
             });
             materialByShader[shaderId] = idx;
             return idx;
@@ -892,12 +884,15 @@ namespace OpenH2.Core.ExternalFormats
                     { "roughnessFactor", 0.7f }
                 };
 
-                if (m.IsEmissiveOnly && m.TextureIndex >= 0)
+                if (m.RenderAsSolidEmissive)
+                {
+                    // Solid green for teleporter/grav-lift beams — no texture, just color
+                    pbr["baseColorFactor"] = new[] { 0.0f, 0.15f, 0.05f, 1.0f };
+                }
+                else if (m.IsEmissiveOnly && m.TextureIndex >= 0)
                 {
                     // EmissiveOnly: black PBR base so only emissive provides color.
                     // The baseColorTexture carries brightness-derived alpha for transparency.
-                    // Factor [0,0,0,1] zeros out RGB (no material appearance) while
-                    // preserving the texture's alpha channel for blending.
                     pbr["baseColorFactor"] = new[] { 0.0f, 0.0f, 0.0f, 1.0f };
                     pbr["baseColorTexture"] = new { index = m.TextureIndex };
                 }
@@ -921,17 +916,13 @@ namespace OpenH2.Core.ExternalFormats
                     { "doubleSided", true }
                 };
 
-                if (m.IsEmissiveOnly)
+                if (m.RenderAsSolidEmissive)
                 {
-                    // BLEND mode for EmissiveOnly: steep alpha curve in BrightnessToAlpha
-                    // ensures only the brightest pixels are opaque (glow), while mid-range
-                    // pixels become nearly transparent (no gray wash)
-                    matObj["alphaMode"] = "BLEND";
+                    // Solid opaque — no blending for beam geometry
+                    matObj["alphaMode"] = "OPAQUE";
                 }
-                else if (m.SkipRendering && m.UseAlphaMask)
+                else if (m.IsEmissiveOnly)
                 {
-                    // Transparent/additive effect shaders with alpha (e.g. teleporter_plasma):
-                    // use BLEND for smooth transparency instead of hard MASK cutoff
                     matObj["alphaMode"] = "BLEND";
                 }
                 else if (m.UseAlphaMask)
@@ -1529,6 +1520,7 @@ namespace OpenH2.Core.ExternalFormats
             public bool SkipRendering;
             public bool IsEmissiveOnly;
             public float[] EmissiveFactor;
+            public bool RenderAsSolidEmissive;
         }
 
         private class GlbTexture
