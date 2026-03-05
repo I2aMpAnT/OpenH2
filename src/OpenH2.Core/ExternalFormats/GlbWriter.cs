@@ -1,3 +1,4 @@
+using OpenH2.Core.Configuration;
 using OpenH2.Core.Enums.Texture;
 using OpenH2.Core.Extensions;
 using OpenH2.Core.Maps.Vista;
@@ -19,6 +20,7 @@ namespace OpenH2.Core.ExternalFormats
     public class GlbWriter
     {
         private readonly H2vMap scene;
+        private readonly MaterialMappingConfig materialConfig;
         private readonly List<GlbMesh> meshes = new();
         private readonly Dictionary<uint, int> materialByShader = new();
         private readonly List<GlbMaterial> materials = new();
@@ -29,6 +31,54 @@ namespace OpenH2.Core.ExternalFormats
         public GlbWriter(H2vMap scene)
         {
             this.scene = scene;
+            this.materialConfig = LoadMaterialConfig();
+        }
+
+        private static MaterialMappingConfig LoadMaterialConfig()
+        {
+            // Try to find material-config.json from the config root
+            var configRoot = Environment.GetEnvironmentVariable(ConfigurationConstants.ConfigPathOverrideEnvironmentVariable);
+
+            string[] searchPaths;
+            if (!string.IsNullOrEmpty(configRoot))
+            {
+                searchPaths = new[] { Path.Combine(configRoot, ConfigurationConstants.MaterialConfigName) };
+            }
+            else
+            {
+                // Search common locations
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                searchPaths = new[]
+                {
+                    Path.Combine(baseDir, ConfigurationConstants.MaterialConfigName),
+                    Path.Combine(baseDir, "Configs", ConfigurationConstants.MaterialConfigName),
+                    Path.Combine(Directory.GetCurrentDirectory(), ConfigurationConstants.MaterialConfigName),
+                };
+            }
+
+            foreach (var path in searchPaths)
+            {
+                if (File.Exists(path))
+                {
+                    var json = File.ReadAllText(path);
+                    var opts = new JsonSerializerOptions
+                    {
+                        AllowTrailingCommas = true,
+                        ReadCommentHandling = JsonCommentHandling.Skip,
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var config = JsonSerializer.Deserialize<MaterialMappingConfig>(json, opts);
+                    Console.WriteLine($"  [glb] Loaded material config from {path}");
+                    return config;
+                }
+            }
+
+            Console.WriteLine("  [glb] WARNING: material-config.json not found, using heuristic fallback");
+            return new MaterialMappingConfig
+            {
+                Aliases = new Dictionary<string, MaterialAlias>(),
+                Mappings = new Dictionary<string, MaterialMapping>()
+            };
         }
 
         public void AddMeshCollection(MeshCollection meshCollection, Matrix4x4 transform, string name)
@@ -73,47 +123,78 @@ namespace OpenH2.Core.ExternalFormats
                 return materialByShader[shaderId];
             }
 
-            // Match MaterialFactory's approach: legacy BitmapInfos first, then scan BitmapArguments
             BitmapTag diffuseBitmap = null;
 
-            // 1. Legacy BitmapInfos path (same as MaterialFactory.PopulateFromHeuristic)
-            if (shader.BitmapInfos != null)
-            {
-                foreach (var info in shader.BitmapInfos)
-                {
-                    if (!info.DiffuseBitmap.IsInvalid && diffuseBitmap == null)
-                    {
-                        scene.TryGetTag(info.DiffuseBitmap, out diffuseBitmap);
-                    }
-                }
-            }
-
-            // 2. Scan BitmapArguments for TextureUsage.Diffuse (same as MaterialFactory heuristic)
             if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
                 var args = shader.Arguments[0];
-                if (args.BitmapArguments != null)
+
+                // Try config-based lookup (same as MaterialFactory.PopulateFromMapping)
+                if (args.ShaderTemplate.Id != uint.MaxValue && scene.TryGetTag(args.ShaderTemplate, out var templateTag))
                 {
-                    for (int i = 0; i < args.BitmapArguments.Length; i++)
+                    var templateKey = templateTag.Name;
+
+                    // Resolve aliases
+                    if (materialConfig.Aliases != null && materialConfig.Aliases.TryGetValue(templateKey, out var alias))
+                        templateKey = alias.Alias;
+
+                    if (materialConfig.Mappings != null && materialConfig.Mappings.TryGetValue(templateKey, out var mapping))
                     {
-                        if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
-                            continue;
-
-                        if (bitm == diffuseBitmap)
-                            continue;
-
-                        if (bitm.TextureUsage == TextureUsage.Diffuse)
+                        // Use the exact DiffuseMapIndex from config
+                        if (mapping.DiffuseMapIndex.HasValue)
                         {
-                            if (diffuseBitmap == null)
-                                diffuseBitmap = bitm;
-                            break;
+                            diffuseBitmap = args.GetBitmap(scene, mapping.DiffuseMapIndex);
+                        }
+                    }
+                }
+
+                // Heuristic fallback (same as MaterialFactory.PopulateFromHeuristic)
+                if (diffuseBitmap == null && args.BitmapArguments != null)
+                {
+                    // First check BitmapInfos for legacy diffuse
+                    if (shader.BitmapInfos != null)
+                    {
+                        foreach (var info in shader.BitmapInfos)
+                        {
+                            if (!info.DiffuseBitmap.IsInvalid)
+                            {
+                                scene.TryGetTag(info.DiffuseBitmap, out diffuseBitmap);
+                                if (diffuseBitmap != null) break;
+                            }
                         }
                     }
 
-                    // 3. Last resort: first bitmap argument
+                    // Then scan BitmapArguments for TextureUsage.Diffuse
+                    if (diffuseBitmap == null)
+                    {
+                        for (int i = 0; i < args.BitmapArguments.Length; i++)
+                        {
+                            if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
+                                continue;
+                            if (bitm.TextureUsage == TextureUsage.Diffuse)
+                            {
+                                diffuseBitmap = bitm;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Last resort: first bitmap argument
                     if (diffuseBitmap == null && args.BitmapArguments.Length > 0)
                     {
                         scene.TryGetTag(args.BitmapArguments[0].Bitmap, out diffuseBitmap);
+                    }
+                }
+            }
+            else if (shader.BitmapInfos != null)
+            {
+                // No Arguments at all, try legacy path
+                foreach (var info in shader.BitmapInfos)
+                {
+                    if (!info.DiffuseBitmap.IsInvalid)
+                    {
+                        scene.TryGetTag(info.DiffuseBitmap, out diffuseBitmap);
+                        if (diffuseBitmap != null) break;
                     }
                 }
             }
@@ -125,8 +206,7 @@ namespace OpenH2.Core.ExternalFormats
             }
             else
             {
-                Console.WriteLine($"  [tex] No diffuse bitmap for shader '{shader.Name}' ({shaderId:X8})" +
-                    $" args={shader.Arguments?.Length ?? 0} bitmapInfos={shader.BitmapInfos?.Length ?? 0}");
+                Console.WriteLine($"  [tex] No diffuse bitmap for shader '{shader.Name}' ({shaderId:X8})");
             }
 
             idx = materials.Count;
@@ -261,12 +341,12 @@ namespace OpenH2.Core.ExternalFormats
                 }
                 var normViewLen = (int)binStream.Position - normViewStart;
 
-                // Write texcoords (V-flip for glTF top-left UV origin)
+                // Write texcoords (Vulkan and glTF both use top-left origin, no flip needed)
                 var uvViewStart = (int)binStream.Position;
                 foreach (var v in verts)
                 {
                     binWriter.Write(v.TexCoords.X);
-                    binWriter.Write(1.0f - v.TexCoords.Y);
+                    binWriter.Write(v.TexCoords.Y);
                 }
                 var uvViewLen = (int)binStream.Position - uvViewStart;
 
