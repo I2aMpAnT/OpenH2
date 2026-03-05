@@ -333,7 +333,25 @@ namespace OpenH2.Launcher.ViewModels
 
                         var skyXform = Matrix4x4.CreateScale(skyScale)
                             * Matrix4x4.CreateTranslation(mapCenter);
-                        AddRenderModelMeshes(writer, mode, skyXform, $"skybox_{objectCount}");
+
+                        // Only export outermost skybox region (Halo ring),
+                        // matching SkyboxFactory which uses Regions.First()
+                        if (mode.Regions != null && mode.Regions.Length > 0
+                            && mode.Sections != null)
+                        {
+                            var outerRegion = mode.Regions[0];
+                            if (outerRegion.Permutations != null && outerRegion.Permutations.Length > 0)
+                            {
+                                var perm = outerRegion.Permutations[0];
+                                var sectionIndex = perm.HighestPieceIndex;
+                                if (sectionIndex >= 0 && sectionIndex < mode.Sections.Length
+                                    && mode.Sections[sectionIndex].Model != null)
+                                {
+                                    writer.AddMeshCollection(mode.Sections[sectionIndex].Model,
+                                        skyXform, $"skybox_{objectCount}");
+                                }
+                            }
+                        }
                         objectCount++;
                     }
                 }
