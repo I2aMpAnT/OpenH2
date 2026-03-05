@@ -117,8 +117,11 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // Transparent/additive effect shaders without emissive = white garbage
-                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0)
+                    // Transparent/additive effect shaders: skip unless they have emissive
+                    // (handled via EmissiveOnly path) or a diffuse texture with alpha
+                    // (e.g. teleporter_plasma has a valid alpha-blended diffuse)
+                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0
+                        && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
                         continue;
                 }
 
@@ -894,6 +897,12 @@ namespace OpenH2.Core.ExternalFormats
                 {
                     // BLEND mode for EmissiveOnly: brightness-derived alpha controls
                     // transparency so dim pixels fade out and only bright areas glow
+                    matObj["alphaMode"] = "BLEND";
+                }
+                else if (m.SkipRendering && m.UseAlphaMask)
+                {
+                    // Transparent/additive effect shaders with alpha (e.g. teleporter_plasma):
+                    // use BLEND for smooth transparency instead of hard MASK cutoff
                     matObj["alphaMode"] = "BLEND";
                 }
                 else if (m.UseAlphaMask)
