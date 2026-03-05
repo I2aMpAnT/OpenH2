@@ -24,7 +24,7 @@ namespace OpenH2.Core.ExternalFormats
         private readonly List<GlbMesh> meshes = new();
         private readonly Dictionary<uint, int> materialByShader = new();
         private readonly List<GlbMaterial> materials = new();
-        private readonly Dictionary<(uint, uint), int> textureByBitmap = new();
+        private readonly Dictionary<(uint, uint, uint), int> textureByBitmap = new();
         private readonly List<GlbTexture> textures = new();
         private int fallbackMatIdx = -1;
 
@@ -110,6 +110,9 @@ namespace OpenH2.Core.ExternalFormats
                 // Skip meshes with no valid visual data or transparent effect shaders
                 if (overrideMaterialIndex < 0 && matIdx >= 0)
                 {
+                    // Fallback material = unresolvable shader, skip entirely
+                    if (matIdx == fallbackMatIdx)
+                        continue;
                     var mat = materials[matIdx];
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
@@ -149,8 +152,10 @@ namespace OpenH2.Core.ExternalFormats
             BitmapTag diffuseBitmap = null;
             BitmapTag detailBitmap = null;
             BitmapTag emissiveBitmap = null;
+            BitmapTag alphaBitmap = null;
             Vector4 detailScale = new Vector4(1, 1, 0, 0);
             bool useAlphaMask = false;
+            bool alphaFromRed = false;
             bool isEmissiveOnly = false;
             bool skipRendering = false;
 
@@ -194,7 +199,11 @@ namespace OpenH2.Core.ExternalFormats
                         }
 
                         if (mapping.AlphaMapIndex.HasValue)
+                        {
                             useAlphaMask = true;
+                            alphaBitmap = args.GetBitmap(scene, mapping.AlphaMapIndex);
+                            alphaFromRed = mapping.AlphaFromRed;
+                        }
 
                         // Emissive map
                         if (mapping.EmissiveMapIndex.HasValue)
@@ -337,7 +346,7 @@ namespace OpenH2.Core.ExternalFormats
             int texIdx = -1;
             if (diffuseBitmap != null)
             {
-                texIdx = GetOrCreateTexture(diffuseBitmap, detailBitmap, detailScale);
+                texIdx = GetOrCreateTexture(diffuseBitmap, detailBitmap, detailScale, alphaBitmap, alphaFromRed);
             }
             else
             {
@@ -381,9 +390,10 @@ namespace OpenH2.Core.ExternalFormats
             return fallbackMatIdx;
         }
 
-        private int GetOrCreateTexture(BitmapTag bitmap, BitmapTag detailBitmap = null, Vector4 detailScale = default)
+        private int GetOrCreateTexture(BitmapTag bitmap, BitmapTag detailBitmap = null,
+            Vector4 detailScale = default, BitmapTag alphaBitmap = null, bool alphaFromRed = false)
         {
-            var cacheKey = (bitmap.Id, detailBitmap?.Id ?? 0u);
+            var cacheKey = (bitmap.Id, detailBitmap?.Id ?? 0u, alphaBitmap?.Id ?? 0u);
             if (textureByBitmap.TryGetValue(cacheKey, out var idx))
                 return idx;
 
@@ -436,6 +446,12 @@ namespace OpenH2.Core.ExternalFormats
             if (detailBitmap != null)
             {
                 rgba = CompositeDetailMap(rgba, width, height, detailBitmap, detailScale);
+            }
+
+            // Composite alpha map into diffuse alpha channel
+            if (alphaBitmap != null && alphaBitmap.Id != bitmap.Id)
+            {
+                rgba = CompositeAlphaMap(rgba, width, height, alphaBitmap, alphaFromRed);
             }
 
             var pngData = EncodePng(rgba, width, height);
@@ -520,6 +536,57 @@ namespace OpenH2.Core.ExternalFormats
                 }
             }
             return result;
+        }
+
+        private byte[] CompositeAlphaMap(byte[] diffuseRgba, int diffW, int diffH,
+            BitmapTag alphaBitmap, bool alphaFromRed)
+        {
+            if (alphaBitmap.TextureInfos == null || alphaBitmap.TextureInfos.Length == 0)
+                return diffuseRgba;
+
+            var alphaInfo = alphaBitmap.TextureInfos[0];
+            if (alphaInfo.LevelsOfDetail == null || alphaInfo.LevelsOfDetail.Length == 0
+                || alphaInfo.LevelsOfDetail[0].Data.Length == 0)
+                return diffuseRgba;
+
+            var alphaW = (int)alphaInfo.Width;
+            var alphaH = (int)alphaInfo.Height;
+            if (alphaW <= 0 || alphaH <= 0)
+                return diffuseRgba;
+
+            byte[] alphaRgba;
+            try
+            {
+                alphaRgba = DecodeToRgba(alphaInfo.LevelsOfDetail[0].Data.Span, alphaW, alphaH, alphaInfo.Format);
+            }
+            catch
+            {
+                return diffuseRgba;
+            }
+            if (alphaRgba == null)
+                return diffuseRgba;
+
+            Console.WriteLine($"  [tex] Compositing alpha '{alphaBitmap.Name}' ({alphaW}x{alphaH}) " +
+                $"into diffuse ({diffW}x{diffH}), alphaFromRed={alphaFromRed}");
+
+            for (int y = 0; y < diffH; y++)
+            {
+                for (int x = 0; x < diffW; x++)
+                {
+                    int diffIdx = (y * diffW + x) * 4;
+
+                    // Map to alpha bitmap coords (stretch if sizes differ)
+                    int ax = alphaW == diffW ? x : (x * alphaW / diffW);
+                    int ay = alphaH == diffH ? y : (y * alphaH / diffH);
+                    int alphaIdx = (ay * alphaW + ax) * 4;
+
+                    if (alphaFromRed)
+                        diffuseRgba[diffIdx + 3] = alphaRgba[alphaIdx]; // red channel
+                    else
+                        diffuseRgba[diffIdx + 3] = alphaRgba[alphaIdx + 3]; // alpha channel
+                }
+            }
+            return diffuseRgba;
         }
 
         private static readonly Vector3 SunDirection = Vector3.Normalize(new Vector3(-0.4f, -1.0f, 0.6f));
