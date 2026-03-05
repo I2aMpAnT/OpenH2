@@ -695,9 +695,9 @@ namespace OpenH2.Core.ExternalFormats
                 float b = result[idx + 2] / 255f;
                 float brightness = Math.Max(r, Math.Max(g, b));
 
-                // Power curve: gamma=2.0 makes mid-range pixels more transparent
-                // and only near-white pixels stay fully opaque
-                float alpha = brightness * brightness;
+                // Steep power curve (brightness^4): mid-range pixels become nearly
+                // transparent (no gray wash) while only the brightest areas glow
+                float alpha = brightness * brightness * brightness * brightness;
 
                 result[idx + 3] = (byte)(Math.Min(alpha, 1f) * 255f);
             }
@@ -908,11 +908,10 @@ namespace OpenH2.Core.ExternalFormats
 
                 if (m.IsEmissiveOnly)
                 {
-                    // MASK mode for EmissiveOnly: binary cutoff so bright emissive areas
-                    // are fully visible and dim areas fully transparent — avoids gray
-                    // semi-transparent artifacts that BLEND mode creates
-                    matObj["alphaMode"] = "MASK";
-                    matObj["alphaCutoff"] = 0.3f;
+                    // BLEND mode for EmissiveOnly: steep alpha curve in BrightnessToAlpha
+                    // ensures only the brightest pixels are opaque (glow), while mid-range
+                    // pixels become nearly transparent (no gray wash)
+                    matObj["alphaMode"] = "BLEND";
                 }
                 else if (m.SkipRendering && m.UseAlphaMask)
                 {
