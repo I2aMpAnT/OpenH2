@@ -303,6 +303,21 @@ namespace OpenH2.Launcher.ViewModels
                         objectCount++;
                     }
                 }
+
+                // Skyboxes
+                if (scenario.SkyboxInstances != null)
+                {
+                    foreach (var sky in scenario.SkyboxInstances)
+                    {
+                        if (!scene.TryGetTag(sky.Skybox, out SkyboxTag skyTag)) continue;
+                        if (!scene.TryGetTag(skyTag.Model, out RenderModelTag mode)) continue;
+
+                        // Scale skybox large to encompass map geometry
+                        var skyXform = Matrix4x4.CreateScale(100f);
+                        AddRenderModelMeshes(writer, mode, skyXform, $"skybox_{objectCount}");
+                        objectCount++;
+                    }
+                }
             }
         }
 
