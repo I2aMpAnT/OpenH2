@@ -117,8 +117,9 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // Transparent/additive effect shaders without emissive = white garbage
-                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0)
+                    // Transparent/additive effect shaders without emissive or alpha = white garbage
+                    // But alpha-masked effect shaders (teleporter plasma) have real cutout geometry
+                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0 && !mat.UseAlphaMask)
                         continue;
                 }
 
@@ -176,11 +177,16 @@ namespace OpenH2.Core.ExternalFormats
                     if (templateKey.Contains("alpha"))
                         useAlphaMask = true;
 
-                    // Transparent/additive shaders (not alpha-test) are effect objects
-                    // (light cones, water volumes, particles) — skip as solid geometry
-                    if (templateKey.Contains("transparent") || templateKey.Contains("\\add")
+                    // Additive/plasma/camo/shield shaders are always effect objects — skip
+                    bool isEffectShader = templateKey.Contains("\\add")
                         || templateKey.Contains("_add_") || templateKey.Contains("plasma")
-                        || templateKey.Contains("active_camo") || templateKey.Contains("shield"))
+                        || templateKey.Contains("active_camo") || templateKey.Contains("shield");
+
+                    // Transparent shaders that are NOT alpha-tested are also effects
+                    // (light cones, water volumes, particles) — skip as solid geometry.
+                    // But alpha-tested transparent shaders (vegetation, fences) are real
+                    // cutout geometry that should be rendered with alphaMode: MASK.
+                    if (isEffectShader || (templateKey.Contains("transparent") && !useAlphaMask))
                         skipRendering = true;
 
                     if (materialConfig.Mappings != null && materialConfig.Mappings.TryGetValue(templateKey, out var mapping))
@@ -358,11 +364,12 @@ namespace OpenH2.Core.ExternalFormats
             {
                 emissiveTexIdx = GetOrCreateTexture(emissiveBitmap);
                 Console.WriteLine($"  [emissive] Created texture idx={emissiveTexIdx} for '{emissiveBitmap.Name}'");
-                // For EmissiveOnly shaders (teleporters, grav lifts, camo), use emissive as diffuse too
-                if (isEmissiveOnly && texIdx < 0)
+                // For EmissiveOnly shaders (teleporters, grav lifts, camo), create a
+                // brightness-alpha texture so they render as transparent glow overlays
+                if (isEmissiveOnly)
                 {
-                    texIdx = emissiveTexIdx;
-                    Console.WriteLine($"  [emissive] Using emissive as diffuse for EmissiveOnly shader '{shader.Name}'");
+                    texIdx = GetOrCreateEmissiveAlphaTexture(emissiveBitmap);
+                    Console.WriteLine($"  [emissive] Created alpha-blended texture idx={texIdx} for EmissiveOnly shader '{shader.Name}'");
                 }
             }
 
@@ -376,6 +383,7 @@ namespace OpenH2.Core.ExternalFormats
                 TextureIndex = texIdx,
                 EmissiveTextureIndex = emissiveTexIdx,
                 UseAlphaMask = useAlphaMask,
+                IsEmissiveOnly = isEmissiveOnly,
                 SkipRendering = skipRendering
             });
             materialByShader[shaderId] = idx;
@@ -460,6 +468,51 @@ namespace OpenH2.Core.ExternalFormats
             textures.Add(new GlbTexture
             {
                 Name = bitmap.Name ?? $"bitm_{bitmap.Id:X8}",
+                PngData = pngData,
+                Width = width,
+                Height = height
+            });
+            textureByBitmap[cacheKey] = idx;
+            return idx;
+        }
+
+        private int GetOrCreateEmissiveAlphaTexture(BitmapTag bitmap)
+        {
+            // Use a unique cache key (distinct from normal texture) by using uint.MaxValue as detail/alpha sentinel
+            var cacheKey = (bitmap.Id, uint.MaxValue, uint.MaxValue);
+            if (textureByBitmap.TryGetValue(cacheKey, out var idx))
+                return idx;
+
+            if (bitmap.TextureInfos == null || bitmap.TextureInfos.Length == 0)
+                return -1;
+
+            var info = bitmap.TextureInfos[0];
+            if (info.LevelsOfDetail == null || info.LevelsOfDetail.Length == 0 || info.LevelsOfDetail[0].Data.Length == 0)
+                return -1;
+
+            var width = (int)info.Width;
+            var height = (int)info.Height;
+            if (width <= 0 || height <= 0)
+                return -1;
+
+            byte[] rgba;
+            try { rgba = DecodeToRgba(info.LevelsOfDetail[0].Data.Span, width, height, info.Format); }
+            catch { return -1; }
+            if (rgba == null) return -1;
+
+            // Bake RGB brightness into alpha channel: bright pixels = opaque, dark = transparent
+            for (int i = 0; i < width * height; i++)
+            {
+                int pi = i * 4;
+                int brightness = Math.Max(rgba[pi], Math.Max(rgba[pi + 1], rgba[pi + 2]));
+                rgba[pi + 3] = (byte)brightness;
+            }
+
+            var pngData = EncodePng(rgba, width, height);
+            idx = textures.Count;
+            textures.Add(new GlbTexture
+            {
+                Name = (bitmap.Name ?? $"bitm_{bitmap.Id:X8}") + "_emissive_alpha",
                 PngData = pngData,
                 Width = width,
                 Height = height
@@ -781,7 +834,12 @@ namespace OpenH2.Core.ExternalFormats
                     { "doubleSided", true }
                 };
 
-                if (m.UseAlphaMask)
+                if (m.IsEmissiveOnly)
+                {
+                    // Additive glow overlay: blend using brightness-based alpha
+                    matObj["alphaMode"] = "BLEND";
+                }
+                else if (m.UseAlphaMask)
                 {
                     matObj["alphaMode"] = "MASK";
                     matObj["alphaCutoff"] = 0.5f;
@@ -1369,6 +1427,7 @@ namespace OpenH2.Core.ExternalFormats
             public int EmissiveTextureIndex = -1;
             public float[] BaseColorFactor;
             public bool UseAlphaMask;
+            public bool IsEmissiveOnly;
             public bool SkipRendering;
         }
 
