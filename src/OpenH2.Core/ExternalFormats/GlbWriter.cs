@@ -1,3 +1,4 @@
+using OpenH2.Core.Enums.Texture;
 using OpenH2.Core.Extensions;
 using OpenH2.Core.Maps.Vista;
 using OpenH2.Core.Tags;
@@ -72,38 +73,49 @@ namespace OpenH2.Core.ExternalFormats
                 return materialByShader[shaderId];
             }
 
-            // Try to find diffuse bitmap using WellKnownMapProperties first (most accurate),
-            // then Arguments[0] fallback, then legacy BitmapInfos
+            // Match MaterialFactory's approach: legacy BitmapInfos first, then scan BitmapArguments
             BitmapTag diffuseBitmap = null;
 
-            if (shader.Arguments != null && shader.Arguments.Length > 0)
+            // 1. Legacy BitmapInfos path (same as MaterialFactory.PopulateFromHeuristic)
+            if (shader.BitmapInfos != null)
             {
-                var args = shader.Arguments[0];
-
-                // Try WellKnownMapProperties — index 0 = Diffuse
-                if (diffuseBitmap == null && args.WellKnownMapProperties != null && args.BitmapArguments != null)
+                foreach (var info in shader.BitmapInfos)
                 {
-                    foreach (var prop in args.WellKnownMapProperties)
+                    if (!info.DiffuseBitmap.IsInvalid && diffuseBitmap == null)
                     {
-                        // Property 0 = Diffuse (see ShaderTag comments)
-                        if (prop.B == 0 && prop.MapIndex < args.BitmapArguments.Length)
-                        {
-                            scene.TryGetTag(args.BitmapArguments[prop.MapIndex].Bitmap, out diffuseBitmap);
-                            break;
-                        }
+                        scene.TryGetTag(info.DiffuseBitmap, out diffuseBitmap);
                     }
-                }
-
-                // Fallback: first bitmap argument is typically diffuse
-                if (diffuseBitmap == null && args.BitmapArguments != null && args.BitmapArguments.Length > 0)
-                {
-                    scene.TryGetTag(args.BitmapArguments[0].Bitmap, out diffuseBitmap);
                 }
             }
 
-            if (diffuseBitmap == null && shader.BitmapInfos != null && shader.BitmapInfos.Length > 0)
+            // 2. Scan BitmapArguments for TextureUsage.Diffuse (same as MaterialFactory heuristic)
+            if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
-                scene.TryGetTag(shader.BitmapInfos[0].DiffuseBitmap, out diffuseBitmap);
+                var args = shader.Arguments[0];
+                if (args.BitmapArguments != null)
+                {
+                    for (int i = 0; i < args.BitmapArguments.Length; i++)
+                    {
+                        if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
+                            continue;
+
+                        if (bitm == diffuseBitmap)
+                            continue;
+
+                        if (bitm.TextureUsage == TextureUsage.Diffuse)
+                        {
+                            if (diffuseBitmap == null)
+                                diffuseBitmap = bitm;
+                            break;
+                        }
+                    }
+
+                    // 3. Last resort: first bitmap argument
+                    if (diffuseBitmap == null && args.BitmapArguments.Length > 0)
+                    {
+                        scene.TryGetTag(args.BitmapArguments[0].Bitmap, out diffuseBitmap);
+                    }
+                }
             }
 
             int texIdx = -1;
@@ -249,12 +261,12 @@ namespace OpenH2.Core.ExternalFormats
                 }
                 var normViewLen = (int)binStream.Position - normViewStart;
 
-                // Write texcoords
+                // Write texcoords (V-flip for glTF top-left UV origin)
                 var uvViewStart = (int)binStream.Position;
                 foreach (var v in verts)
                 {
                     binWriter.Write(v.TexCoords.X);
-                    binWriter.Write(v.TexCoords.Y);
+                    binWriter.Write(1.0f - v.TexCoords.Y);
                 }
                 var uvViewLen = (int)binStream.Position - uvViewStart;
 
