@@ -146,13 +146,27 @@ namespace OpenH2.Core.ExternalFormats
                             diffuseBitmap = args.GetBitmap(scene, mapping.DiffuseMapIndex);
                         }
                     }
+                    else
+                    {
+                        Console.WriteLine($"  [tex] UNMAPPED shader template: '{templateKey}' (shader: '{shader.Name}')");
+                    }
                 }
 
-                // Heuristic fallback (same as MaterialFactory.PopulateFromHeuristic)
+                // Heuristic fallback
                 if (diffuseBitmap == null && args.BitmapArguments != null)
                 {
-                    // First check BitmapInfos for legacy diffuse
-                    if (shader.BitmapInfos != null)
+                    // Try WellKnownMapProperties — index 0 in the array = Diffuse
+                    if (args.WellKnownMapProperties != null && args.WellKnownMapProperties.Length > 0)
+                    {
+                        var diffuseProp = args.WellKnownMapProperties[0];
+                        if (diffuseProp.MapIndex < args.BitmapArguments.Length)
+                        {
+                            scene.TryGetTag(args.BitmapArguments[diffuseProp.MapIndex].Bitmap, out diffuseBitmap);
+                        }
+                    }
+
+                    // Check BitmapInfos for legacy diffuse
+                    if (diffuseBitmap == null && shader.BitmapInfos != null)
                     {
                         foreach (var info in shader.BitmapInfos)
                         {
@@ -164,12 +178,14 @@ namespace OpenH2.Core.ExternalFormats
                         }
                     }
 
-                    // Then scan BitmapArguments for TextureUsage.Diffuse
+                    // Scan BitmapArguments for TextureUsage.Diffuse, skip Bump
                     if (diffuseBitmap == null)
                     {
                         for (int i = 0; i < args.BitmapArguments.Length; i++)
                         {
                             if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
+                                continue;
+                            if (bitm.TextureUsage == TextureUsage.Bump)
                                 continue;
                             if (bitm.TextureUsage == TextureUsage.Diffuse)
                             {
@@ -179,10 +195,34 @@ namespace OpenH2.Core.ExternalFormats
                         }
                     }
 
-                    // Last resort: first bitmap argument
+                    // Last resort: largest non-bump bitmap by pixel area
                     if (diffuseBitmap == null && args.BitmapArguments.Length > 0)
                     {
-                        scene.TryGetTag(args.BitmapArguments[0].Bitmap, out diffuseBitmap);
+                        BitmapTag bestCandidate = null;
+                        int bestArea = 0;
+
+                        for (int i = 0; i < args.BitmapArguments.Length; i++)
+                        {
+                            if (!scene.TryGetTag(args.BitmapArguments[i].Bitmap, out var bitm))
+                                continue;
+                            if (bitm.TextureUsage == TextureUsage.Bump)
+                                continue;
+                            if (bitm.TextureInfos == null || bitm.TextureInfos.Length == 0)
+                                continue;
+
+                            int area = bitm.TextureInfos[0].Width * bitm.TextureInfos[0].Height;
+                            if (area > bestArea)
+                            {
+                                bestArea = area;
+                                bestCandidate = bitm;
+                            }
+                        }
+
+                        diffuseBitmap = bestCandidate;
+
+                        // If all were bumps, fall back to first available
+                        if (diffuseBitmap == null)
+                            scene.TryGetTag(args.BitmapArguments[0].Bitmap, out diffuseBitmap);
                     }
                 }
             }
@@ -291,6 +331,10 @@ namespace OpenH2.Core.ExternalFormats
             return idx;
         }
 
+        private static readonly Vector3 SunDirection = Vector3.Normalize(new Vector3(-0.4f, -1.0f, 0.6f));
+        private const float AmbientIntensity = 0.3f;
+        private const float DirectionalIntensity = 0.5f;
+
         public byte[] ToGlb()
         {
             if (meshes.Count == 0)
@@ -350,25 +394,45 @@ namespace OpenH2.Core.ExternalFormats
                 }
                 var uvViewLen = (int)binStream.Position - uvViewStart;
 
+                // Write vertex colors (baked directional lighting)
+                var colorViewStart = (int)binStream.Position;
+                foreach (var v in verts)
+                {
+                    var n = Vector3.TransformNormal(v.Normal, xform);
+                    var len = n.Length();
+                    if (len > 0) n /= len;
+
+                    var ndotl = Math.Max(0f, Vector3.Dot(n, -SunDirection));
+                    var intensity = Math.Min(AmbientIntensity + ndotl * DirectionalIntensity, 1.0f);
+
+                    binWriter.Write(intensity);
+                    binWriter.Write(intensity);
+                    binWriter.Write(intensity);
+                    binWriter.Write(1.0f);
+                }
+                var colorViewLen = (int)binStream.Position - colorViewStart;
+
                 // Write indices (uint32)
                 var idxViewStart = (int)binStream.Position;
                 foreach (var idx in indices)
                     binWriter.Write((uint)idx);
                 var idxViewLen = (int)binStream.Position - idxViewStart;
 
-                // Buffer views
+                // Buffer views: pos, norm, uv, color, indices
                 int bvPos = bufferViews.Count;
                 bufferViews.Add(new { buffer = 0, byteOffset = posViewStart, byteLength = posViewLen, target = 34962 });
                 bufferViews.Add(new { buffer = 0, byteOffset = normViewStart, byteLength = normViewLen, target = 34962 });
                 bufferViews.Add(new { buffer = 0, byteOffset = uvViewStart, byteLength = uvViewLen, target = 34962 });
+                bufferViews.Add(new { buffer = 0, byteOffset = colorViewStart, byteLength = colorViewLen, target = 34962 });
                 bufferViews.Add(new { buffer = 0, byteOffset = idxViewStart, byteLength = idxViewLen, target = 34963 });
 
-                // Accessors
+                // Accessors: pos, norm, uv, color, indices
                 int accPos = accessors.Count;
                 accessors.Add(new { bufferView = bvPos, componentType = 5126, count = verts.Length, type = "VEC3", min = new[] { minX, minY, minZ }, max = new[] { maxX, maxY, maxZ } });
                 accessors.Add(new { bufferView = bvPos + 1, componentType = 5126, count = verts.Length, type = "VEC3" });
                 accessors.Add(new { bufferView = bvPos + 2, componentType = 5126, count = verts.Length, type = "VEC2" });
-                accessors.Add(new { bufferView = bvPos + 3, componentType = 5125, count = indices.Length, type = "SCALAR" });
+                accessors.Add(new { bufferView = bvPos + 3, componentType = 5126, count = verts.Length, type = "VEC4" });
+                accessors.Add(new { bufferView = bvPos + 4, componentType = 5125, count = indices.Length, type = "SCALAR" });
 
                 // Mesh primitive
                 gltfMeshes.Add(new
@@ -382,9 +446,10 @@ namespace OpenH2.Core.ExternalFormats
                             {
                                 { "POSITION", accPos },
                                 { "NORMAL", accPos + 1 },
-                                { "TEXCOORD_0", accPos + 2 }
+                                { "TEXCOORD_0", accPos + 2 },
+                                { "COLOR_0", accPos + 3 }
                             },
-                            indices = accPos + 3,
+                            indices = accPos + 4,
                             material = mesh.MaterialIndex
                         }
                     }

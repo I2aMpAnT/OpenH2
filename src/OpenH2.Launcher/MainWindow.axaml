@@ -40,6 +40,7 @@
           <StackPanel Grid.Column="1" Orientation="Vertical" Margin="10" Spacing="8">
             <Button Content="Launch" Command="{Binding Launch}" HorizontalAlignment="Stretch" />
             <Button Content="Export GLB" Command="{Binding ExportGlb}" HorizontalAlignment="Stretch" />
+            <Button Content="Export All GLB" Command="{Binding ExportAllGlb}" HorizontalAlignment="Stretch" />
             <TextBlock Text="{Binding ExportStatus}" FontSize="11" Foreground="Gray" TextWrapping="Wrap" />
           </StackPanel>
         </Grid>

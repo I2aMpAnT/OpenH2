@@ -125,130 +125,13 @@ namespace OpenH2.Launcher.ViewModels
                     }
 
                     var writer = new GlbWriter(scene);
-                    var bsps = scene.GetLocalTagsOfType<BspTag>().ToArray();
-
-                    // BSP clusters
-                    int clusterCount = 0;
-                    foreach (var bsp in bsps)
-                    {
-                        if (bsp.Clusters == null) continue;
-                        for (int ci = 0; ci < bsp.Clusters.Length; ci++)
-                        {
-                            var cluster = bsp.Clusters[ci];
-                            if (cluster.Model == null) continue;
-                            writer.AddMeshCollection(cluster.Model, Matrix4x4.Identity, $"cluster_{ci}");
-                            clusterCount++;
-                        }
-                    }
-
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        ExportStatus = $"Loaded {clusterCount} clusters, processing instanced geometry...");
-
-                    // Instanced geometry
-                    int igCount = 0;
-                    foreach (var bsp in bsps)
-                    {
-                        if (bsp.InstancedGeometryInstances == null || bsp.InstancedGeometryDefinitions == null)
-                            continue;
-
-                        foreach (var instance in bsp.InstancedGeometryInstances)
-                        {
-                            if (instance.Index >= bsp.InstancedGeometryDefinitions.Length)
-                                continue;
-
-                            var def = bsp.InstancedGeometryDefinitions[instance.Index];
-                            if (def.Model == null) continue;
-
-                            var xform = Matrix4x4.CreateScale(new Vector3(instance.Scale))
-                                * Matrix4x4.CreateFromQuaternion(QuaternionExtensions.From3x3Mat(instance.RotationMatrix))
-                                * Matrix4x4.CreateTranslation(instance.Position);
-
-                            writer.AddMeshCollection(def.Model, xform, $"ig_{igCount}");
-                            igCount++;
-                        }
-                    }
-
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        ExportStatus = $"Clusters: {clusterCount}, IG: {igCount}. Processing scenery...");
-
-                    // Scenery, Crates (Bloc), Machinery from scenario
-                    var scenario = scene.GetLocalTagsOfType<ScenarioTag>().FirstOrDefault();
-                    int objectCount = 0;
-
-                    if (scenario != null)
-                    {
-                        // Scenery
-                        if (scenario.SceneryInstances != null && scenario.SceneryDefinitions != null)
-                        {
-                            foreach (var inst in scenario.SceneryInstances)
-                            {
-                                if (inst.SceneryDefinitionIndex >= scenario.SceneryDefinitions.Length)
-                                    continue;
-                                var def = scenario.SceneryDefinitions[inst.SceneryDefinitionIndex];
-                                if (!scene.TryGetTag(def.Scenery, out SceneryTag scen)) continue;
-                                if (!scene.TryGetTag(scen.Model, out HaloModelTag hlmt)) continue;
-                                if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
-
-                                var xform = Matrix4x4.CreateFromQuaternion(
-                                        QuaternionExtensions.FromH2vOrientation(inst.Orientation))
-                                    * Matrix4x4.CreateTranslation(inst.Position);
-
-                                AddRenderModelMeshes(writer, mode, xform, $"scenery_{objectCount}");
-                                objectCount++;
-                            }
-                        }
-
-                        // Crates (Bloc)
-                        if (scenario.BlocInstances != null && scenario.BlocDefinitions != null)
-                        {
-                            foreach (var inst in scenario.BlocInstances)
-                            {
-                                if (inst.BlocDefinitionIndex >= scenario.BlocDefinitions.Length)
-                                    continue;
-                                var def = scenario.BlocDefinitions[inst.BlocDefinitionIndex];
-                                if (!scene.TryGetTag(def.Bloc, out BlocTag bloc)) continue;
-                                if (!scene.TryGetTag(bloc.PhysicalModel, out HaloModelTag hlmt)) continue;
-                                if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
-
-                                var xform = Matrix4x4.CreateFromQuaternion(
-                                        QuaternionExtensions.FromH2vOrientation(inst.Orientation))
-                                    * Matrix4x4.CreateTranslation(inst.Position);
-
-                                AddRenderModelMeshes(writer, mode, xform, $"crate_{objectCount}");
-                                objectCount++;
-                            }
-                        }
-
-                        // Machinery
-                        if (scenario.MachineryInstances != null && scenario.MachineryDefinitions != null)
-                        {
-                            foreach (var inst in scenario.MachineryInstances)
-                            {
-                                if (inst.MachineryDefinitionIndex >= scenario.MachineryDefinitions.Length)
-                                    continue;
-                                var def = scenario.MachineryDefinitions[inst.MachineryDefinitionIndex];
-                                if (!scene.TryGetTag(def.Machinery, out MachineryTag mach)) continue;
-                                if (!scene.TryGetTag(mach.Model, out HaloModelTag hlmt)) continue;
-                                if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
-
-                                var xform = Matrix4x4.CreateFromQuaternion(
-                                        QuaternionExtensions.FromH2vOrientation(inst.Orientation))
-                                    * Matrix4x4.CreateTranslation(inst.Position);
-
-                                AddRenderModelMeshes(writer, mode, xform, $"machine_{objectCount}");
-                                objectCount++;
-                            }
-                        }
-                    }
-
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        ExportStatus = $"Writing GLB... (clusters: {clusterCount}, IG: {igCount}, objects: {objectCount})");
+                    ExportMapToWriter(writer, scene);
 
                     var glbData = writer.ToGlb();
                     File.WriteAllBytes(savePath, glbData);
 
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        ExportStatus = $"Exported to {Path.GetFileName(savePath)} ({glbData.Length / 1024 / 1024}MB) — clusters: {clusterCount}, IG: {igCount}, objects: {objectCount}");
+                        ExportStatus = $"Exported to {Path.GetFileName(savePath)} ({glbData.Length / 1024 / 1024}MB)");
                 }
                 catch (Exception ex)
                 {
@@ -256,6 +139,171 @@ namespace OpenH2.Launcher.ViewModels
                         ExportStatus = $"Export failed: {ex.Message}");
                 }
             });
+        }
+
+        public async Task ExportAllGlb()
+        {
+            if (AvailableMaps.Count == 0)
+            {
+                ExportStatus = "No maps loaded.";
+                return;
+            }
+
+            var dialog = new OpenFolderDialog();
+            dialog.Directory = AppPreferences.Current.ChosenMapFolder;
+
+            var outputFolder = await dialog.ShowAsync(this.window);
+            if (string.IsNullOrWhiteSpace(outputFolder))
+                return;
+
+            var maps = AvailableMaps.ToArray();
+            int total = maps.Length;
+
+            await Task.Run(() =>
+            {
+                int exported = 0;
+                for (int i = 0; i < maps.Length; i++)
+                {
+                    var mapEntry = maps[i];
+                    var mapName = Path.GetFileNameWithoutExtension(mapEntry.FileName);
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        ExportStatus = $"Exporting {i + 1}/{total}: {mapName}...");
+
+                    try
+                    {
+                        var mapFolder = Path.GetDirectoryName(mapEntry.FullPath);
+                        var factory = new MapFactory(mapFolder);
+                        var h2map = factory.Load(Path.GetFileName(mapEntry.FullPath));
+
+                        if (h2map is not H2vMap scene)
+                            continue;
+
+                        var writer = new GlbWriter(scene);
+                        ExportMapToWriter(writer, scene);
+
+                        var glbData = writer.ToGlb();
+                        var savePath = Path.Combine(outputFolder, mapName + ".glb");
+                        File.WriteAllBytes(savePath, glbData);
+                        exported++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to export {mapName}: {ex.Message}");
+                    }
+                }
+
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    ExportStatus = $"Exported {exported}/{total} maps to {outputFolder}");
+            });
+        }
+
+        private static void ExportMapToWriter(GlbWriter writer, H2vMap scene)
+        {
+            var bsps = scene.GetLocalTagsOfType<BspTag>().ToArray();
+
+            // BSP clusters
+            foreach (var bsp in bsps)
+            {
+                if (bsp.Clusters == null) continue;
+                for (int ci = 0; ci < bsp.Clusters.Length; ci++)
+                {
+                    var cluster = bsp.Clusters[ci];
+                    if (cluster.Model == null) continue;
+                    writer.AddMeshCollection(cluster.Model, Matrix4x4.Identity, $"cluster_{ci}");
+                }
+            }
+
+            // Instanced geometry
+            int igCount = 0;
+            foreach (var bsp in bsps)
+            {
+                if (bsp.InstancedGeometryInstances == null || bsp.InstancedGeometryDefinitions == null)
+                    continue;
+
+                foreach (var instance in bsp.InstancedGeometryInstances)
+                {
+                    if (instance.Index >= bsp.InstancedGeometryDefinitions.Length)
+                        continue;
+
+                    var def = bsp.InstancedGeometryDefinitions[instance.Index];
+                    if (def.Model == null) continue;
+
+                    var xform = Matrix4x4.CreateScale(new Vector3(instance.Scale))
+                        * Matrix4x4.CreateFromQuaternion(QuaternionExtensions.From3x3Mat(instance.RotationMatrix))
+                        * Matrix4x4.CreateTranslation(instance.Position);
+
+                    writer.AddMeshCollection(def.Model, xform, $"ig_{igCount}");
+                    igCount++;
+                }
+            }
+
+            // Scenery, Crates (Bloc), Machinery from scenario
+            var scenario = scene.GetLocalTagsOfType<ScenarioTag>().FirstOrDefault();
+            int objectCount = 0;
+
+            if (scenario != null)
+            {
+                if (scenario.SceneryInstances != null && scenario.SceneryDefinitions != null)
+                {
+                    foreach (var inst in scenario.SceneryInstances)
+                    {
+                        if (inst.SceneryDefinitionIndex >= scenario.SceneryDefinitions.Length)
+                            continue;
+                        var def = scenario.SceneryDefinitions[inst.SceneryDefinitionIndex];
+                        if (!scene.TryGetTag(def.Scenery, out SceneryTag scen)) continue;
+                        if (!scene.TryGetTag(scen.Model, out HaloModelTag hlmt)) continue;
+                        if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
+
+                        var xform = Matrix4x4.CreateFromQuaternion(
+                                QuaternionExtensions.FromH2vOrientation(inst.Orientation))
+                            * Matrix4x4.CreateTranslation(inst.Position);
+
+                        AddRenderModelMeshes(writer, mode, xform, $"scenery_{objectCount}");
+                        objectCount++;
+                    }
+                }
+
+                if (scenario.BlocInstances != null && scenario.BlocDefinitions != null)
+                {
+                    foreach (var inst in scenario.BlocInstances)
+                    {
+                        if (inst.BlocDefinitionIndex >= scenario.BlocDefinitions.Length)
+                            continue;
+                        var def = scenario.BlocDefinitions[inst.BlocDefinitionIndex];
+                        if (!scene.TryGetTag(def.Bloc, out BlocTag bloc)) continue;
+                        if (!scene.TryGetTag(bloc.PhysicalModel, out HaloModelTag hlmt)) continue;
+                        if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
+
+                        var xform = Matrix4x4.CreateFromQuaternion(
+                                QuaternionExtensions.FromH2vOrientation(inst.Orientation))
+                            * Matrix4x4.CreateTranslation(inst.Position);
+
+                        AddRenderModelMeshes(writer, mode, xform, $"crate_{objectCount}");
+                        objectCount++;
+                    }
+                }
+
+                if (scenario.MachineryInstances != null && scenario.MachineryDefinitions != null)
+                {
+                    foreach (var inst in scenario.MachineryInstances)
+                    {
+                        if (inst.MachineryDefinitionIndex >= scenario.MachineryDefinitions.Length)
+                            continue;
+                        var def = scenario.MachineryDefinitions[inst.MachineryDefinitionIndex];
+                        if (!scene.TryGetTag(def.Machinery, out MachineryTag mach)) continue;
+                        if (!scene.TryGetTag(mach.Model, out HaloModelTag hlmt)) continue;
+                        if (!scene.TryGetTag(hlmt.RenderModel, out RenderModelTag mode)) continue;
+
+                        var xform = Matrix4x4.CreateFromQuaternion(
+                                QuaternionExtensions.FromH2vOrientation(inst.Orientation))
+                            * Matrix4x4.CreateTranslation(inst.Position);
+
+                        AddRenderModelMeshes(writer, mode, xform, $"machine_{objectCount}");
+                        objectCount++;
+                    }
+                }
+            }
         }
 
         private static void AddRenderModelMeshes(GlbWriter writer, RenderModelTag mode, Matrix4x4 transform, string name)
