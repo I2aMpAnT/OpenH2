@@ -117,13 +117,15 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // EmissiveOnly light volumes with no real texture (tiny placeholder
-                    // bitmaps like default_additive) — can't render, skip
-                    if (mat.SkipRendering && mat.IsEmissiveOnly && mat.TextureIndex < 0)
+                    // EmissiveOnly + SkipRendering = additive overlays (light volumes,
+                    // glow layers). These require additive blending which glTF doesn't
+                    // support — renders as white patches (MASK) or gray wash (BLEND).
+                    // Skip all of them; base meshes (skip=false) still render.
+                    if (mat.SkipRendering && mat.IsEmissiveOnly)
                         continue;
-                    // Other transparent/additive shaders: skip unless they have emissive
-                    // or a diffuse texture with alpha
-                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0
+                    // Other transparent/additive shaders: skip unless they have
+                    // a diffuse texture with alpha
+                    if (mat.SkipRendering
                         && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
                         continue;
                 }
