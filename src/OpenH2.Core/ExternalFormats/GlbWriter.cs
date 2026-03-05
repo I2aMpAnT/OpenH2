@@ -117,12 +117,14 @@ namespace OpenH2.Core.ExternalFormats
                     // No texture, no color, no emissive = invisible junk
                     if (mat.TextureIndex < 0 && mat.BaseColorFactor == null && mat.EmissiveTextureIndex < 0)
                         continue;
-                    // EmissiveOnly shaders are additive-blend effects (light volumes,
-                    // teleporter glow, etc.) that can't be represented in glTF — skip all
-                    if (mat.SkipRendering && mat.IsEmissiveOnly)
+                    // EmissiveOnly light volumes with no real texture (tiny placeholder
+                    // bitmaps like default_additive) — can't render, skip
+                    if (mat.SkipRendering && mat.IsEmissiveOnly && mat.TextureIndex < 0)
                         continue;
-                    // Other transparent/additive shaders: skip unless they have alpha-blended diffuse
-                    if (mat.SkipRendering && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
+                    // Other transparent/additive shaders: skip unless they have emissive
+                    // or a diffuse texture with alpha
+                    if (mat.SkipRendering && mat.EmissiveTextureIndex < 0
+                        && !(mat.TextureIndex >= 0 && mat.UseAlphaMask))
                         continue;
                 }
 
@@ -906,9 +908,11 @@ namespace OpenH2.Core.ExternalFormats
 
                 if (m.IsEmissiveOnly)
                 {
-                    // BLEND mode for EmissiveOnly: brightness-derived alpha controls
-                    // transparency so dim pixels fade out and only bright areas glow
-                    matObj["alphaMode"] = "BLEND";
+                    // MASK mode for EmissiveOnly: binary cutoff so bright emissive areas
+                    // are fully visible and dim areas fully transparent — avoids gray
+                    // semi-transparent artifacts that BLEND mode creates
+                    matObj["alphaMode"] = "MASK";
+                    matObj["alphaCutoff"] = 0.3f;
                 }
                 else if (m.SkipRendering && m.UseAlphaMask)
                 {
