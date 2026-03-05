@@ -107,6 +107,11 @@ namespace OpenH2.Core.ExternalFormats
 
                 var matIdx = overrideMaterialIndex >= 0 ? overrideMaterialIndex : ResolveMaterial(mesh);
 
+                // Skip meshes with no valid shader — prevents broken white geometry
+                if (overrideMaterialIndex < 0 && matIdx >= 0 && materials[matIdx].TextureIndex < 0
+                    && materials[matIdx].BaseColorFactor == null && materials[matIdx].EmissiveTextureIndex < 0)
+                    continue;
+
                 meshes.Add(new GlbMesh
                 {
                     Name = name,
@@ -136,8 +141,10 @@ namespace OpenH2.Core.ExternalFormats
 
             BitmapTag diffuseBitmap = null;
             BitmapTag detailBitmap = null;
+            BitmapTag emissiveBitmap = null;
             Vector4 detailScale = new Vector4(1, 1, 0, 0);
             bool useAlphaMask = false;
+            bool isEmissiveOnly = false;
 
             if (shader.Arguments != null && shader.Arguments.Length > 0)
             {
@@ -173,6 +180,14 @@ namespace OpenH2.Core.ExternalFormats
 
                         if (mapping.AlphaMapIndex.HasValue)
                             useAlphaMask = true;
+
+                        // Emissive map
+                        if (mapping.EmissiveMapIndex.HasValue)
+                        {
+                            emissiveBitmap = args.GetBitmap(scene, mapping.EmissiveMapIndex);
+                            if (mapping.EmissiveType == EmissiveType.EmissiveOnly)
+                                isEmissiveOnly = true;
+                        }
                     }
                     else
                     {
@@ -311,11 +326,21 @@ namespace OpenH2.Core.ExternalFormats
                 Console.WriteLine($"  [tex] No diffuse bitmap for shader '{shader.Name}' ({shaderId:X8})");
             }
 
+            int emissiveTexIdx = -1;
+            if (emissiveBitmap != null)
+            {
+                emissiveTexIdx = GetOrCreateTexture(emissiveBitmap);
+                // For EmissiveOnly shaders (teleporters, grav lifts, camo), use emissive as diffuse too
+                if (isEmissiveOnly && texIdx < 0)
+                    texIdx = emissiveTexIdx;
+            }
+
             idx = materials.Count;
             materials.Add(new GlbMaterial
             {
                 Name = shader.Name ?? $"shader_{shaderId:X8}",
                 TextureIndex = texIdx,
+                EmissiveTextureIndex = emissiveTexIdx,
                 UseAlphaMask = useAlphaMask
             });
             materialByShader[shaderId] = idx;
@@ -667,6 +692,12 @@ namespace OpenH2.Core.ExternalFormats
                 {
                     matObj["alphaMode"] = "MASK";
                     matObj["alphaCutoff"] = 0.5f;
+                }
+
+                if (m.EmissiveTextureIndex >= 0)
+                {
+                    matObj["emissiveTexture"] = new { index = m.EmissiveTextureIndex };
+                    matObj["emissiveFactor"] = new[] { 1.0f, 1.0f, 1.0f };
                 }
 
                 return matObj;
@@ -1242,6 +1273,7 @@ namespace OpenH2.Core.ExternalFormats
         {
             public string Name;
             public int TextureIndex = -1;
+            public int EmissiveTextureIndex = -1;
             public float[] BaseColorFactor;
             public bool UseAlphaMask;
         }
