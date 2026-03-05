@@ -202,6 +202,8 @@ namespace OpenH2.Core.ExternalFormats
                             emissiveBitmap = args.GetBitmap(scene, mapping.EmissiveMapIndex);
                             if (mapping.EmissiveType == EmissiveType.EmissiveOnly)
                                 isEmissiveOnly = true;
+                            Console.WriteLine($"  [emissive] Shader '{shader.Name}': emissiveMapIdx={mapping.EmissiveMapIndex}, " +
+                                $"bitmap={emissiveBitmap?.Name ?? "NULL"}, type={mapping.EmissiveType}, isEmissiveOnly={isEmissiveOnly}");
                         }
                     }
                     else
@@ -346,10 +348,17 @@ namespace OpenH2.Core.ExternalFormats
             if (emissiveBitmap != null)
             {
                 emissiveTexIdx = GetOrCreateTexture(emissiveBitmap);
+                Console.WriteLine($"  [emissive] Created texture idx={emissiveTexIdx} for '{emissiveBitmap.Name}'");
                 // For EmissiveOnly shaders (teleporters, grav lifts, camo), use emissive as diffuse too
                 if (isEmissiveOnly && texIdx < 0)
+                {
                     texIdx = emissiveTexIdx;
+                    Console.WriteLine($"  [emissive] Using emissive as diffuse for EmissiveOnly shader '{shader.Name}'");
+                }
             }
+
+            Console.WriteLine($"  [mat] '{shader.Name}': texIdx={texIdx}, emissiveTexIdx={emissiveTexIdx}, " +
+                $"skip={skipRendering}, alpha={useAlphaMask}");
 
             idx = materials.Count;
             materials.Add(new GlbMaterial
